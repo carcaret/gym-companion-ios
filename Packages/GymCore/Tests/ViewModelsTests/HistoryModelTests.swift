@@ -121,13 +121,28 @@ struct HistoryFullTests {
     }
 
     @Test("eliminar entry confirmar desaparece de la lista")
-    func delete() async {
+    func delete() async throws {
         let history = await HistoryHarness.make()
         let initial = history.model.rows.count
         history.model.requestDelete(history.model.rows[0].date)
         #expect(history.model.deletePrompt?.title.contains("Borrar") == true)
-        await history.model.confirmDelete()
+        try await history.model.confirmDelete(#require(history.model.deletePrompt))
         #expect(history.model.rows.count == initial - 1)
+        #expect(await history.saved?.history.count == initial - 1)
+    }
+
+    /// Al pulsar "Borrar", SwiftUI cierra el diálogo (su `isPresented` pasa a `false`, que lo
+    /// descarta) antes de ejecutar la acción del botón: el borrado no puede depender del aviso.
+    @Test("borrar desde el diálogo, que se cierra antes de la acción, borra la sesión")
+    func deleteAfterDialogDismissal() async throws {
+        let history = await HistoryHarness.make()
+        let initial = history.model.rows.count
+        let date = history.model.rows[0].date
+        history.model.requestDelete(date)
+        let prompt = try #require(history.model.deletePrompt)
+        history.model.cancelDelete()
+        await history.model.confirmDelete(prompt)
+        #expect(!history.model.rows.contains { $0.date == date })
         #expect(await history.saved?.history.count == initial - 1)
     }
 

@@ -87,7 +87,7 @@ struct WorkoutSwapTests {
         await today.start()
         await swap(today, at: 0, to: "sentadilla")
         await today.model.requestRemoval(at: 0)
-        await today.model.confirmRemoval()
+        try await today.model.confirmRemoval(#require(today.model.removalPrompt))
         #expect(today.model.activeCards.count == 2)
         #expect(today.model.activeCards[0].title == "Curl Bíceps")
         let routine = try #require(await today.saved?.routines[0].exerciseIDs)
@@ -205,10 +205,22 @@ struct ReciprocalSwapTests {
         let offer = try #require(today.model.reciprocalOffer)
         #expect(offer.title == "Intercambio recíproco")
         #expect(offer.message.contains("Full Body - Día 1"))
-        await today.model.acceptReciprocal()
+        await today.model.acceptReciprocal(offer)
         let pending = try #require(await today.saved?.pendingSwaps["DIA1"])
         #expect(pending.from == "curl_biceps")
         #expect(pending.to == "sentadilla")
+    }
+
+    /// SwiftUI cierra la alerta (y la descarta) antes de ejecutar la acción del botón.
+    @Test("aceptar desde la alerta, que se cierra antes de la acción, crea el pendiente")
+    func acceptAfterAlertDismissal() async throws {
+        let today = await TodayHarness.make()
+        await today.start("DIA2")
+        await swap(today, at: 0, to: "curl_biceps")
+        let offer = try #require(today.model.reciprocalOffer)
+        today.model.declineReciprocal()
+        await today.model.acceptReciprocal(offer)
+        #expect(await today.saved?.pendingSwaps["DIA1"] != nil)
     }
 
     @Test("2 — declinar el modal (No) no crea ningún pendiente")
@@ -232,11 +244,11 @@ struct ReciprocalSwapTests {
     }
 
     /// `createPendingSwapOnDia1`: DIA2 con curl en vez de sentadilla, aceptar, terminar y volver.
-    private func pendingOnDia1() async -> TodayHarness {
+    private func pendingOnDia1() async throws -> TodayHarness {
         let today = await TodayHarness.make()
         await today.start("DIA2")
         await swap(today, at: 0, to: "curl_biceps")
-        await today.model.acceptReciprocal()
+        try await today.model.acceptReciprocal(#require(today.model.reciprocalOffer))
         await today.finish()
         today.model.backFromCompleted()
         return today
@@ -244,23 +256,23 @@ struct ReciprocalSwapTests {
 
     @Test("4 — selector de días muestra aviso del intercambio pendiente")
     func note() async throws {
-        let today = await pendingOnDia1()
+        let today = try await pendingOnDia1()
         let note = try #require(today.model.routineRows.first { $0.id == "DIA1" }?.pendingNote)
         #expect(note.contains("Sentadilla"))
         #expect(note.contains("Curl Bíceps"))
     }
 
     @Test("5 — al iniciar el día destino, el ejercicio queda sustituido y el pendiente sigue vivo")
-    func applied() async {
-        let today = await pendingOnDia1()
+    func applied() async throws {
+        let today = try await pendingOnDia1()
         await today.start("DIA1")
         #expect(today.model.activeCards.map(\.title) == ["Press Banca", "Sentadilla", "Ejercicio Sin Historial"])
         #expect(await today.saved?.pendingSwaps["DIA1"] != nil)
     }
 
     @Test("7 — al terminar el entreno del día destino, el pendiente se borra")
-    func clearedOnFinish() async {
-        let today = await pendingOnDia1()
+    func clearedOnFinish() async throws {
+        let today = try await pendingOnDia1()
         await today.start("DIA1")
         #expect(await today.saved?.pendingSwaps["DIA1"] != nil)
         await today.finish()
@@ -274,7 +286,7 @@ struct ReciprocalSwapTests {
         await today.start("DIA2")
         await swap(today, at: 0, to: "curl_biceps")
         #expect(today.model.reciprocalOffer != nil)
-        await today.model.acceptReciprocal()
+        try await today.model.acceptReciprocal(#require(today.model.reciprocalOffer))
         let first = try #require(await today.saved?.pendingSwaps["DIA1"])
         #expect(first.from == "curl_biceps")
         #expect(first.to == "sentadilla")
@@ -343,13 +355,26 @@ struct RemoveExerciseTests {
     }
 
     @Test("confirmar elimina card del entreno y ejercicio de DB.routines")
-    func confirm() async {
+    func confirm() async throws {
         let today = await TodayHarness.make()
         await today.start()
         await today.model.requestRemoval(at: 0)
-        await today.model.confirmRemoval()
+        try await today.model.confirmRemoval(#require(today.model.removalPrompt))
         #expect(today.model.activeCards.count == 2)
         #expect(today.model.activeCards[0].title == "Curl Bíceps")
+        #expect(await today.saved?.routines[0].exerciseIDs.contains("press_banca") == false)
+    }
+
+    /// SwiftUI cierra el diálogo (y lo descarta) antes de ejecutar la acción del botón.
+    @Test("quitar desde el diálogo, que se cierra antes de la acción, quita el ejercicio")
+    func confirmAfterDialogDismissal() async throws {
+        let today = await TodayHarness.make()
+        await today.start()
+        await today.model.requestRemoval(at: 0)
+        let prompt = try #require(today.model.removalPrompt)
+        today.model.cancelRemoval()
+        await today.model.confirmRemoval(prompt)
+        #expect(today.model.activeCards.count == 2)
         #expect(await today.saved?.routines[0].exerciseIDs.contains("press_banca") == false)
     }
 

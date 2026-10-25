@@ -97,8 +97,9 @@ public final class HistoryModel {
         deletePrompt = DeletePrompt(date: date, title: HistoryText.deleteTitle, message: HistoryText.deleteMessage(date))
     }
 
-    public func confirmDelete() async {
-        guard let prompt = deletePrompt else { return }
+    /// Recibe el aviso que se confirma, no lo lee de `deletePrompt`: SwiftUI cierra el diálogo
+    /// (`cancelDelete`) antes de ejecutar la acción del botón.
+    public func confirmDelete(_ prompt: DeletePrompt) async {
         deletePrompt = nil
         var data = data
         data.history.removeAll { $0.date == prompt.date }

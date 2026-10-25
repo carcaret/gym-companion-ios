@@ -452,8 +452,9 @@ public final class TodayModel {
         )
     }
 
-    public func acceptReciprocal() async {
-        guard let offer = reciprocalOffer else { return }
+    /// Recibe la oferta que se acepta, no la lee de `reciprocalOffer`: SwiftUI cierra la alerta
+    /// (`declineReciprocal`) antes de ejecutar la acción del botón.
+    public func acceptReciprocal(_ offer: ReciprocalOffer) async {
         reciprocalOffer = nil
         var data = data
         data.pendingSwaps[offer.routine] = offer.swap
@@ -481,8 +482,10 @@ public final class TodayModel {
                                       message: TodayText.removeMessage(exercise: data.catalog.name(of: log.exerciseID), routine: name(of: session.routineID)))
     }
 
-    public func confirmRemoval() async {
-        guard let prompt = removalPrompt, let session = activeSession else { return }
+    /// Recibe el aviso que se confirma, no lo lee de `removalPrompt`: SwiftUI cierra el diálogo
+    /// (`cancelRemoval`) antes de ejecutar la acción del botón.
+    public func confirmRemoval(_ prompt: RemovalPrompt) async {
+        guard let session = activeSession else { return }
         removalPrompt = nil
         var data = data
         if let routine = data.routines.firstIndex(where: { $0.id == session.routineID }) {

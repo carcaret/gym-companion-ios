@@ -196,12 +196,12 @@ struct WorkoutOpenStateTests {
     }
 
     @Test("quitar la card abierta: no queda ninguna abierta (la siguiente no se abre sola)")
-    func remove() async {
+    func remove() async throws {
         let today = await TodayHarness.make()
         await today.start()
         today.model.toggleCard("curl_biceps")
         await today.model.requestRemoval(at: 1)
-        await today.model.confirmRemoval()
+        try await today.model.confirmRemoval(#require(today.model.removalPrompt))
         let cards = today.model.activeCards
         #expect(cards.count == 2)
         #expect(cards[1].title == "Ejercicio Sin Historial")
