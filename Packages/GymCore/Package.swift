@@ -28,7 +28,7 @@ let package = Package(
         .testTarget(name: "DomainTests", dependencies: ["Domain"]),
         .testTarget(name: "PresentationTests", dependencies: ["Presentation", "Domain"]),
         .testTarget(name: "ApplicationTests", dependencies: ["Application", "Domain", "GymCoreTesting"]),
-        .testTarget(name: "ViewModelsTests", dependencies: ["ViewModels", "Application", "Domain", "GymCoreTesting"]),
+        .testTarget(name: "ViewModelsTests", dependencies: ["ViewModels", "Presentation", "Application", "Domain", "GymCoreTesting"]),
         .testTarget(name: "AdaptersTests", dependencies: ["Adapters", "Application", "Domain", "GymCoreTesting"],
                     resources: [.copy("Fixtures")]),
     ]

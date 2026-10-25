@@ -5,7 +5,8 @@ extension String {
         String(lowercased().map { Self.baseLetters[$0] ?? $0 })
     }
 
-    func trimmingWhitespace() -> String {
+    /// Sin espacios ni saltos de línea al principio ni al final (el `trim()` de JS).
+    public func trimmingWhitespace() -> String {
         String(drop(while: \.isWhitespace).reversed().drop(while: \.isWhitespace).reversed())
     }
 
