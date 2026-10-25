@@ -8,6 +8,10 @@ si cambian los tests.
 La app tiene además sus propios tests (contratos de los puertos, sincronización, adaptadores,
 ViewModels): 944 `@Test` en el paquete y las capturas en `UITests/`, frente a los 829 de la PWA.
 
+La épica (#1) y #15 hablan de 851 (508 unitarios y 343 e2e), pero la PWA tiene 829: los 508
+unitarios y 321 e2e en 37 ficheros (contados en el commit `76243dc` de la PWA; ningún e2e se genera
+en bucle, así que Playwright lista los mismos 321).
+
 | Test de la PWA | Test nativo | Notas |
 |---|---|---|
 | `dates.test.js` › todayStr › devuelve formato YYYY-MM-DD | `SystemClockTests.swift` |  |
