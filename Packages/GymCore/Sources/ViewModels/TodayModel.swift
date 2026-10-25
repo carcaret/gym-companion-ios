@@ -24,58 +24,11 @@ public final class TodayModel {
         public let pendingNote: String?
     }
 
-    public enum SeriesState: Hashable, Sendable {
-        /// Llegó al objetivo.
-        case done
-        /// Rellenada por debajo del objetivo.
-        case filled
-        case empty
-    }
-
-    public struct SeriesCell: Hashable, Sendable {
-        public let label: String
-        public let text: String
-        public let value: Int?
-        public let state: SeriesState
-        public let isFocused: Bool
-        public let hasError: Bool
-    }
-
-    public enum ChipRelation: Hashable, Sendable { case below, atTarget, above }
-
-    public struct Chip: Hashable, Sendable {
-        public let value: Int
-        public let isCurrent: Bool
-        public let relation: ChipRelation
-    }
-
-    /// Una tarjeta de ejercicio (en la vista previa, solo lectura; en el entreno, editable).
-    public struct Card: Hashable, Sendable, Identifiable {
-        public var id: ExerciseID { exerciseID }
-        public let exerciseID: ExerciseID
-        public let title: String
-        public let subtitle: String
-        public let isOpen: Bool
-        /// En la vista previa todo es de solo lectura: sin −/+, sin campos y sin botones abajo.
-        public let isEditable: Bool
-        public let weight: Double
-        public let series: Int
-        public let targetReps: Int
-        public let cells: [SeriesCell]
-        /// Los chips de la serie enfocada (solo en el entreno).
-        public let chips: [Chip]
-        public let strip: HistoryStripContent?
-        public let isVolumeRecord: Bool
-        public let isE1RMRecord: Bool
-        public let isSkipped: Bool
-        public let isOneOff: Bool
-        public let skipLabel: String
-        public let removeLabel: String
-        /// Errores de la última vez que se intentó terminar.
-        public let errors: [LogValidationError]
-
-        public var hasRecord: Bool { isVolumeRecord || isE1RMRecord }
-    }
+    public typealias SeriesState = ExerciseCard.SeriesState
+    public typealias SeriesCell = ExerciseCard.SeriesCell
+    public typealias ChipRelation = ExerciseCard.ChipRelation
+    public typealias Chip = ExerciseCard.Chip
+    public typealias Card = ExerciseCard
 
     /// Una línea del entreno terminado (el formato del historial).
     public struct SummaryRow: Hashable, Sendable {
@@ -555,30 +508,10 @@ public final class TodayModel {
     }
 
     private func card(for log: ExerciseLog, index: Int, isOpen: Bool, editable: Bool, anchor: LocalDate) -> Card {
-        let errors = editable ? validationErrors[index] ?? [] : []
-        let focused = editable && focusedSeries?.log == index ? focusedSeries?.series : nil
-        let cells = (0..<max(0, log.series)).map { series in
-            let value = series < log.actualReps.count ? log.actualReps[series] : nil
-            let state: SeriesState = value.map { $0 >= log.targetReps ? .done : .filled } ?? .empty
-            return SeriesCell(label: TodayText.seriesLabel(series), text: value.map(String.init) ?? TodayText.emptyRep, value: value, state: state,
-                              isFocused: focused == series, hasError: errors.contains { $0.repIndex == series })
-        }
-        var chips: [Chip] = []
-        if let focused, focused < log.series {
-            let current = (focused < log.actualReps.count ? log.actualReps[focused] : nil) ?? log.targetReps
-            chips = RepChips.values(around: current).map { value in
-                Chip(value: value, isCurrent: value == current,
-                     relation: value < log.targetReps ? .below : value == log.targetReps ? .atTarget : .above)
-            }
-        }
-        let records = editable ? log.records(against: data.history.filter { $0.date != anchor }) : nil
-        return Card(
-            exerciseID: log.exerciseID, title: data.catalog.name(of: log.exerciseID), subtitle: LogText.summary(log), isOpen: isOpen, isEditable: editable,
-            weight: log.weight, series: log.series, targetReps: log.targetReps, cells: cells, chips: chips,
-            strip: HistoryStrip.make(history: data.history, exercise: log.exerciseID, current: log, anchor: anchor),
-            isVolumeRecord: records?.isVolumeRecord ?? false, isE1RMRecord: records?.isE1RMRecord ?? false,
-            isSkipped: log.skipped, isOneOff: log.oneOff, skipLabel: TodayText.skipLabel(skipped: log.skipped),
-            removeLabel: TodayText.removeLabel(oneOff: log.oneOff), errors: errors
+        ExerciseCard(
+            log: log, data: data, isOpen: isOpen, isEditable: editable, anchor: anchor,
+            focusedSeries: editable && focusedSeries?.log == index ? focusedSeries?.series : nil,
+            errors: editable ? validationErrors[index] ?? [] : [], showsRecords: editable
         )
     }
 }

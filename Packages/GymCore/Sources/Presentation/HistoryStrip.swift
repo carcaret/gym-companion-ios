@@ -114,13 +114,19 @@ public enum HistoryStrip {
         }
     }
 
-    /// Detalle de una barra en dos líneas: "e1RM 80 kg" y "60 kg · 10-10-8". (`buildBarTooltip`.)
+    /// Detalle de una barra en dos líneas, igual que la PWA (`buildBarTooltip`): "e1RM 84kg" y
+    /// "60kg · 12-11-10", con los números como los escribe JavaScript.
     public static func tooltip(_ log: ExerciseLog) -> String {
         let e1rm = log.estimatedOneRepMax
-        let first = e1rm > 0 ? "e1RM \(LogText.kilograms((e1rm * 10 + 0.5).rounded(.down) / 10)) kg" : ""
+        let first = e1rm > 0 ? "e1RM \(jsNumber((e1rm * 10 + 0.5).rounded(.down) / 10))kg" : ""
         let reps = log.actualReps.contains { $0 != nil } ? log.actualReps.map { $0.map(String.init) ?? "-" }.joined(separator: "-") : ""
-        let second = [log.weight > 0 ? "\(LogText.kilograms(log.weight)) kg" : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
+        let second = [log.weight > 0 ? "\(jsNumber(log.weight))kg" : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
         return [first, second].filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    /// Un número como lo escribe JavaScript: "60", "73.3".
+    static func jsNumber(_ value: Double) -> String {
+        value == value.rounded() && abs(value) < 1e15 ? String(Int64(value)) : "\(value)"
     }
 }
 

@@ -44,3 +44,10 @@ e2e/one-off-exercise.spec.js
 e2e/records.spec.js
 e2e/validation-workout.spec.js
 e2e/workout-completed-view.spec.js
+e2e/history-full.spec.js
+e2e/history-incomplete.spec.js
+e2e/history-strip.spec.js
+e2e/validation-history.spec.js
+e2e/bar-colors.spec.js
+e2e/bar-tooltip-position.spec.js
+e2e/view-nav-buttons.spec.js
