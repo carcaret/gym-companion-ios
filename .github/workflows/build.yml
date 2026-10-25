@@ -22,7 +22,7 @@ jobs:
     # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
     # Linux, con la misma imagen que en el NAS.
     runs-on: ubuntu-latest
-    container: swift:6.4.1
+    container: swift:6.3.3
     steps:
       - uses: actions/checkout@v4
       - name: Tests del paquete (Linux)

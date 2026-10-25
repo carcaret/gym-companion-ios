@@ -34,10 +34,10 @@ project.yml                  XcodeGen (el .xcodeproj no se versiona)
 En el NAS (segundos; el primer `swift test` descarga la imagen):
 
 ```sh
-docker run --rm --user 1000:10 -e HOME=/tmp -v ~/git/gym-companion-ios:/w -w /w/Packages/GymCore swift:6.4.1 swift test
+docker run --rm --user 1000:10 -e HOME=/tmp -v ~/git/gym-companion-ios:/w -w /w/Packages/GymCore swift:6.3.3 swift test
 ```
 
-Con `--user` el `.build` queda del usuario y no de root. La versión de la imagen es la misma que la del job `core-linux` de `build.yml`: si se cambia, en los dos sitios.
+Con `--user` el `.build` queda del usuario y no de root. La imagen lleva la misma versión de Swift que el Xcode del runner `macos-26` (Xcode 26.6 → Swift 6.3.3, sale en el paso "Generar proyecto" del CI) y la misma que el job `core-linux` de `build.yml`: si Xcode cambia de versión, cambiarla en los dos sitios.
 
 En CI (`.github/workflows/build.yml`), en cada PR y en `master`: `core-linux` (paquete en Linux) y `app` (paquete en macOS y tests de la app en el simulador). La release solo se publica en `master` y si los dos pasan.
 
