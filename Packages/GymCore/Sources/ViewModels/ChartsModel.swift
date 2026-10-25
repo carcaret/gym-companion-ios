@@ -1,0 +1,111 @@
+import Application
+import Domain
+import Observation
+import Presentation
+
+/// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas, un buscador de
+/// ejercicios (los de alguna rutina primero) y, con un ejercicio elegido, sus gráficas de 1RM
+/// estimado y de peso. Sin ejercicio elegido no se pinta nada.
+@MainActor
+@Observable
+public final class ChartsModel {
+    public struct Option: Hashable, Sendable, Identifiable {
+        public var id: ExerciseID { exerciseID }
+        public let exerciseID: ExerciseID
+        public let name: String
+        public let isSelected: Bool
+    }
+
+    /// Una gráfica: su título del eje y la serie (ya sin el nombre del ejercicio en la leyenda).
+    public struct Chart: Hashable, Sendable {
+        public let label: String
+        public let axisTitle: String
+        public let points: [ChartPoint]
+    }
+
+    public private(set) var from: LocalDate
+    public private(set) var to: LocalDate
+    public var query = ""
+    public private(set) var selected: ExerciseID?
+
+    private let app: AppModel
+    private let navigation: NavigationModel
+    private let clock: any Clock
+
+    public init(app: AppModel, navigation: NavigationModel, clock: any Clock) {
+        self.app = app
+        self.navigation = navigation
+        self.clock = clock
+        let today = clock.today()
+        to = today
+        from = Self.monthsBefore(today, 6)
+    }
+
+    private var data: TrainingData { app.data ?? TrainingData() }
+
+    /// Al entrar: si se viene de otra pantalla con un ejercicio, queda elegido.
+    public func appear() {
+        guard let exercise = navigation.takeChartsExercise() else { return }
+        if data.exercisesTrained(from: from, to: to).contains(exercise) {
+            select(exercise)
+        }
+    }
+
+    public var canGoBack: Bool { navigation.canGoBack }
+
+    public func goBack() {
+        navigation.goBack()
+    }
+
+    /// Cambiar el rango olvida el ejercicio elegido si no se hizo en él.
+    public func setRange(from newFrom: LocalDate, to newTo: LocalDate) {
+        from = newFrom
+        to = newTo
+        if let selected, !data.exercisesTrained(from: from, to: to).contains(selected) {
+            clear()
+        }
+    }
+
+    /// Los ejercicios hechos en el rango que casan con la búsqueda: los de alguna rutina y el resto.
+    public var options: (inRoutine: [Option], others: [Option]) {
+        let needle = query.trimmingWhitespace().searchFolded
+        let trained = data.exercisesTrained(from: from, to: to).filter { needle.isEmpty || data.catalog.name(of: $0).searchFolded.contains(needle) }
+        let split = data.catalog.splitByRoutine(trained, routineExerciseIDs: data.routines.flatMap(\.exerciseIDs))
+        func option(_ id: ExerciseID) -> Option { Option(exerciseID: id, name: data.catalog.name(of: id), isSelected: id == selected) }
+        return (split.inRoutine.map(option), split.others.map(option))
+    }
+
+    /// "Sin resultados" en vez de la lista.
+    public var hasNoResults: Bool { options.inRoutine.isEmpty && options.others.isEmpty }
+
+    /// La "x" del buscador, solo con texto.
+    public var showsClear: Bool { !query.isEmpty }
+
+    public func select(_ exercise: ExerciseID) {
+        selected = exercise
+        query = data.catalog.name(of: exercise)
+    }
+
+    public func clear() {
+        selected = nil
+        query = ""
+    }
+
+    /// 1RM estimado y peso, o nada sin ejercicio elegido.
+    public var charts: [Chart] {
+        guard let selected else { return [] }
+        let series = data.history.chartSeries(for: [selected], from: from, to: to)
+        return [
+            Chart(label: ChartsText.e1rmLabel, axisTitle: ChartsText.e1rmAxis, points: series.e1RM.first?.points ?? []),
+            Chart(label: ChartsText.weightLabel, axisTitle: ChartsText.weightAxis, points: series.weight.first?.points ?? []),
+        ]
+    }
+
+    /// `setMonth(getMonth() - n)` de JavaScript: el mismo día n meses antes; si ese mes no tiene
+    /// ese día, se pasa al siguiente.
+    static func monthsBefore(_ date: LocalDate, _ months: Int) -> LocalDate {
+        let total = date.year * 12 + (date.month - 1) - months
+        let first = LocalDate(year: total / 12, month: total % 12 + 1, day: 1)!
+        return first.adding(days: date.day - 1)
+    }
+}

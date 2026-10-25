@@ -45,3 +45,4 @@ e2e/bar-tooltip-position.spec.js	Posición del tooltip de barras (no se recorta 
 e2e/bar-tooltip-position.spec.js	Posición del tooltip de barras (no se recorta en los bordes)	barra CENTRAL queda centrada (sin desplazar, --tt-shift ~0)	Ídem.
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	history detail: botón Volver está en view-nav-actions	Contenedor del DOM de la PWA.
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	history detail: botón Volver ocupa mitad del ancho del contenedor	Anchura CSS.
+e2e/charts-full.spec.js	Graficas completo	tooltip usa colores del dark theme	Colores del tema oscuro de Chart.js. En la app el detalle de Swift Charts usa los colores del sistema, claros u oscuros según el iPhone.

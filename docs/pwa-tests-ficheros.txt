@@ -51,3 +51,4 @@ e2e/validation-history.spec.js
 e2e/bar-colors.spec.js
 e2e/bar-tooltip-position.spec.js
 e2e/view-nav-buttons.spec.js
+e2e/charts-full.spec.js
