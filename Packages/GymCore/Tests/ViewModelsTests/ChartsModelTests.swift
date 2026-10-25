@@ -78,24 +78,32 @@ struct ChartsFullTests {
         #expect(all(model).allSatisfy { $0.name.searchFolded.contains("curl") })
     }
 
+    // En la PWA el campo hacía de desplegable y se comprobaba su "x". En la app el buscador
+    // está en la pantalla de elegir (`.searchable`, que pone su propia "x") y solo filtra:
+    // empieza vacío y elegir lo vacía (cambiado con aprobación del usuario, 2026-10-25).
     @Test("botón clear está oculto sin texto y visible con texto")
-    func clearVisibility() async {
-        let model = await charts().0
-        #expect(!model.showsClear)
+    func clearVisibility() async throws {
+        let model = await in2024()
+        #expect(model.query.isEmpty)
         model.query = "curl"
-        #expect(model.showsClear)
+        model.select(try #require(all(model).first).exerciseID)
+        #expect(model.query.isEmpty)
+        #expect(model.selectedName?.searchFolded.contains("curl") == true)
     }
 
+    // En la PWA, tras elegir, el nombre quedaba en el campo. En la app se ve en la fila del
+    // ejercicio elegido (`selectedName`) (cambiado con aprobación del usuario, 2026-10-25).
     @Test("botón clear limpia selección y abre dropdown")
     func clear() async throws {
         let model = await in2024()
-        model.select(try #require(all(model).first).exerciseID)
-        #expect(!model.query.isEmpty)
-        #expect(model.showsClear)
+        #expect(model.selectedName == nil)
+        let first = try #require(all(model).first)
+        model.select(first.exerciseID)
+        #expect(model.selectedName == first.name)
         model.clear()
         #expect(model.query.isEmpty)
-        #expect(!model.showsClear)
         #expect(model.selected == nil)
+        #expect(model.selectedName == nil)
         #expect(!all(model).isEmpty)
         #expect(model.charts.isEmpty)
     }
@@ -151,7 +159,7 @@ struct ChartsModelTests {
         navigation.openCharts(for: "sentadilla", from: .progress)
         model.appear()
         #expect(model.selected == "sentadilla")
-        #expect(model.query == "Sentadilla")
+        #expect(model.selectedName == "Sentadilla")
         #expect(model.canGoBack)
         model.goBack()
         #expect(navigation.selectedTab == .progress)

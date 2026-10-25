@@ -17,18 +17,23 @@ final class KeyboardTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 5))
     }
 
-    /// También en una pantalla que es una lista (Gráficas): tocar fuera del buscador lo cierra.
+    /// También en una pantalla que es una lista (elegir ejercicio en Gráficas): tocar fuera del
+    /// buscador lo cierra.
     @MainActor
     func testTocarFueraEnUnaLista() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
         app.tabBars.buttons["Gráficas"].tap()
-        let search = app.textFields["chart-search"]
+        let exercise = app.buttons["chart-exercise"]
+        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        exercise.tap()
+        let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 10))
         search.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "No se abrió el teclado")
-        app.staticTexts["Desde"].tap()
+        // La cabecera de la sección, la escriba iOS en mayúsculas o no.
+        app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "En rutinas")).firstMatch.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
     }
 

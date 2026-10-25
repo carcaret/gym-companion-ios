@@ -60,10 +60,14 @@ final class ScreenshotTests: XCTestCase {
         capture(app, "21-historial-detalle")
 
         app.tabBars.buttons["Gráficas"].tap()
-        let search = app.textFields["chart-search"]
-        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        let exercise = app.buttons["chart-exercise"]
+        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        exercise.tap()
+        XCTAssertTrue(app.buttons["Press Banca"].firstMatch.waitForExistence(timeout: 10))
+        capture(app, "30-graficas-elegir")
         app.buttons["Press Banca"].firstMatch.tap()
-        capture(app, "30-graficas")
+        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        capture(app, "31-graficas")
 
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.buttons["stats-exercises"].waitForExistence(timeout: 10))
