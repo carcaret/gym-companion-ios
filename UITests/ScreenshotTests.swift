@@ -55,7 +55,7 @@ final class ScreenshotTests: XCTestCase {
 
         first.tap()
         XCTAssertTrue(app.buttons["Volver"].waitForExistence(timeout: 10))
-        app.otherElements["card-press_banca"].buttons.firstMatch.tap()
+        app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "21-historial-detalle")
     }
 
