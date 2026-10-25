@@ -28,14 +28,14 @@ struct ProgressScreen: View {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(StatsText.exercisesTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                            Text(StatsText.exercisesTitle).font(.scaled(15, weight: .semibold)).foregroundStyle(Theme.text)
                             Spacer()
                             Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
                         }
-                        Text(model.exercisesSubtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                        Text(model.exercisesSubtitle).font(.scaled(12)).foregroundStyle(Theme.textSecondary)
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.scaled(13, weight: .semibold))
                         .rotationEffect(.degrees(model.isExpanded ? 180 : 0))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -55,7 +55,7 @@ struct ProgressScreen: View {
     private var groups: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(StatsText.groupsTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                Text(StatsText.groupsTitle).font(.scaled(15, weight: .semibold)).foregroundStyle(Theme.text)
                 Spacer()
                 Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
             }
@@ -68,7 +68,7 @@ struct ProgressScreen: View {
                 legend(StatsText.indirect, Theme.accent.opacity(0.32))
                 legend(StatsText.referenceBand(model.referenceBand), Color.white.opacity(0.07), border: Color.white.opacity(0.14))
             }
-            .font(.system(size: 11))
+            .font(.scaled(11))
             .foregroundStyle(Theme.textMuted)
             .padding(.top, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,16 +100,16 @@ private struct ExerciseProgressRow: View {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(row.name).font(.system(size: 14, weight: .semibold)).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                            Text(row.name).font(.scaled(14, weight: .semibold)).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                             Spacer()
                             if let weight = row.weight {
-                                Text(weight).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.accentLight)
+                                Text(weight).font(.scaled(13, weight: .semibold)).foregroundStyle(Theme.accentLight)
                             }
                         }
-                        Text(row.phrase).font(.system(size: 12)).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
+                        Text(row.phrase).font(.scaled(12)).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.scaled(12, weight: .semibold))
                         .rotationEffect(.degrees(row.isOpen ? 180 : 0))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -121,7 +121,7 @@ private struct ExerciseProgressRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(StatsText.recentSessions).sectionLabelStyle()
                     Text(row.recentReps.joined(separator: "  ·  "))
-                        .font(.system(size: 13).monospacedDigit())
+                        .font(.scaled(13).monospacedDigit())
                         .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                     if row.canOpenCharts {
                         Button(StatsText.openCharts, action: openCharts).buttonStyle(.pill(.subtle)).padding(.top, 6)
@@ -157,7 +157,7 @@ private struct GroupBarRow: View {
         VStack(alignment: .leading, spacing: 4) {
             Button(action: toggle) {
                 HStack(spacing: 10) {
-                    Text(group.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).frame(width: 62, alignment: .leading)
+                    Text(group.name).font(.scaled(12)).foregroundStyle(Theme.textSecondary).frame(width: 62, alignment: .leading)
                     GeometryReader { proxy in
                         let width = proxy.size.width
                         let x = { (value: Double) in width * CGFloat(min(value / scale, 1)) }
@@ -178,7 +178,7 @@ private struct GroupBarRow: View {
                         .clipShape(.rect(cornerRadius: 3))
                     }
                     .frame(height: 14)
-                    Text("\(group.total)").font(.system(size: 13, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.text)
+                    Text("\(group.total)").font(.scaled(13, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.text)
                         .frame(width: 26, alignment: .trailing)
                 }
                 .contentShape(.rect)
@@ -209,7 +209,7 @@ private struct GroupBarRow: View {
             Spacer()
             Text(value).monospacedDigit()
         }
-        .font(.system(size: 12))
+        .font(.scaled(12))
         .foregroundStyle(Theme.textSecondary)
     }
 }

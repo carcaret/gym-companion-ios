@@ -12,13 +12,13 @@ struct SettingsScreen: View {
         ScrollView {
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(SettingsText.githubSection).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text)
+                    Text(SettingsText.githubSection).font(.scaled(16, weight: .bold)).foregroundStyle(Theme.text)
                     HStack {
                         Text(SettingsText.status).foregroundStyle(Theme.textSecondary)
                         Spacer()
                         Text(statusText).foregroundStyle(Theme.text)
                     }
-                    .font(.system(size: 14))
+                    .font(.scaled(14))
                     field(SettingsText.repository) {
                         TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
                             .accessibilityIdentifier("settings-repository")
@@ -53,7 +53,7 @@ struct SettingsScreen: View {
                 }
                 .card()
                 Text(model.versionLabel)
-                    .font(.system(size: 11))
+                    .font(.scaled(11))
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.top, 4)
                     .accessibilityIdentifier("settings-version")
@@ -69,12 +69,12 @@ struct SettingsScreen: View {
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.scaled(12, weight: .semibold))
                 .textCase(.uppercase)
                 .tracking(0.5)
                 .foregroundStyle(Theme.textSecondary)
             content()
-                .font(.system(size: 15))
+                .font(.scaled(15))
                 .foregroundStyle(Theme.text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()

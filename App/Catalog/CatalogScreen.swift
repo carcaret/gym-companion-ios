@@ -15,9 +15,9 @@ struct CatalogCard: View {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(CatalogText.cardTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                        Text(CatalogText.cardTitle).font(.scaled(15, weight: .semibold)).foregroundStyle(Theme.text)
                         Spacer()
-                        Text(CatalogText.total(model.total)).font(.system(size: 11)).foregroundStyle(Theme.textMuted)
+                        Text(CatalogText.total(model.total)).font(.scaled(11)).foregroundStyle(Theme.textMuted)
                     }
                     HStack(spacing: 4) {
                         Text(CatalogText.cardSubtitle).foregroundStyle(Theme.textSecondary)
@@ -25,9 +25,9 @@ struct CatalogCard: View {
                             Text(CatalogText.withoutGroup(model.withoutGroup)).fontWeight(.semibold).foregroundStyle(Theme.orange)
                         }
                     }
-                    .font(.system(size: 12))
+                    .font(.scaled(12))
                 }
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textMuted)
+                Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Theme.textMuted)
             }
             .card()
             .contentShape(.rect)
@@ -46,7 +46,7 @@ struct CatalogScreen: View {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if model.sections.isEmpty {
                     Text(CatalogText.noMatches)
-                        .font(.system(size: 14))
+                        .font(.scaled(14))
                         .foregroundStyle(Theme.textMuted)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
@@ -56,7 +56,7 @@ struct CatalogScreen: View {
                         Text(section.title).foregroundStyle(Theme.textSecondary)
                         Text("\(section.rows.count)").fontWeight(.medium).foregroundStyle(Theme.textMuted)
                     }
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.scaled(12, weight: .semibold))
                     .textCase(.uppercase)
                     .tracking(0.5)
                     .padding(.horizontal, 2)
@@ -64,7 +64,7 @@ struct CatalogScreen: View {
                     ForEach(section.rows) { row in
                         Button { model.edit(row.exerciseID) } label: {
                             HStack(spacing: 10) {
-                                Text(row.name).font(.system(size: 15)).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
+                                Text(row.name).font(.scaled(15)).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
                                 Spacer()
                                 ForEach(row.secondaries, id: \.self) { secondary in
                                     CatalogChip(text: secondary)
@@ -101,7 +101,7 @@ private struct CatalogChip: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold))
+            .font(.scaled(11, weight: .semibold))
             .foregroundStyle(Theme.accentLight)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)

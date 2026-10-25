@@ -52,7 +52,7 @@ struct ChartsScreen: View {
                     Section {
                         ProgressChart(chart: chart)
                     } header: {
-                        Text(chart.axisTitle).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text).textCase(nil)
+                        Text(chart.axisTitle).font(.scaled(16, weight: .bold)).foregroundStyle(Theme.text).textCase(nil)
                     }
                     .listRowBackground(Theme.surface)
                 }
@@ -111,7 +111,7 @@ private struct ProgressChart: View {
                     .foregroundStyle(Theme.textMuted)
                     .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
                         Text(ChartsText.pointLabel(chart.label, value: selected.value, carriedForward: selected.isCarriedForward))
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.scaled(11, weight: .medium))
                             .foregroundStyle(Theme.text)
                             .padding(6)
                             .background(Theme.cardSolid, in: .rect(cornerRadius: 4))

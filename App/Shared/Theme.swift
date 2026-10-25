@@ -53,6 +53,14 @@ enum Theme {
     }
 }
 
+extension Font {
+    /// Un tamaño de la PWA que crece o encoge con el tamaño de texto de iOS (Ajustes > Pantalla >
+    /// Tamaño del texto). PRUEBA: solo para ver cómo quedaría.
+    static func scaled(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: UIFontMetrics.default.scaledValue(for: size), weight: weight)
+    }
+}
+
 extension Color {
     init(hex: UInt32) {
         self.init(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
@@ -89,7 +97,7 @@ extension View {
 
     /// Etiqueta de sección de la PWA: mayúsculas pequeñas, en gris.
     func sectionLabelStyle() -> some View {
-        font(.system(size: 10, weight: .medium))
+        font(.scaled(10, weight: .medium))
             .textCase(.uppercase)
             .tracking(0.4)
             .foregroundStyle(Theme.textSecondary)
@@ -104,7 +112,7 @@ struct PillButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .semibold))
+            .font(.scaled(15, weight: .semibold))
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .foregroundStyle(foreground)

@@ -12,8 +12,8 @@ struct ActiveWorkoutView: View {
         List {
             Section {
                 HStack(spacing: 10) {
-                    Image(systemName: "circle.fill").font(.system(size: 10)).foregroundStyle(Theme.green).symbolEffect(.pulse)
-                    Text(model.activeStatus).font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.text)
+                    Image(systemName: "circle.fill").font(.scaled(10)).foregroundStyle(Theme.green).symbolEffect(.pulse)
+                    Text(model.activeStatus).font(.scaled(14, weight: .medium)).foregroundStyle(Theme.text)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)

@@ -62,7 +62,7 @@ struct HistoryScreen: View {
             LazyVStack(spacing: 12) {
                 if model.isIncomplete {
                     Label(HistoryText.incomplete, systemImage: "pause.fill")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.scaled(11, weight: .bold))
                         .foregroundStyle(Theme.accentLight)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
@@ -108,20 +108,20 @@ private struct HistoryRowView: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(spacing: 2) {
-                Text(row.day).font(.system(size: 20, weight: .bold)).monospacedDigit().foregroundStyle(Theme.text)
-                Text(row.month).font(.system(size: 9.5, weight: .semibold)).tracking(0.4).foregroundStyle(Theme.textMuted)
+                Text(row.day).font(.scaled(20, weight: .bold)).monospacedDigit().foregroundStyle(Theme.text)
+                Text(row.month).font(.scaled(9.5, weight: .semibold)).tracking(0.4).foregroundStyle(Theme.textMuted)
             }
             .frame(minWidth: 40)
             Rectangle().fill(Theme.border).frame(width: 1, height: 32)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     RoutineBadge(text: row.routine, color: Theme.color(row.tint) ?? Theme.textSecondary)
-                    Text(row.relative).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    Text(row.relative).font(.scaled(11)).foregroundStyle(Theme.textSecondary)
                     if row.isIncomplete {
-                        Image(systemName: "pause.fill").font(.system(size: 10)).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
+                        Image(systemName: "pause.fill").font(.scaled(10)).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
                     }
                 }
-                Text(row.summary).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                Text(row.summary).font(.scaled(12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
             Spacer(minLength: 0)
         }
@@ -139,7 +139,7 @@ struct RoutineBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9.5, weight: .bold))
+            .font(.scaled(9.5, weight: .bold))
             .textCase(.uppercase)
             .tracking(0.4)
             .lineLimit(1)

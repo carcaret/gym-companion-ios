@@ -36,18 +36,18 @@ struct TodayScreen: View {
         ScrollView {
             VStack(spacing: 12) {
                 Text(TodayText.selectorPrompt)
-                    .font(.system(size: 16))
+                    .font(.scaled(16))
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.bottom, 8)
                 ForEach(model.routineRows, id: \.id) { row in
                     Button { model.select(row.id) } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.title)
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(.scaled(15, weight: .semibold))
                                 .foregroundStyle(Theme.color(row.tint) ?? Theme.text)
-                            Text(row.subtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                            Text(row.subtitle).font(.scaled(12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
                             if let note = row.pendingNote {
-                                Text(note).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.accent).padding(.top, 4)
+                                Text(note).font(.scaled(12, weight: .medium)).foregroundStyle(Theme.accent).padding(.top, 4)
                             }
                         }
                         .card(padding: 20, stripe: Theme.color(row.tint))
@@ -84,7 +84,7 @@ struct TodayScreen: View {
         ScrollView {
             VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(14, weight: .medium))
                     .foregroundStyle(Theme.text)
                     .symbolRenderingMode(.multicolor)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -139,8 +139,8 @@ struct SummaryRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
-            Text(subtitle).font(.system(size: 12)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
+            Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
+            Text(subtitle).font(.scaled(12)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
         }
         .card(background: isSkipped ? Theme.skipTint : Theme.surface)
     }

@@ -14,7 +14,7 @@ struct HistoryStripView: View {
                 Spacer()
                 if let delta = strip.deltaText {
                     Text(delta)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.scaled(11, weight: .medium))
                         .foregroundStyle(strip.delta?.up == true ? Theme.greenSoft : Theme.redSoft)
                 }
             }
@@ -26,7 +26,7 @@ struct HistoryStripView: View {
             .frame(height: 44)
             if let selected, case .session(_, _, _, let tooltip) = strip.bars[selected].kind, !tooltip.isEmpty {
                 Text(tooltip.replacingOccurrences(of: "\n", with: " · "))
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.scaled(11, weight: .medium))
                     .foregroundStyle(Theme.text)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -58,7 +58,7 @@ struct HistoryStripView: View {
                     }
                 }
             }
-            Text(bar.dateLabel).font(.system(size: 9)).foregroundStyle(Theme.textSecondary).frame(height: 12)
+            Text(bar.dateLabel).font(.scaled(9)).foregroundStyle(Theme.textSecondary).frame(height: 12)
         }
         .frame(maxWidth: .infinity)
     }
