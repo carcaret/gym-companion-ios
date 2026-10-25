@@ -34,12 +34,6 @@ private struct WindowHook: UIViewRepresentable {
             super.didMoveToWindow()
             if let window { Keyboard.dismissOnTapOutside(in: window) }
         }
-
-        // DIAGNÓSTICO TEMPORAL (KeyboardTests): lo que ha pasado con el reconocedor.
-        override var isAccessibilityElement: Bool { get { true } set {} }
-        override var accessibilityIdentifier: String? { get { "keyboard-debug" } set {} }
-        override var accessibilityValue: String? { get { Keyboard.trace.joined(separator: " | ") } set {} }
-        override var accessibilityFrame: CGRect { get { CGRect(x: 0, y: 0, width: 1, height: 1) } set {} }
     }
 }
 
@@ -47,8 +41,6 @@ private struct WindowHook: UIViewRepresentable {
 @MainActor
 enum Keyboard {
     private static let tapOutside = TapOutside()
-    /// DIAGNÓSTICO TEMPORAL.
-    static var trace: [String] = []
 
     static func dismiss() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -57,9 +49,7 @@ enum Keyboard {
     /// Pone en la ventana un reconocedor de toques que cierra el teclado. No se queda con el toque
     /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto.
     static func dismissOnTapOutside(in window: UIWindow) {
-        trace.append("ventana \(type(of: window))")
         guard !(window.gestureRecognizers ?? []).contains(where: { $0.delegate === tapOutside }) else { return }
-        trace.append("instalado")
         let recognizer = UITapGestureRecognizer(target: tapOutside, action: #selector(TapOutside.tap(_:)))
         recognizer.cancelsTouchesInView = false
         recognizer.delegate = tapOutside
@@ -68,22 +58,15 @@ enum Keyboard {
 
     private final class TapOutside: NSObject, UIGestureRecognizerDelegate {
         @objc func tap(_ recognizer: UITapGestureRecognizer) {
-            let closed = recognizer.view?.endEditing(true) ?? false
-            Keyboard.trace.append("toque estado=\(recognizer.state.rawValue) cerrado=\(closed)")
+            recognizer.view?.endEditing(true)
         }
 
         func gestureRecognizer(_ recognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
             var view = touch.view
-            var chain: [String] = []
             while let current = view {
-                chain.append(String(describing: type(of: current)))
-                if current is UITextField || current is UITextView {
-                    Keyboard.trace.append("recibe NO: \(chain.prefix(3).joined(separator: ">"))")
-                    return false
-                }
+                if current is UITextField || current is UITextView { return false }
                 view = current.superview
             }
-            Keyboard.trace.append("recibe SÍ: \(chain.prefix(3).joined(separator: ">"))")
             return true
         }
 
