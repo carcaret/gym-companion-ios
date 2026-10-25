@@ -13,3 +13,11 @@ charts.test.js
 routine-rename.test.js
 routine-reorder.test.js
 constants.test.js
+github.test.js
+json-parse-safety.test.js
+keepalive.test.js
+e2e/github-sync.spec.js
+e2e/sync-canonicos.spec.js
+e2e/sync-ui.spec.js
+e2e/workout-github-sync.spec.js
+e2e/persistence.spec.js

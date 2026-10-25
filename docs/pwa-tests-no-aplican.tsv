@@ -17,3 +17,11 @@ charts.test.js	buildChartDatasets	chartType bar → fill=false y type=bar en e1R
 routine-rename.test.js	consistencia ROUTINE_KEYS / DAY_LABELS	ROUTINE_KEYS coincide con claves de DAY_LABELS	Ids y nombres van juntos en cada `Routine`: no pueden desincronizarse.
 constants.test.js	constants	las claves de localStorage están definidas	No hay localStorage: dónde se guardan los datos y la configuración es del adaptador de persistencia (#6) y de Ajustes (#14).
 constants.test.js	constants	SESSION_KEY y SALT ya no existen (sistema de auth eliminado)	La app nunca tuvo ese sistema de acceso.
+json-parse-safety.test.js	safe JSON.parse pattern	undefined → devuelve null	En Swift no hay `undefined`; los datos que no llegan son el caso «null» / «string vacío».
+keepalive.test.js	keepalive fetch option	sin options → no tiene keepalive	`keepalive` era la forma de que el navegador terminara el PUT al cerrar la pestaña. En iOS: `flush()` al pasar a segundo plano, dentro de una tarea en segundo plano (DebounceTests › «al ir a segundo plano se sube lo que esperaba»).
+keepalive.test.js	keepalive fetch option	con keepalive: true → fetch incluye keepalive	Ídem: opción de `fetch` del navegador; la intención la cubre `flush()`.
+keepalive.test.js	keepalive fetch option	con keepalive: false → no incluye keepalive	Ídem.
+keepalive.test.js	keepalive fetch option	con options vacío → no tiene keepalive	Ídem.
+e2e/sync-ui.spec.js	Sync — UI y ajustes	PAT guardado en claro es legible directamente	A propósito no: el token va en el Llavero (`KeychainCredentialStore`), nunca en claro.
+e2e/sync-ui.spec.js	Sync — UI y ajustes	probar conexión NO sobrescribe la DB local	«Probar conexión» es de la pantalla Ajustes (#14).
+e2e/persistence.spec.js	Persistencia y datos	finalizar entreno → historial muestra entry con datos correctos	Es de las pantallas Hoy e Historial (#9, #10).

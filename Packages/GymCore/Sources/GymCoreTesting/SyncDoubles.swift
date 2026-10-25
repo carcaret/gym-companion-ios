@@ -94,3 +94,27 @@ public actor ManualSleeper {
         try Task.checkCancellation()
     }
 }
+
+/// `CredentialStore` en memoria.
+public actor InMemoryCredentialStore: CredentialStore {
+    private var stored: String?
+
+    public init(_ token: String? = nil) {
+        stored = token
+    }
+
+    public func token() async throws -> String? { stored }
+    public func setToken(_ token: String?) async throws { stored = token }
+}
+
+/// `GitHubSettingsStore` en memoria.
+public actor InMemoryGitHubSettingsStore: GitHubSettingsStore {
+    private var stored: GitHubSettings?
+
+    public init(_ settings: GitHubSettings? = nil) {
+        stored = settings
+    }
+
+    public func load() async -> GitHubSettings? { stored }
+    public func save(_ settings: GitHubSettings?) async { stored = settings }
+}

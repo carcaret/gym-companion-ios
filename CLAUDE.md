@@ -35,6 +35,8 @@ scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Te
 
 - Solo `Adapters` importa Foundation (y lo que compila en Linux); `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
 - Puertos (`Application`): `Clock`, `TrainingDataStore`. Cada adaptador de un puerto pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y los casos de uso se prueban con los dobles en memoria.
+- Sincronización (`Application/Sync`): puertos `RemoteTrainingData` (GitHub, `GitHubRemote`), `SyncMetadataStore` (pendiente de subir y `sha`), `CredentialStore` (token en el Llavero, `KeychainCredentialStore`, solo Apple) y `GitHubSettingsStore` (repo, rama y ruta en UserDefaults). `Synchronizer` aplica la política de la PWA (canónicos A–N de sus e2e, en `SynchronizerTests`) y `AppModel` la pinta (indicador, avisos, conflicto). Sin token y ajustes la sincronización está desactivada; el primer arranque baja igualmente el `db.json` público de la PWA.
+- La API "contents" de GitHub no devuelve ficheros de más de 1 MB, y `db.json` iba por 600 KB el 2026-10-25.
 - Datos en el iPhone: `Application Support/GymCompanion/training-data.json`, formato propio versionado (`StoredTrainingData`, `version`), escrito de forma atómica. Se conserva al reinstalar encima (lo que hace ios-signer). `db.json` solo se lee (`PWAFormat`) y, desde #7, se escribe para sincronizar.
 - Un adaptador que solo exista en Apple (SwiftData, HealthKit, WatchConnectivity...) va en su propio módulo, para que el resto del paquete siga compilando en Linux.
 - `App/CompositionRoot.swift` es el único sitio que crea adaptadores concretos.
@@ -45,6 +47,8 @@ scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Te
 - Textos de la interfaz en español en el código (`Text("Versión \(…)")`), recogidos en `App/Localizable.xcstrings` (idioma base `es`).
 
 ## Tests
+
+Para mirar los ficheros de la app en el iPhone (va firmada para desarrollo): `HouseArrestService.create(rsd, bundle_id="com.carcaret.gymcompanion.J92Z4JJV8L", documents_only=False)` de pymobiledevice3 desde el contenedor de ios-signer (ver el comentario de la issue #6).
 
 En el NAS (segundos; la primera vez descarga la imagen): `Packages/GymCore/test.sh` (admite los argumentos de `swift test`, p. ej. `--filter LocalDateTests`; el filtro es por nombre de tipo o función, no por el texto del `@Test`). Si `~/git/gym-companion` está clonado, le pasa su `db.json` real en `PWA_DB_JSON` para el test de importación (el CI hace lo mismo). Es esto, con el usuario propio para que `.build` no quede de root:
 
