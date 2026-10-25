@@ -182,7 +182,8 @@ private struct ParameterRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(label).scaledFont(12, .medium).foregroundStyle(Theme.textSecondary)
+            // Con letra grande pasa a dos líneas en vez de cortarse.
+            Text(label).scaledFont(12, .medium).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer()
             if let adjust, let type, let commit {
                 RoundIconButton(systemImage: "minus") { adjust(-1) }

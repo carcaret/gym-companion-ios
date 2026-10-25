@@ -8,8 +8,9 @@ struct HistoryStripView: View {
     let strip: HistoryStripContent
     @State private var selected: Int?
 
-    /// El alto de las barras, en puntos. Las vacías, las saltadas y las muy bajas tienen 3.
-    private static let plotHeight: CGFloat = 44
+    /// El alto de las barras, en puntos: los 44 de la tira de la PWA menos la fecha. Las vacías,
+    /// las saltadas y las muy bajas tienen 3.
+    private static let plotHeight: CGFloat = 30
     private static let minimumHeight = Double(3 / plotHeight * 100)
 
     var body: some View {
@@ -58,6 +59,7 @@ struct HistoryStripView: View {
                 AxisValueLabel {
                     if let key = value.as(String.self), let index = Int(key) {
                         Text(strip.bars[index].dateLabel).scaledFont(9).foregroundStyle(Theme.textSecondary)
+                            .fixedSize()  // con letra grande, entera aunque roce la de al lado
                     }
                 }
             }
