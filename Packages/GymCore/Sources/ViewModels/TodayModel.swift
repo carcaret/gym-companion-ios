@@ -241,6 +241,9 @@ public final class TodayModel {
         }
     }
 
+    /// Las tarjetas se pueden arrastrar solo con un entreno en curso (no en la vista previa).
+    public var canReorder: Bool { stage == .active }
+
     /// La insignia de récord del título.
     public var hasRecord: Bool { activeCards.contains(where: \.hasRecord) }
 

@@ -30,3 +30,8 @@ e2e/routine-preview-accordion.spec.js
 e2e/routine.spec.js
 e2e/session.spec.js
 e2e/best-recent-preload.spec.js
+e2e/workout-full.spec.js
+e2e/workout-accordion.spec.js
+e2e/workout-open-state.spec.js
+e2e/workout-subtitle-reps.spec.js
+e2e/workout-reorder.spec.js
