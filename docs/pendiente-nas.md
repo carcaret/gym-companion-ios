@@ -111,3 +111,19 @@ justificados) y `CLAUDE.md` al día. Falta, y es del usuario:
       cambia el formato de `db.json` y si los datos pasan a un repo privado (hoy están en el
       repo público `carcaret/gym-companion`).
 - [ ] Cerrar #15 y la épica #1 cuando lo anterior esté hecho.
+
+### #16 App del Apple Watch
+
+Hecho y probado en Docker (la lógica del reloj, en el paquete) y en el CI (compilación y capturas
+del simulador del Series 10 de 46 mm). Falta lo que necesita el NAS o el reloj en la mano:
+
+- [ ] **ios-signer instala la app del reloj** (repo `home-nas`, lo que dice #2): tras instalar la
+      de iOS, si la `.ipa` firmada trae `Payload/GymCompanion.app/Watch/*.app`, empaquetarla sola
+      e instalarla en el reloj por el companion proxy y `streaming_zip_conduit`; tomar el perfil de
+      `Payload/GymCompanion.app/embedded.mobileprovision` exactamente (ahora hay dos); y la
+      reinstalación en el reloj al renovar a los 7 días.
+- [ ] **WatchConnectivity con la app instalada directamente en el reloj**: con un entreno en curso
+      en el iPhone, el reloj enseña sus ejercicios; al cambiar un peso o unas reps en el iPhone,
+      el reloj se pone al día; al terminar el entreno, dice "Sin entreno en curso". Nadie documenta
+      si WatchConnectivity empareja una app del reloj que no instaló el iPhone: si no, la salida es
+      que el reloj lea el `db.json` de GitHub él mismo (otro adaptador del mismo `WatchModel`).

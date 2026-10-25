@@ -8,7 +8,9 @@ import Presentation
 @MainActor
 @Observable
 public final class AppModel {
-    public private(set) var data: TrainingData?
+    public private(set) var data: TrainingData? {
+        didSet { watch?.send(data) }
+    }
     /// Si los datos guardados no se pudieron leer: no se machacan, se avisa.
     public private(set) var loadError: String?
     /// Si un cambio no se pudo guardar en el iPhone.
@@ -18,9 +20,11 @@ public final class AppModel {
     public var notice: Notice?
 
     private let repository: TrainingRepository
+    private let watch: WatchRelay?
 
-    public init(repository: TrainingRepository) {
+    public init(repository: TrainingRepository, watch: WatchRelay? = nil) {
         self.repository = repository
+        self.watch = watch
     }
 
     public func start() async {
@@ -55,6 +59,12 @@ public final class AppModel {
             saveError = String(describing: error)
             return .failed
         }
+    }
+
+    /// Al volver a la app: el reloj se pone al día aunque los datos no hayan cambiado (puede ser
+    /// otro día).
+    public func refreshWatch() {
+        watch?.send(data)
     }
 
     /// Lo remoto sustituye a lo local (lo decide la sincronización).
