@@ -121,8 +121,15 @@ private struct ProgressChart: View {
         }
         .chartXSelection(value: $selectedDate)
         .chartYScale(domain: chart.valueRange)
-        .chartXScale(range: .plotDimension(padding: 16))  // que la primera y la última fecha no se corten
-        .chartYAxis { AxisMarks(position: .leading) }      // a la izquierda, como en la PWA: a la derecha tapaba la última fecha
+        .chartXScale(range: .plotDimension(padding: 24))
+        // Cada fecha centrada en su línea, con margen para que la última no se corte
+        .chartXAxis {
+            AxisMarks { _ in
+                AxisGridLine()
+                AxisValueLabel(anchor: .top)  // con el formato por defecto, que sigue el locale es_ES de la raíz
+            }
+        }
+        .chartYAxis { AxisMarks(position: .leading) }      // a la izquierda, como en la PWA
         .frame(height: 200)
         .accessibilityLabel(chart.axisTitle)
     }
