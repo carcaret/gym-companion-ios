@@ -92,7 +92,8 @@ jobs:
           # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
           defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
           xcrun simctl boot "$udid"
-          # El reloj del usuario: Apple Watch Series 10 de 46 mm (o, si no está, otro de 46 mm).
+          # El reloj del usuario: Apple Watch Series 10 de 46 mm o, si no está, otro de 46 mm (el
+          # Series 11 de 46 mm, que tiene la misma pantalla).
           xcrun simctl list devices available | grep -i watch || true
           watch=$(xcrun simctl list devices available -j \
             | jq -r '[.devices | to_entries[] | select(.key | contains("watchOS")) | .value[]]
@@ -109,8 +110,10 @@ jobs:
             -destination "id=$SIMULATOR" \
             -derivedDataPath build \
             -showBuildTimingSummary \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
+            | tee build.log | tail -n 40
+          status=${PIPESTATUS[0]}
+          grep -E ': error:' build.log | sort -u | head -n 30 || true
+          test "$status" -eq 0
 
       - name: Tests de la app en el simulador
         run: |
@@ -132,8 +135,10 @@ jobs:
             -scheme GymCompanionWatch \
             -destination "id=$WATCH_SIMULATOR" \
             -derivedDataPath build \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
+            | tee build-watch.log | tail -n 40
+          status=${PIPESTATUS[0]}
+          grep -E ': error:' build-watch.log | sort -u | head -n 30 || true
+          test "$status" -eq 0
 
       - name: Tests del reloj en el simulador
         run: |
