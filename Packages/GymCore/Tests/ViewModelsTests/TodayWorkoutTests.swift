@@ -348,7 +348,7 @@ struct WorkoutReorderTests {
     func afterTabSwitch() async {
         let today = await started()
         await today.model.reorder(from: 0, to: 1)
-        today.model.appear()
+        today.model.reselect()
         #expect(today.model.stage == .active)
         #expect(today.model.activeCards.prefix(2).map(\.title) == ["Curl Bíceps", "Press Banca"])
     }
@@ -457,7 +457,7 @@ struct WorkoutReorderTests {
     func accordionAfterReorder() async {
         let today = await started()
         await today.model.reorder(from: 0, to: 1)
-        today.model.appear()
+        today.model.reselect()
         today.model.toggleCard(today.model.activeCards[0].exerciseID)
         #expect(today.model.activeCards.map(\.isOpen).prefix(2) == [true, false])
         today.model.toggleCard(today.model.activeCards[1].exerciseID)

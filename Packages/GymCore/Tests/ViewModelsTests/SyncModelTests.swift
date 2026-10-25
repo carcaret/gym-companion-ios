@@ -287,3 +287,49 @@ struct SyncModelTests {
         #expect(!sync.isSavedLocallyPresented)
     }
 }
+
+// Tirar hacia abajo en Historial (`refreshable`): sincroniza al momento y siempre dice cómo ha
+// quedado, porque lo ha pedido el usuario.
+@MainActor
+@Suite("Sync — tirar para sincronizar", .timeLimit(.minutes(1)))
+struct SyncPullToRefreshTests {
+    @Test("sin GitHub avisa de que no está configurado")
+    func notConfigured() async {
+        let (_, sync) = await models(SyncHarness(configured: false))
+        await sync.pullToRefresh()
+        #expect(sync.notice == SyncText.notConfigured)
+    }
+
+    @Test("con lo remoto distinto, lo aplica y lo dice")
+    func remoteApplied() async {
+        let remote = F.adding(Exercise(id: "dominadas", name: "Dominadas"))
+        let (app, sync) = await models(SyncHarness(remote: remote))
+        await sync.pullToRefresh()
+        #expect(app.data == remote)
+        #expect(sync.notice == SyncText.remoteApplied)
+    }
+
+    @Test("con todo igual dice que está sincronizado")
+    func synced() async {
+        let (_, sync) = await models(SyncHarness())
+        await sync.pullToRefresh()
+        #expect(sync.notice == SyncText.synced)
+    }
+
+    @Test("con algo pendiente lo sube y dice que está sincronizado")
+    func uploadsPending() async {
+        let (_, sync) = await models(SyncHarness(pending: true))
+        await sync.pullToRefresh()
+        #expect(sync.status.state == .ok)
+        #expect(sync.notice == SyncText.synced)
+    }
+
+    @Test("sin red dice que hay cambios pendientes")
+    func offline() async {
+        let harness = SyncHarness(pending: true)
+        await harness.remote.fail(fetch: .unreachable)
+        let (_, sync) = await models(harness)
+        await sync.pullToRefresh()
+        #expect(sync.notice == SyncText.pendingChanges)
+    }
+}

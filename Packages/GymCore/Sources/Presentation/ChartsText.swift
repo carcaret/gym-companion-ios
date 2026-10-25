@@ -11,7 +11,6 @@ public enum ChartsText {
     public static let inRoutine = "En rutinas"
     public static let others = "Otros"
     public static let noResults = "Sin resultados"
-    public static let back = "Volver"
     public static let e1rmLabel = "e1RM"
     public static let weightLabel = "Peso"
     public static let e1rmAxis = "e1RM (kg)"

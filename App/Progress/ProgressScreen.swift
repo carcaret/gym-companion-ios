@@ -1,3 +1,4 @@
+import Charts
 import Domain
 import Presentation
 import SwiftUI
@@ -20,6 +21,12 @@ struct ProgressScreen: View {
             .padding(16)
         }
         .navigationTitle(StatsText.title)
+        // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
+        .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {
+            if let charts = model.charts {
+                ChartsScreen(model: charts).screenBackground()
+            }
+        }
     }
 
     private var exercises: some View {
@@ -28,14 +35,14 @@ struct ProgressScreen: View {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(StatsText.exercisesTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                            Text(StatsText.exercisesTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
                             Spacer()
                             Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
                         }
-                        Text(model.exercisesSubtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                        Text(model.exercisesSubtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
+                        .scaledFont(13, .semibold)
                         .rotationEffect(.degrees(model.isExpanded ? 180 : 0))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -55,7 +62,7 @@ struct ProgressScreen: View {
     private var groups: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(StatsText.groupsTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                Text(StatsText.groupsTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
                 Spacer()
                 Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
             }
@@ -68,7 +75,7 @@ struct ProgressScreen: View {
                 legend(StatsText.indirect, Theme.accent.opacity(0.32))
                 legend(StatsText.referenceBand(model.referenceBand), Color.white.opacity(0.07), border: Color.white.opacity(0.14))
             }
-            .font(.system(size: 11))
+            .scaledFont(11)
             .foregroundStyle(Theme.textMuted)
             .padding(.top, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,16 +107,16 @@ private struct ExerciseProgressRow: View {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(row.name).font(.system(size: 14, weight: .semibold)).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                            Text(row.name).scaledFont(14, .semibold).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                             Spacer()
                             if let weight = row.weight {
-                                Text(weight).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.accentLight)
+                                Text(weight).scaledFont(13, .semibold).foregroundStyle(Theme.accentLight)
                             }
                         }
-                        Text(row.phrase).font(.system(size: 12)).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
+                        Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                        .scaledFont(12, .semibold)
                         .rotationEffect(.degrees(row.isOpen ? 180 : 0))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -117,11 +124,12 @@ private struct ExerciseProgressRow: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("stats-row-\(row.exerciseID.rawValue)")
             if row.isOpen {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(StatsText.recentSessions).sectionLabelStyle()
                     Text(row.recentReps.joined(separator: "  ·  "))
-                        .font(.system(size: 13).monospacedDigit())
+                        .scaledFont(13).monospacedDigit()
                         .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                     if row.canOpenCharts {
                         Button(StatsText.openCharts, action: openCharts).buttonStyle(.pill(.subtle)).padding(.top, 6)
@@ -145,41 +153,26 @@ private struct ExerciseProgressRow: View {
     }
 }
 
-/// Barra de series de un grupo (`.stats-group-bar-row`), en la escala común: la franja de
-/// referencia detrás y sus límites encima, para que una barra larga no los tape.
+/// Una fila de grupo (`.stats-group-bar-row`): el nombre, la barra y el total; al tocarla, sus
+/// ejercicios.
 private struct GroupBarRow: View {
     let group: ProgressModel.GroupRow
     let scale: Double
     let band: ClosedRange<Int>
     let toggle: () -> Void
+    /// El nombre y el total, con su ancho fijo de la PWA, crecen con la letra (Dynamic Type).
+    @ScaledMetric(relativeTo: .caption) private var nameWidth: CGFloat = 62
+    @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 26
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Button(action: toggle) {
                 HStack(spacing: 10) {
-                    Text(group.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).frame(width: 62, alignment: .leading)
-                    GeometryReader { proxy in
-                        let width = proxy.size.width
-                        let x = { (value: Double) in width * CGFloat(min(value / scale, 1)) }
-                        ZStack(alignment: .leading) {
-                            Theme.input
-                            Rectangle().fill(Color.white.opacity(0.10))
-                                .frame(width: x(Double(band.upperBound)) - x(Double(band.lowerBound)))
-                                .offset(x: x(Double(band.lowerBound)))
-                            HStack(spacing: 0) {
-                                Rectangle().fill(Theme.accent).frame(width: x(Double(group.sets)))
-                                Rectangle().fill(Theme.accent.opacity(0.32)).frame(width: x(group.indirectSets))
-                            }
-                            .clipShape(.rect(cornerRadius: 3))
-                            ForEach([band.lowerBound, band.upperBound], id: \.self) { limit in
-                                Rectangle().fill(Color.white.opacity(0.45)).frame(width: 1).offset(x: x(Double(limit)))
-                            }
-                        }
-                        .clipShape(.rect(cornerRadius: 3))
-                    }
-                    .frame(height: 14)
-                    Text("\(group.total)").font(.system(size: 13, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.text)
-                        .frame(width: 26, alignment: .trailing)
+                    Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)
+                    GroupBar(group: group, scale: scale, band: band)
+                        .frame(height: 14)
+                    Text("\(group.total)").scaledFont(13, .semibold).monospacedDigit().foregroundStyle(Theme.text)
+                        .frame(width: totalWidth, alignment: .trailing)
                 }
                 .contentShape(.rect)
             }
@@ -209,7 +202,47 @@ private struct GroupBarRow: View {
             Spacer()
             Text(value).monospacedDigit()
         }
-        .font(.system(size: 12))
+        .scaledFont(12)
         .foregroundStyle(Theme.textSecondary)
+    }
+}
+
+/// La barra de series de un grupo, en Swift Charts y en la escala común: las directas y las
+/// indirectas seguidas, la franja de referencia detrás y sus límites encima, para que una barra
+/// larga no los tape.
+private struct GroupBar: View {
+    let group: ProgressModel.GroupRow
+    let scale: Double
+    let band: ClosedRange<Int>
+
+    var body: some View {
+        let direct = min(Double(group.sets), scale)
+        let total = min(Double(group.sets) + group.indirectSets, scale)
+        Chart {
+            RectangleMark(xStart: .value("Series", Double(band.lowerBound)), xEnd: .value("Series", Double(band.upperBound)),
+                          y: .value("Grupo", group.name), height: .ratio(1))
+                .foregroundStyle(Color.white.opacity(0.10))
+            // Las indirectas, con el extremo redondeado, debajo de las directas: la unión queda
+            // recta y el extremo de la barra entera, redondo.
+            if total > direct {
+                BarMark(xStart: .value("Series", 0.0), xEnd: .value("Series", total), y: .value("Grupo", group.name), height: .ratio(1))
+                    .foregroundStyle(Theme.accent.opacity(0.32))
+                    .cornerRadius(3)
+            }
+            BarMark(xStart: .value("Series", 0.0), xEnd: .value("Series", direct), y: .value("Grupo", group.name), height: .ratio(1))
+                .foregroundStyle(Theme.accent)
+                .cornerRadius(total > direct ? 0 : 3)
+            ForEach([band.lowerBound, band.upperBound], id: \.self) { limit in
+                RuleMark(x: .value("Series", Double(limit)))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+            }
+        }
+        .chartXScale(domain: 0...scale, range: .plotDimension(padding: 0))
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
+        .chartLegend(.hidden)
+        .chartPlotStyle { $0.background(Theme.input).clipShape(.rect(cornerRadius: 3)) }
+        .accessibilityHidden(true)  // el total va al lado, en texto
     }
 }

@@ -7,30 +7,41 @@ import ViewModels
 /// La pestaña Ajustes: sincronización con GitHub y versión de la app. Solo pinta `SettingsModel`.
 struct SettingsScreen: View {
     @Bindable var model: SettingsModel
+    /// La tecla de retorno pasa al campo siguiente, como en un formulario de iOS; en el último
+    /// cierra el teclado.
+    @FocusState private var focused: Field?
+
+    private enum Field: CaseIterable {
+        case repository, branch, path, token
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(SettingsText.githubSection).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text)
+                    Text(SettingsText.githubSection).scaledFont(16, .bold).foregroundStyle(Theme.text)
                     HStack {
                         Text(SettingsText.status).foregroundStyle(Theme.textSecondary)
                         Spacer()
                         Text(statusText).foregroundStyle(Theme.text)
                     }
-                    .font(.system(size: 14))
-                    field(SettingsText.repository) {
+                    .scaledFont(14)
+                    field(SettingsText.repository, .repository) {
                         TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
                             .accessibilityIdentifier("settings-repository")
                     }
-                    field(SettingsText.branch) {
+                    field(SettingsText.branch, .branch) {
                         TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
+                            .accessibilityIdentifier("settings-branch")
                     }
-                    field(SettingsText.path) {
+                    field(SettingsText.path, .path) {
                         TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
+                            .accessibilityIdentifier("settings-path")
                     }
-                    field(SettingsText.token) {
+                    field(SettingsText.token, .token) {
                         SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
+                            .textContentType(.password)
+                            .accessibilityIdentifier("settings-token")
                     }
                     VStack(spacing: 10) {
                         Button { Task { await model.save() } } label: { Text(SettingsText.save).frame(maxWidth: .infinity) }
@@ -53,7 +64,7 @@ struct SettingsScreen: View {
                 }
                 .card()
                 Text(model.versionLabel)
-                    .font(.system(size: 11))
+                    .scaledFont(11)
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.top, 4)
                     .accessibilityIdentifier("settings-version")
@@ -66,18 +77,21 @@ struct SettingsScreen: View {
     }
 
     /// Un campo de la PWA (`.input-group`): el nombre encima, en mayúsculas pequeñas, y la caja.
-    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+    private func field<Content: View>(_ label: String, _ id: Field, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: 12, weight: .semibold))
+                .scaledFont(12, .semibold)
                 .textCase(.uppercase)
                 .tracking(0.5)
                 .foregroundStyle(Theme.textSecondary)
             content()
-                .font(.system(size: 15))
+                .scaledFont(15)
                 .foregroundStyle(Theme.text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .focused($focused, equals: id)
+                .submitLabel(id == Field.allCases.last ? .done : .next)
+                .onSubmit { focused = Field.allCases.drop(while: { $0 != id }).dropFirst().first }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 13)
                 .background(Theme.input, in: .rect(cornerRadius: Theme.radiusSmall))

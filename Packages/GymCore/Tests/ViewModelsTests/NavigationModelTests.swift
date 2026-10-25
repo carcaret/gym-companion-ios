@@ -2,8 +2,7 @@ import Domain
 import Testing
 import ViewModels
 
-// Navegación de la PWA (`navigateToTab`, `gym:navigate` y `gym:navigate-back` de app.js; botón de
-// volver de `views/charts.js`).
+// Navegación de la PWA (`navigateToTab` de app.js), con las pestañas de iOS.
 @MainActor
 @Suite("Navegación")
 struct NavigationModelTests {
@@ -24,43 +23,39 @@ struct NavigationModelTests {
         #expect(navigation.selectedTab == .history)
     }
 
-    @Test("Progreso → Gráficas con el ejercicio elegido y con botón de volver")
-    func chartsFromProgress() {
-        let navigation = NavigationModel()
-        navigation.select(.progress)
-        navigation.openCharts(for: "press_banca", from: .progress)
-        #expect(navigation.selectedTab == .charts)
-        #expect(navigation.chartsExercise == "press_banca")
-        #expect(navigation.canGoBack)
-        navigation.goBack()
-        #expect(navigation.selectedTab == .progress)
-        #expect(!navigation.canGoBack)
-    }
+    // Gráficas desde Progreso ya no salta de pestaña ni tiene botón de volver propio: entra
+    // empujada dentro de Progreso (`ProgressModel.openCharts`), con la vuelta de iOS (decisión del
+    // usuario, 2026-10-25).
 
-    @Test("Gráficas desde su pestaña no tiene botón de volver")
-    func chartsFromTab() {
+    // Como en iOS: cambiar de pestaña conserva la pantalla de cada una; tocar otra vez la pestaña
+    // activa vuelve a su pantalla de entrada. La PWA volvía a la entrada al cambiar de pestaña
+    // (decisión del usuario, 2026-10-25).
+    @Test("tocar otra vez la pestaña activa la vuelve a seleccionar, sin cambiar de pestaña")
+    func reselect() {
         let navigation = NavigationModel()
-        navigation.select(.charts)
-        #expect(!navigation.canGoBack)
-        navigation.goBack()
-        #expect(navigation.selectedTab == .charts)
-    }
-
-    @Test("tocar una pestaña a mano borra el volver: solo vale dentro del salto que lo creó")
-    func manualTabClearsBack() {
-        let navigation = NavigationModel()
-        navigation.openCharts(for: "press_banca", from: .progress)
         navigation.select(.history)
-        navigation.select(.charts)
-        #expect(!navigation.canGoBack)
+        #expect(navigation.reselection == nil)
+        navigation.select(.history)
+        #expect(navigation.selectedTab == .history)
+        #expect(navigation.reselection?.tab == .history)
     }
 
-    @Test("Gráficas recuerda el ejercicio hasta que se elige otro")
-    func chartsExerciseConsumed() {
+    @Test("tocarla dos veces seguidas cuenta dos veces")
+    func reselectTwice() {
         let navigation = NavigationModel()
-        navigation.openCharts(for: "press_banca", from: .progress)
-        #expect(navigation.takeChartsExercise() == "press_banca")
-        #expect(navigation.takeChartsExercise() == nil)
+        navigation.select(.routines)
+        let first = navigation.reselection
+        navigation.select(.routines)
+        #expect(navigation.reselection != first)
+        #expect(navigation.reselection?.tab == .routines)
+    }
+
+    @Test("cambiar a otra pestaña no cuenta como volver a tocarla")
+    func switchIsNotReselect() {
+        let navigation = NavigationModel()
+        navigation.select(.history)
+        navigation.select(.routines)
+        #expect(navigation.reselection == nil)
     }
 
     @Test("Historial → Rutinas (al marcar como completada una sesión de hoy)")
@@ -69,6 +64,5 @@ struct NavigationModelTests {
         navigation.select(.history)
         navigation.showRoutines()
         #expect(navigation.selectedTab == .routines)
-        #expect(!navigation.canGoBack)
     }
 }

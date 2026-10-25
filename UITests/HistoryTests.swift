@@ -58,4 +58,20 @@ final class HistoryTests: XCTestCase {
         wait(for: [closed], timeout: 5)
         XCTAssertEqual(rows.allElementsBoundByIndex.map(\.identifier), before)
     }
+
+    /// Tirar hacia abajo de la lista sincroniza con GitHub y dice cómo ha quedado; con `-demo` no
+    /// hay GitHub, y lo dice.
+    @MainActor
+    func testTirarHaciaAbajoSincroniza() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Historial"].tap()
+        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+
+        let start = first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 300)))
+        XCTAssertTrue(app.staticTexts["GitHub no configurado"].waitForExistence(timeout: 5))
+    }
 }

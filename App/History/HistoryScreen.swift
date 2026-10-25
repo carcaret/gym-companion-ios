@@ -6,6 +6,7 @@ import ViewModels
 /// La pestaña Historial: la lista de sesiones y el detalle de una. Solo pinta `HistoryModel`.
 struct HistoryScreen: View {
     @Bindable var model: HistoryModel
+    let sync: SyncModel
 
     var body: some View {
         list
@@ -42,6 +43,8 @@ struct HistoryScreen: View {
             }
             .listStyle(.plain)
             .screenBackground()
+            // Tirar hacia abajo sincroniza con GitHub al momento y dice cómo ha quedado.
+            .refreshable { await sync.pullToRefresh() }
             // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
             // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
             // cierra la alerta (y la descarta) antes de ejecutarla.
@@ -61,7 +64,7 @@ struct HistoryScreen: View {
             LazyVStack(spacing: 12) {
                 if model.isIncomplete {
                     Label(HistoryText.incomplete, systemImage: "pause.fill")
-                        .font(.system(size: 11, weight: .bold))
+                        .scaledFont(11, .bold)
                         .foregroundStyle(Theme.accentLight)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
@@ -107,20 +110,20 @@ private struct HistoryRowView: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(spacing: 2) {
-                Text(row.day).font(.system(size: 20, weight: .bold)).monospacedDigit().foregroundStyle(Theme.text)
-                Text(row.month).font(.system(size: 9.5, weight: .semibold)).tracking(0.4).foregroundStyle(Theme.textMuted)
+                Text(row.day).scaledFont(20, .bold).monospacedDigit().foregroundStyle(Theme.text)
+                Text(row.month).scaledFont(9.5, .semibold).tracking(0.4).foregroundStyle(Theme.textMuted)
             }
             .frame(minWidth: 40)
             Rectangle().fill(Theme.border).frame(width: 1, height: 32)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     RoutineBadge(text: row.routine, color: Theme.color(row.tint) ?? Theme.textSecondary)
-                    Text(row.relative).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    Text(row.relative).scaledFont(11).foregroundStyle(Theme.textSecondary)
                     if row.isIncomplete {
-                        Image(systemName: "pause.fill").font(.system(size: 10)).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
+                        Image(systemName: "pause.fill").scaledFont(10).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
                     }
                 }
-                Text(row.summary).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                Text(row.summary).scaledFont(12).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
             Spacer(minLength: 0)
         }
@@ -138,7 +141,7 @@ struct RoutineBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9.5, weight: .bold))
+            .scaledFont(9.5, .bold)
             .textCase(.uppercase)
             .tracking(0.4)
             .lineLimit(1)

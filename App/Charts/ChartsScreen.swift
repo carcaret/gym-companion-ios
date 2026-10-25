@@ -4,9 +4,9 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Gráficas: rango de fechas, el ejercicio elegido (se elige en su propia pantalla,
-/// como los selectores de Ajustes de iOS) y las gráficas de 1RM estimado y de peso. Solo pinta
-/// `ChartsModel`.
+/// La pestaña Gráficas, y las gráficas de un ejercicio empujadas desde Progreso: rango de fechas,
+/// el ejercicio elegido (se elige en su propia pantalla, como los selectores de Ajustes de iOS) y
+/// las gráficas de 1RM estimado y de peso. Solo pinta `ChartsModel`.
 struct ChartsScreen: View {
     @Bindable var model: ChartsModel
 
@@ -19,9 +19,7 @@ struct ChartsScreen: View {
                 DatePicker(ChartsText.to, selection: Binding(
                     get: { model.to.date }, set: { model.setRange(from: model.from, to: LocalDate($0)) }
                 ), displayedComponents: .date)
-                NavigationLink {
-                    ExercisePicker(model: model)
-                } label: {
+                NavigationLink(value: ExercisePickerRoute()) {
                     LabeledContent(ChartsText.exercise, value: model.selectedName ?? ChartsText.chooseExercise)
                 }
                 .accessibilityIdentifier("chart-exercise")
@@ -35,7 +33,7 @@ struct ChartsScreen: View {
                     Section {
                         ProgressChart(chart: chart)
                     } header: {
-                        Text(chart.axisTitle).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text).textCase(nil)
+                        Text(chart.axisTitle).scaledFont(16, .bold).foregroundStyle(Theme.text).textCase(nil)
                     }
                     .listRowBackground(Theme.surface)
                 }
@@ -43,16 +41,12 @@ struct ChartsScreen: View {
         }
         .navigationTitle(ChartsText.title)
         .foregroundStyle(Theme.text)
-        .toolbar {
-            if model.canGoBack {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { model.goBack() } label: { Label(ChartsText.back, systemImage: "chevron.left") }
-                }
-            }
-        }
-        .onAppear { model.appear() }
+        .navigationDestination(for: ExercisePickerRoute.self) { _ in ExercisePicker(model: model) }
     }
 }
+
+/// La pantalla de elegir ejercicio, empujada con valor para que tocar otra vez la pestaña la cierre.
+private struct ExercisePickerRoute: Hashable {}
 
 /// Los ejercicios hechos en el rango, con buscador: los de alguna rutina y el resto. Elegir uno
 /// vuelve a las gráficas.
@@ -127,7 +121,7 @@ private struct ProgressChart: View {
                     .foregroundStyle(Theme.textMuted)
                     .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
                         Text(ChartsText.pointLabel(chart.label, value: selected.value, carriedForward: selected.isCarriedForward))
-                            .font(.system(size: 11, weight: .medium))
+                            .scaledFont(11, .medium)
                             .foregroundStyle(Theme.text)
                             .padding(6)
                             .background(Theme.cardSolid, in: .rect(cornerRadius: 4))

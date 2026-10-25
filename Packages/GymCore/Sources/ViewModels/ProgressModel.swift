@@ -50,14 +50,14 @@ public final class ProgressModel {
     public private(set) var isExpanded = false
     public private(set) var openRows: Set<ExerciseID> = []
     public private(set) var openGroups: Set<String> = []
+    /// Las gráficas de un ejercicio, empujadas dentro de Progreso; `nil` = Progreso.
+    public private(set) var charts: ChartsModel?
 
     private let app: AppModel
-    private let navigation: NavigationModel
     private let clock: any Clock
 
-    public init(app: AppModel, navigation: NavigationModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock) {
         self.app = app
-        self.navigation = navigation
         self.clock = clock
     }
 
@@ -99,9 +99,22 @@ public final class ProgressModel {
         if openRows.contains(exercise) { openRows.remove(exercise) } else { openRows.insert(exercise) }
     }
 
-    /// "Ver en Gráficas": a Gráficas con el ejercicio elegido y botón de volver.
+    /// "Ver en Gráficas": las gráficas del ejercicio, empujadas dentro de Progreso. Son otras que
+    /// las de la pestaña Gráficas, que conserva su rango y su ejercicio.
     public func openCharts(_ exercise: ExerciseID) {
-        navigation.openCharts(for: exercise, from: .progress)
+        let charts = ChartsModel(app: app, clock: clock)
+        charts.choose(exercise)
+        self.charts = charts
+    }
+
+    /// Volver de las gráficas (la flecha de iOS o deslizar).
+    public func closeCharts() {
+        charts = nil
+    }
+
+    /// Tocar otra vez la pestaña: Progreso, sin las gráficas empujadas.
+    public func reselect() {
+        closeCharts()
     }
 
     // MARK: - Grupos
