@@ -69,6 +69,10 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["stats-exercises"].waitForExistence(timeout: 10))
         app.buttons["stats-exercises"].tap()
         capture(app, "40-progreso")
+
+        app.buttons["catalog-card"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Ejercicios"].waitForExistence(timeout: 10))
+        capture(app, "50-catalogo")
     }
 
     @MainActor
