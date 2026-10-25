@@ -87,6 +87,7 @@ struct CatalogScreen: View {
         .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
         .navigationTitle(CatalogText.title)
         .screenBackground()
+        .keyboardDismissal()
         .onDisappear { model.leave() }
         .sheet(isPresented: Binding(get: { model.editor != nil }, set: { if !$0 { model.cancelEditing() } })) {
             CatalogEditor(model: model)
@@ -140,6 +141,7 @@ private struct CatalogEditor: View {
             }
             .navigationTitle(CatalogText.editorTitle)
             .screenBackground()
+            .keyboardDismissal()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(CatalogText.cancel) { model.cancelEditing() } }

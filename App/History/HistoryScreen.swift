@@ -72,7 +72,7 @@ struct HistoryScreen: View {
             }
             .padding()
         }
-        .numberPadDismissal()
+        .keyboardDismissal()
         .safeAreaInset(edge: .bottom) {
             if model.isIncomplete {
                 BottomActions(primary: {
