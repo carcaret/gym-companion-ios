@@ -26,9 +26,8 @@ Para cada PR fusionada, después de que el CI publique la release:
 
 Para que no se pierda nada al repartir tests entre issues:
 
-- [ ] `e2e/view-nav-buttons.spec.js` (de #8): los 11 de Hoy ya están portados o en el TSV (#9).
-      Faltan los 4 de "history detail", con Historial en #10; entonces se añade el fichero a
-      `docs/pwa-tests-ficheros.txt` (el cruce falla si queda alguno sin portar).
+- [x] `e2e/view-nav-buttons.spec.js` (de #8): los 11 de Hoy en #9 y los 4 del historial en #10;
+      el fichero ya está en el cruce.
 - [x] `unit/builders.test.js` y `unit/bar-colors.test.js` (de #10) se portaron en #9: la tira de
       historial también sale en las tarjetas de Hoy. En #10 solo queda pintarla en el detalle.
 
@@ -67,3 +66,10 @@ Falta lo que necesita el iPhone o el NAS:
   - que el aviso "Entreno guardado localmente" sale si no hay red al terminar.
 - [ ] Ver que la PWA lee bien el entreno que sube la app (lo mismo que en #7, ahora con datos de un
       entreno de verdad).
+
+### #10 Historial
+
+- [ ] En el iPhone: abrir una sesión pasada, corregir un peso, "Guardar" y comprobar que el cambio
+      sube a GitHub (un commit nuevo en `db.json`). Cerrar la tarjeta sin guardar no debe cambiar
+      nada.
+- [ ] Deslizar una sesión a la izquierda para borrarla pide confirmación.
