@@ -89,6 +89,8 @@ jobs:
             | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
           echo "Simulador: $udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+          # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
           xcrun simctl boot "$udid"
 
       - name: Compilar la app y los tests
@@ -121,7 +123,11 @@ jobs:
           xcrun xcresulttool export attachments --path Tests.xcresult --output-path attachments
           mkdir -p capturas
           jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
-            | while IFS=$'\t' read -r file name; do cp "attachments/$file" "capturas/${name%%_*}.png"; done
+            | while IFS=$'\t' read -r file name; do
+                # upload-artifact no admite " : < > | * ? en los nombres (salen en las descripciones de un fallo).
+                name=$(printf '%s' "${name%%_*}" | tr -d '":<>|*?')
+                cp "attachments/$file" "capturas/$name.png"
+              done
           ls capturas
 
       - uses: actions/upload-artifact@v4

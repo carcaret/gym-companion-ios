@@ -60,6 +60,7 @@ struct ChartsScreen: View {
         }
         .navigationTitle(ChartsText.title)
         .foregroundStyle(Theme.text)
+        .keyboardDismissal()
         .toolbar {
             if model.canGoBack {
                 ToolbarItem(placement: .topBarLeading) {

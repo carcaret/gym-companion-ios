@@ -45,7 +45,7 @@ struct ActiveWorkoutView: View {
         }
         .listStyle(.plain)
         .screenBackground()
-        .numberPadDismissal()
+        .keyboardDismissal()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(Theme.gold).accessibilityLabel("Récord") }
