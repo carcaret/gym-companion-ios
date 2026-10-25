@@ -17,6 +17,7 @@ struct CompositionRoot {
     let today: TodayModel
     let history: HistoryModel
     let charts: ChartsModel
+    let progress: ProgressModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
@@ -39,6 +40,7 @@ struct CompositionRoot {
         today = TodayModel(app: model, sync: sync, clock: SystemClock())
         history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
         charts = ChartsModel(app: model, navigation: navigation, clock: SystemClock())
+        progress = ProgressModel(app: model, navigation: navigation, clock: SystemClock())
     }
 
     /// Cada vez que vuelve la red.
