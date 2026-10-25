@@ -12,11 +12,12 @@ final class ScreenshotTests: XCTestCase {
     func testPestanas() {
         let app = XCUIApplication()
         app.launch()
-        let tabs = [("Rutinas", "01-rutinas"), ("Historial", "02-historial"), ("Progreso", "03-progreso"),
-                    ("Gráficas", "04-graficas"), ("Ajustes", "05-ajustes")]
-        for (title, name) in tabs {
-            app.tabBars.buttons[title].tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "No se abrió \(title)")
+        // Pestaña, título de su pantalla y nombre de la captura.
+        let tabs = [("Rutinas", "Rutinas", "01-rutinas"), ("Historial", "Historial", "02-historial"),
+                    ("Progreso", "Estadísticas", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas"), ("Ajustes", "Ajustes", "05-ajustes")]
+        for (tab, title, name) in tabs {
+            app.tabBars.buttons[tab].tap()
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "No se abrió \(tab)")
             capture(app, name)
         }
         XCTAssertTrue(app.buttons["sync-indicator"].exists)
@@ -63,6 +64,11 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 10))
         app.buttons["Press Banca"].firstMatch.tap()
         capture(app, "30-graficas")
+
+        app.tabBars.buttons["Progreso"].tap()
+        XCTAssertTrue(app.buttons["stats-exercises"].waitForExistence(timeout: 10))
+        app.buttons["stats-exercises"].tap()
+        capture(app, "40-progreso")
     }
 
     @MainActor

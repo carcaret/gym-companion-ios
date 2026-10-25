@@ -7,7 +7,7 @@ struct GymCompanionApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(version: root.appVersion, app: root.model, sync: root.sync, today: root.today, history: root.history, charts: root.charts, navigation: root.navigation)
+            RootView(version: root.appVersion, app: root.model, sync: root.sync, today: root.today, history: root.history, charts: root.charts, progress: root.progress, navigation: root.navigation)
                 .task {
                     await root.model.start()
                     await root.sync.synchronize()

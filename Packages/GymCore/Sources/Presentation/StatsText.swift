@@ -1,0 +1,30 @@
+import Domain
+
+/// Los textos de la pestaña Progreso (`views/estadisticas.js`).
+public enum StatsText {
+    public static let title = "Estadísticas"
+    public static let exercisesTitle = "Ejercicios"
+    public static let groupsTitle = "Grupos musculares"
+    public static let recentSessions = "Últimas sesiones"
+    public static let openCharts = "Ver en Gráficas"
+    public static let direct = "directo"
+    public static let indirect = "indirecto"
+    public static let setsHeader = "series"
+    public static let sessionsHeader = "· sesiones"
+
+    public static func window(weeks: Int) -> String { "últimas \(weeks) semanas" }
+
+    /// "1 de 3 estancados" o, sin ninguno, "Nada estancado · 2 progresando".
+    public static func exercisesSubtitle(stalled: Int, total: Int, progressing: Int) -> String {
+        stalled > 0 ? "\(stalled) de \(total) estancados" : "Nada estancado · \(progressing) progresando"
+    }
+
+    public static func referenceBand(_ range: ClosedRange<Int>) -> String {
+        "\(range.lowerBound)–\(range.upperBound) series"
+    }
+
+    /// Series indirectas con un decimal como mucho ("2,5", "3").
+    public static func indirectSets(_ sets: Double) -> String {
+        LogText.kilograms((sets * 10).rounded() / 10)
+    }
+}

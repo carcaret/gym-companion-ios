@@ -11,6 +11,7 @@ struct RootView: View {
     let today: TodayModel
     let history: HistoryModel
     let charts: ChartsModel
+    let progress: ProgressModel
     @Bindable var navigation: NavigationModel
 
     var body: some View {
@@ -32,7 +33,12 @@ struct RootView: View {
                 }
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
-                screen("Progreso") { PendingScreen(issue: 12) }
+                NavigationStack {
+                    ProgressScreen(model: progress)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: sync) }
+                        }
+                }
             }
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
                 NavigationStack {
