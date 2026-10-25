@@ -47,6 +47,16 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["finish-workout"].tap()
         XCTAssertTrue(app.buttons["back-to-routines"].waitForExistence(timeout: 10))
         capture(app, "14-hoy-terminado")
+
+        app.tabBars.buttons["Historial"].tap()
+        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        capture(app, "20-historial-lista")
+
+        first.tap()
+        XCTAssertTrue(app.buttons["Volver"].waitForExistence(timeout: 10))
+        app.buttons["card-press_banca"].firstMatch.tap()
+        capture(app, "21-historial-detalle")
     }
 
     @MainActor

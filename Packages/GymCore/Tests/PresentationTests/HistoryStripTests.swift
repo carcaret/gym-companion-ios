@@ -152,7 +152,8 @@ struct HistoryStripTests {
 
     @Test("cada barra dice su e1RM y lo hecho (el tooltip de la PWA)")
     func tooltip() {
-        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 60)) == "e1RM 80 kg\n60 kg · 10-10-8")
+        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 60)) == "e1RM 80kg\n60kg · 10-10-8")
+        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 55)) == "e1RM 73.3kg\n55kg · 10-10-8")
         #expect(HistoryStrip.tooltip(log(series: 2, expected: 10, actual: [10, nil], weight: 0)) == "10--")
     }
 }

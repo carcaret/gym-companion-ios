@@ -102,6 +102,7 @@ struct BottomActions<Secondary: View, Primary: View>: View {
         .controlSize(.large)
         .padding(.horizontal)
         .padding(.vertical, 8)
+        .background(.bar)
     }
 }
 

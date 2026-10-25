@@ -9,6 +9,7 @@ struct RootView: View {
     let app: AppModel
     let sync: SyncModel
     let today: TodayModel
+    let history: HistoryModel
     @Bindable var navigation: NavigationModel
 
     var body: some View {
@@ -22,7 +23,12 @@ struct RootView: View {
                 }
             }
             Tab("Historial", systemImage: "clock", value: AppTab.history) {
-                screen("Historial") { PendingScreen(issue: 10) }
+                NavigationStack {
+                    HistoryScreen(model: history)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: sync) }
+                        }
+                }
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 screen("Progreso") { PendingScreen(issue: 12) }

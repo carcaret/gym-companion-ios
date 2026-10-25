@@ -33,3 +33,15 @@ e2e/workout-completed-view.spec.js	Vista de entreno completado	vista completada:
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	routine preview: botones Volver e Iniciar están en workout-actions	Contenedor del DOM de la PWA. Que la vista previa ofrece volver y empezar lo prueban «botón Volver vuelve al selector» y el selector de rutinas.
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	routine preview: botón Volver es el primero (izquierda)	Orden visual de dos botones: lo decide la vista.
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	routine preview: botón Volver ocupa 1/3 del ancho, Iniciar 2/3	Anchuras CSS (flex 1 / flex 2).
+e2e/history-incomplete.spec.js	Historial — entrenos incompletos	card incompleta: icono de pausa contiene SVG	Detalle del HTML (el icono es un SVG). En la app el icono es un símbolo SF que la vista pinta si `Row.isIncomplete`.
+e2e/history-incomplete.spec.js	Historial — entrenos incompletos	card incompleta: icono de pausa tiene color accent	Color CSS; lo decide la vista.
+e2e/history-incomplete.spec.js	Historial — entrenos incompletos	card completa: .day-info-top no contiene SVG de pausa	Detalle del HTML; que una sesión terminada no lleva pausa lo prueba «card completa: NO tiene icono de pausa».
+e2e/history-incomplete.spec.js	Historial — entrenos incompletos	detalle entreno incompleto: botón está en contenedor workout-actions	Contenedor del DOM de la PWA.
+e2e/history-incomplete.spec.js	Historial — entrenos incompletos	detalle entreno incompleto: "Completar entreno" tiene clase btn-primary	Clase CSS; en la app es el botón principal de SwiftUI.
+e2e/history-strip.spec.js	History strip (franja de últimas sesiones)	tap en barra con datos añade clase tooltip-active; tap fuera la quita	Qué barra enseña su detalle es estado de la vista SwiftUI (`HistoryStripView`), no de los datos; el contenido del detalle lo prueba «tooltip en 2 líneas».
+e2e/history-strip.spec.js	History strip (franja de últimas sesiones)	tap en otra barra mueve la clase tooltip-active (solo una a la vez)	Ídem: estado de la vista, que guarda una sola barra elegida.
+e2e/bar-tooltip-position.spec.js	Posición del tooltip de barras (no se recorta en los bordes)	tap en barra del extremo IZQUIERDO → tooltip dentro del viewport	Posición CSS del tooltip flotante de la PWA. En la app el detalle va en una línea debajo de la tira, dentro de la tarjeta: no puede salirse.
+e2e/bar-tooltip-position.spec.js	Posición del tooltip de barras (no se recorta en los bordes)	tap en barra del extremo DERECHO → tooltip dentro del viewport	Ídem.
+e2e/bar-tooltip-position.spec.js	Posición del tooltip de barras (no se recorta en los bordes)	barra CENTRAL queda centrada (sin desplazar, --tt-shift ~0)	Ídem.
+e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	history detail: botón Volver está en view-nav-actions	Contenedor del DOM de la PWA.
+e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	history detail: botón Volver ocupa mitad del ancho del contenedor	Anchura CSS.
