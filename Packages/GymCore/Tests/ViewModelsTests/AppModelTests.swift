@@ -9,7 +9,8 @@ import ViewModels
 struct AppModelTests {
     @Test("al arrancar carga los datos")
     func loads() async {
-        let model = AppModel(startUp: StartUp(store: InMemoryTrainingDataStore(storage: .init(TrainingDataStoreContract.sample))))
+        let harness = SyncHarness(local: TrainingDataStoreContract.sample, configured: false)
+        let model = AppModel(repository: harness.repository())
         #expect(model.data == nil)
         await model.start()
         #expect(model.data == TrainingDataStoreContract.sample)
@@ -18,7 +19,11 @@ struct AppModelTests {
 
     @Test("si no puede leer los datos, se queda sin datos y con el error")
     func failure() async {
-        let model = AppModel(startUp: StartUp(store: FailingStore()))
+        let repository = TrainingRepository(
+            store: FailingStore(), settings: InMemorySyncSettingsStore(), credentials: InMemoryCredentialStore(),
+            remote: InMemoryRemote(storage: .init()), clock: FixedClock(SyncFixtures.today), background: RecordingBackgroundActivity()
+        )
+        let model = AppModel(repository: repository)
         await model.start()
         #expect(model.data == nil)
         #expect(model.loadError != nil)
@@ -26,11 +31,21 @@ struct AppModelTests {
 
     @Test("arrancar dos veces no vuelve a cargar")
     func once() async {
-        let storage = InMemoryTrainingDataStore.Storage()
-        let model = AppModel(startUp: StartUp(store: InMemoryTrainingDataStore(storage: storage)))
+        let harness = SyncHarness(local: nil, configured: false)
+        let model = AppModel(repository: harness.repository())
         await model.start()
         await model.start()
-        #expect(await storage.saves == 1)
+        #expect(await harness.local.saves == 1)
+    }
+
+    @Test("un cambio se ve al momento y se guarda")
+    func update() async {
+        let harness = SyncHarness(configured: false)
+        let model = AppModel(repository: harness.repository())
+        await model.start()
+        await model.update(SyncFixtures.finishedWorkout())
+        #expect(model.data == SyncFixtures.finishedWorkout())
+        #expect(await harness.savedLocally == SyncFixtures.finishedWorkout())
     }
 }
 

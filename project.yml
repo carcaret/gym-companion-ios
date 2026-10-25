@@ -29,7 +29,11 @@ targets:
       - package: GymCore
         product: ViewModels
       - package: GymCore
+        product: Presentation
+      - package: GymCore
         product: Adapters
+      - package: GymCore
+        product: AppleAdapters
     info:
       path: App/Info.plist
       properties:

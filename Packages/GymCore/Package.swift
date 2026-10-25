@@ -2,8 +2,9 @@
 // Núcleo de la app, un módulo por capa. Las dependencias entre módulos son las reglas de la
 // arquitectura: Domain no depende de nada; Presentation (textos en español para la interfaz) y
 // Application, de Domain; ViewModels (estado de cada pantalla, @Observable), de Application,
-// Presentation y Domain; Adapters, de Application y Domain. Solo la app conoce los Adapters.
-// Nada salvo Adapters importa frameworks de Apple: los tests corren también en Linux.
+// Presentation y Domain; Adapters y AppleAdapters, de Application y Domain. Solo la app conoce
+// los adaptadores. Nada salvo AppleAdapters importa frameworks solo de Apple (y lo hace tras
+// `#if canImport`): los tests corren también en Linux.
 import PackageDescription
 
 let package = Package(
@@ -15,6 +16,7 @@ let package = Package(
         .library(name: "Application", targets: ["Application"]),
         .library(name: "ViewModels", targets: ["ViewModels"]),
         .library(name: "Adapters", targets: ["Adapters"]),
+        .library(name: "AppleAdapters", targets: ["AppleAdapters"]),
     ],
     targets: [
         .target(name: "Domain"),
@@ -22,14 +24,17 @@ let package = Package(
         .target(name: "Application", dependencies: ["Domain"]),
         .target(name: "ViewModels", dependencies: ["Application", "Presentation", "Domain"]),
         .target(name: "Adapters", dependencies: ["Application", "Domain"]),
+        // Adaptadores que solo existen en Apple (Llavero, UIKit, Network): en Linux compila vacío.
+        .target(name: "AppleAdapters", dependencies: ["Application", "Domain"]),
         // Para los tests: dobles de los puertos y tests de contrato que cualquier adaptador de un
         // puerto debe pasar (el local hoy, el de iCloud mañana).
         .target(name: "GymCoreTesting", dependencies: ["Application", "Domain"]),
         .testTarget(name: "DomainTests", dependencies: ["Domain"]),
         .testTarget(name: "PresentationTests", dependencies: ["Presentation", "Domain"]),
         .testTarget(name: "ApplicationTests", dependencies: ["Application", "Domain", "GymCoreTesting"]),
-        .testTarget(name: "ViewModelsTests", dependencies: ["ViewModels", "Application", "Domain", "GymCoreTesting"]),
+        .testTarget(name: "ViewModelsTests", dependencies: ["ViewModels", "Presentation", "Application", "Domain", "GymCoreTesting"]),
         .testTarget(name: "AdaptersTests", dependencies: ["Adapters", "Application", "Domain", "GymCoreTesting"],
                     resources: [.copy("Fixtures")]),
+        .testTarget(name: "AppleAdaptersTests", dependencies: ["AppleAdapters", "Application", "GymCoreTesting"]),
     ]
 )

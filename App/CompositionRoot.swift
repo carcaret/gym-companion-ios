@@ -1,4 +1,5 @@
 import Adapters
+import AppleAdapters
 import Application
 import Domain
 import Foundation
@@ -9,14 +10,30 @@ import ViewModels
 @MainActor
 struct CompositionRoot {
     let appVersion: AppVersion
+    let repository: TrainingRepository
     let model: AppModel
+    let sync: SyncModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
             marketing: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
             build: bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
         )
-        model = AppModel(startUp: StartUp(store: Self.store()))
+        repository = TrainingRepository(
+            store: Self.store(),
+            settings: Self.settings(),
+            credentials: KeychainCredentialStore(),
+            remote: GitHubTrainingDataSource(),
+            clock: SystemClock(),
+            background: UIKitBackgroundActivity()
+        )
+        model = AppModel(repository: repository)
+        sync = SyncModel(repository: repository, app: model)
+    }
+
+    /// Cada vez que vuelve la red.
+    func reconnections() -> AsyncStream<Void> {
+        ConnectivityMonitor.reconnections()
     }
 
     /// Application Support del iPhone; en el improbable caso de que no exista, la carpeta temporal
@@ -24,5 +41,10 @@ struct CompositionRoot {
     private static func store() -> any TrainingDataStore {
         (try? JSONFileTrainingDataStore.applicationSupport())
             ?? JSONFileTrainingDataStore(file: FileManager.default.temporaryDirectory.appendingPathComponent("training-data.json"))
+    }
+
+    private static func settings() -> any SyncSettingsStore {
+        (try? JSONFileSyncSettingsStore.applicationSupport())
+            ?? JSONFileSyncSettingsStore(file: FileManager.default.temporaryDirectory.appendingPathComponent("sync.json"))
     }
 }

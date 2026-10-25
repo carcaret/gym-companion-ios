@@ -13,3 +13,6 @@ charts.test.js
 routine-rename.test.js
 routine-reorder.test.js
 constants.test.js
+github.test.js
+json-parse-safety.test.js
+keepalive.test.js
