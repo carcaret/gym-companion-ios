@@ -1,6 +1,7 @@
 import Application
 import Domain
 import Observation
+import Presentation
 
 /// Estado de la app: los datos del usuario, cargados al arrancar. Las pantallas los leen de aquí
 /// y le pasan sus cambios, que se guardan y se sincronizan (`TrainingRepository`).
@@ -12,6 +13,9 @@ public final class AppModel {
     public private(set) var loadError: String?
     /// Si un cambio no se pudo guardar en el iPhone.
     public private(set) var saveError: String?
+    /// El aviso breve que hay que enseñar (uno para toda la app, como el toast de la PWA); la
+    /// vista lo quita cuando se ha visto.
+    public var notice: Notice?
 
     private let repository: TrainingRepository
 

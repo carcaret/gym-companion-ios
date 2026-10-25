@@ -25,3 +25,8 @@ e2e/persistence.spec.js
 e2e/tabbar-keyboard.spec.js
 builders.test.js
 bar-colors.test.js
+e2e/day-selector.spec.js
+e2e/routine-preview-accordion.spec.js
+e2e/routine.spec.js
+e2e/session.spec.js
+e2e/best-recent-preload.spec.js
