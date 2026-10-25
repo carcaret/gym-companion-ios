@@ -103,7 +103,8 @@ final class NavigationTests: XCTestCase {
         app.tabBars.buttons["Progreso"].tap()
         openChartsFromProgress(app)
         XCTAssertTrue(app.tabBars.buttons["Progreso"].isSelected, "Las gráficas se abren dentro de Progreso")
-        XCTAssertTrue(app.staticTexts["Press Banca"].firstMatch.exists, "Con el ejercicio elegido")
+        // La fila del ejercicio es un `NavigationLink`: su texto va en la etiqueta del botón.
+        XCTAssertTrue(app.buttons["chart-exercise"].label.contains("Press Banca"), "Con el ejercicio elegido")
 
         swipeBackFully(app)
         XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 5), "Deslizar vuelve a Estadísticas")

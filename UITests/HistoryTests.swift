@@ -70,8 +70,13 @@ final class HistoryTests: XCTestCase {
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 10))
 
-        let start = first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 300)))
-        XCTAssertTrue(app.staticTexts["GitHub no configurado"].waitForExistence(timeout: 5))
+        // Despacio y aguantando abajo, para pasar del umbral del refresco antes de soltar.
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)),
+                   withVelocity: .slow, thenHoldForDuration: 0.5)
+        // El aviso (`notice`) dura 2,5 s; cualquier tipo de elemento, con su texto.
+        let notice = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == 'notice' AND label == 'GitHub no configurado'")).firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: 5))
     }
 }
