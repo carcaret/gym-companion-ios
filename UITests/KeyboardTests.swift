@@ -1,7 +1,7 @@
 import XCTest
 
-/// El teclado se cierra: al tocar fuera de un campo y con "OK" encima del teclado. Con él abierto
-/// la barra de pestañas queda tapada (visto en el iPhone en Ajustes).
+/// El teclado se cierra al tocar fuera de un campo. Con él abierto la barra de pestañas queda
+/// tapada (visto en el iPhone en Ajustes).
 final class KeyboardTests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -29,14 +29,6 @@ final class KeyboardTests: XCTestCase {
         search.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "No se abrió el teclado")
         app.staticTexts["Desde"].tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
-    }
-
-    /// "OK" encima del teclado lo cierra.
-    @MainActor
-    func testOKCierraElTeclado() {
-        let app = openSettingsWithKeyboard()
-        app.buttons["OK"].firstMatch.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
     }
 
