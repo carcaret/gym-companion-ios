@@ -31,13 +31,15 @@ struct HistoryScreen: View {
         } else {
             List(model.rows) { row in
                 Button { model.open(row.date) } label: { HistoryRowView(row: row) }
-                    .foregroundStyle(.primary)
-                    .listRowBackground(row.isIncomplete ? Color.blue.opacity(0.08) : nil)
+                    .buttonStyle(.plain)
+                    .cardRow()
                     .swipeActions {
                         Button(HistoryText.deleteConfirm, systemImage: "trash", role: .destructive) { model.requestDelete(row.date) }
                     }
                     .accessibilityIdentifier("history-\(row.date.iso)")
             }
+            .listStyle(.plain)
+            .screenBackground()
         }
     }
 
@@ -45,9 +47,12 @@ struct HistoryScreen: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 if model.isIncomplete {
-                    Label(HistoryText.incomplete, systemImage: "clock")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.blue)
+                    Label(HistoryText.incomplete, systemImage: "pause.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Theme.accentLight)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Theme.accent.opacity(0.18), in: .capsule)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 ForEach(Array(model.cards.enumerated()), id: \.offset) { index, card in
@@ -61,12 +66,12 @@ struct HistoryScreen: View {
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.back() } label: { Label(HistoryText.back, systemImage: "chevron.left") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.pill(.secondary))
                     .fixedSize()
             } primary: {
                 if model.isIncomplete {
                     Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.pill())
                 } else {
                     Spacer()
                 }
@@ -85,25 +90,53 @@ struct HistoryScreen: View {
     }
 }
 
+/// Una sesión (`.historial-entry-btn`): la fecha en bloque, la etiqueta de la rutina con su color,
+/// "hace…" y los ejercicios, con el filete del día. Sin terminar, con el tinte azul.
 private struct HistoryRowView: View {
     let row: HistoryModel.Row
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(spacing: 0) {
-                Text(row.day).font(.title2.weight(.bold))
-                Text(row.month).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+        HStack(spacing: 14) {
+            VStack(spacing: 2) {
+                Text(row.day).font(.system(size: 20, weight: .bold)).monospacedDigit().foregroundStyle(Theme.text)
+                Text(row.month).font(.system(size: 9.5, weight: .semibold)).tracking(0.4).foregroundStyle(Theme.textMuted)
             }
-            .frame(width: 44)
+            .frame(minWidth: 40)
+            Rectangle().fill(Theme.border).frame(width: 1, height: 32)
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(row.routine).font(.subheadline.weight(.semibold))
-                    Text(row.relative).font(.caption).foregroundStyle(.secondary)
-                    if row.isIncomplete { Image(systemName: "pause.circle.fill").foregroundStyle(.blue).accessibilityLabel(HistoryText.incomplete) }
+                HStack(spacing: 8) {
+                    RoutineBadge(text: row.routine, color: Theme.color(row.tint) ?? Theme.textSecondary)
+                    Text(row.relative).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    if row.isIncomplete {
+                        Image(systemName: "pause.fill").font(.system(size: 10)).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
+                    }
                 }
-                Text(row.summary).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Text(row.summary).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 2)
+        .card(background: row.isIncomplete ? Theme.accent.opacity(0.07) : Theme.surface,
+              border: row.isIncomplete ? Theme.accent.opacity(0.35) : Theme.border,
+              stripe: Theme.color(row.tint))
+        .contentShape(.rect)
+    }
+}
+
+/// La etiqueta de una rutina (`.type-badge`): mayúsculas pequeñas en su color, sobre su color suave.
+struct RoutineBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9.5, weight: .bold))
+            .textCase(.uppercase)
+            .tracking(0.4)
+            .lineLimit(1)
+            .foregroundStyle(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.13), in: .rect(cornerRadius: Theme.radiusTag))
+            .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(color.opacity(0.27)) }
     }
 }
