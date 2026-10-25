@@ -23,3 +23,5 @@ e2e/sync-ui.spec.js
 e2e/workout-github-sync.spec.js
 e2e/persistence.spec.js
 e2e/tabbar-keyboard.spec.js
+builders.test.js
+bar-colors.test.js
