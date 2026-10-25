@@ -35,3 +35,12 @@ e2e/workout-accordion.spec.js
 e2e/workout-open-state.spec.js
 e2e/workout-subtitle-reps.spec.js
 e2e/workout-reorder.spec.js
+e2e/workout-swap.spec.js
+e2e/workout-swap-order.spec.js
+e2e/workout-reciprocal-swap.spec.js
+e2e/workout-remove-exercise.spec.js
+e2e/skip-exercise.spec.js
+e2e/one-off-exercise.spec.js
+e2e/records.spec.js
+e2e/validation-workout.spec.js
+e2e/workout-completed-view.spec.js

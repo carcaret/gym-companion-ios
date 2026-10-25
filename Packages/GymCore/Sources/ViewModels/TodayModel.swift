@@ -81,6 +81,8 @@ public final class TodayModel {
     public struct SummaryRow: Hashable, Sendable {
         public let title: String
         public let subtitle: String
+        /// Saltado: se pinta con el fondo de saltado y sin botones.
+        public let isSkipped: Bool
     }
 
     public enum PickerPurpose: Hashable, Sendable {
@@ -327,7 +329,7 @@ public final class TodayModel {
 
     public var completedRows: [SummaryRow] {
         guard stage == .completed, let session = todaySession else { return [] }
-        return session.logs.map { SummaryRow(title: data.catalog.name(of: $0.exerciseID), subtitle: LogText.summary($0)) }
+        return session.logs.map { SummaryRow(title: data.catalog.name(of: $0.exerciseID), subtitle: LogText.summary($0), isSkipped: $0.skipped) }
     }
 
     /// "← Volver a rutinas".
