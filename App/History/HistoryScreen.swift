@@ -33,9 +33,9 @@ struct HistoryScreen: View {
                     .buttonStyle(.plain)
                     .cardRow()
                     .swipeActions {
-                        // En rojo a mano: las acciones de deslizar heredan el tinte de la raíz aunque
-                        // sean destructivas.
-                        Button(HistoryText.deleteConfirm, systemImage: "trash", role: .destructive) { model.requestDelete(row.date) }
+                        // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
+                        // tocarlo y la quita antes de que se confirme. El rojo, a mano.
+                        Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
                             .tint(Theme.red)
                     }
                     .accessibilityIdentifier("history-\(row.date.iso)")
