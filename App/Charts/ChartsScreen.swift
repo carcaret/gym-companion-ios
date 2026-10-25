@@ -125,7 +125,7 @@ private struct ProgressChart: View {
         .chartXAxis {
             AxisMarks { _ in
                 AxisGridLine()
-                AxisValueLabel(format: .dateTime.day().month(.abbreviated), anchor: .top)
+                AxisValueLabel(anchor: .top)  // con el formato por defecto, que sigue el locale es_ES de la raíz
             }
         }
         .chartYAxis { AxisMarks(position: .leading) }      // a la izquierda, como en la PWA
