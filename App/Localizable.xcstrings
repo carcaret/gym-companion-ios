@@ -1,0 +1,12 @@
+{
+  "sourceLanguage" : "es",
+  "strings" : {
+    "Gym Companion" : {
+      "shouldTranslate" : false
+    },
+    "Versión %@" : {
+
+    }
+  },
+  "version" : "1.0"
+}
