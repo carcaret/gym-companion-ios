@@ -9,34 +9,48 @@ struct SettingsScreen: View {
     @Bindable var model: SettingsModel
 
     var body: some View {
-        Form {
-            Section {
-                LabeledContent(SettingsText.status) { Text(statusText).foregroundStyle(.secondary) }
-                field(SettingsText.repository) {
-                    TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
-                        .accessibilityIdentifier("settings-repository")
+        ScrollView {
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(SettingsText.githubSection).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text)
+                    HStack {
+                        Text(SettingsText.status).foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Text(statusText).foregroundStyle(Theme.text)
+                    }
+                    .font(.system(size: 14))
+                    field(SettingsText.repository) {
+                        TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
+                            .accessibilityIdentifier("settings-repository")
+                    }
+                    field(SettingsText.branch) {
+                        TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
+                    }
+                    field(SettingsText.path) {
+                        TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
+                    }
+                    field(SettingsText.token) {
+                        SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
+                    }
+                    VStack(spacing: 10) {
+                        Button { Task { await model.save() } } label: { Text(SettingsText.save).frame(maxWidth: .infinity) }
+                            .buttonStyle(.pill())
+                        Button { Task { await model.testConnection() } } label: { Text(SettingsText.testConnection).frame(maxWidth: .infinity) }
+                            .buttonStyle(.pill(.secondary))
+                        Button { Task { await model.upload() } } label: { Text(SettingsText.upload).frame(maxWidth: .infinity) }
+                            .buttonStyle(.pill(.secondary))
+                        Button(role: .destructive) { model.requestDownload() } label: { Text(SettingsText.download).frame(maxWidth: .infinity) }
+                            .buttonStyle(.pill(.danger))
+                    }
                 }
-                field(SettingsText.branch) {
-                    TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
-                }
-                field(SettingsText.path) {
-                    TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
-                }
-                field(SettingsText.token) {
-                    SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
-                }
-            } header: {
-                Text(SettingsText.githubSection)
+                .card()
+                Text(model.versionLabel)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("settings-version")
             }
-            Section {
-                Button(SettingsText.save) { Task { await model.save() } }
-                Button(SettingsText.testConnection) { Task { await model.testConnection() } }
-                Button(SettingsText.upload) { Task { await model.upload() } }
-                Button(SettingsText.download, role: .destructive) { model.requestDownload() }
-            }
-            Section(SettingsText.aboutSection) {
-                Text(model.versionLabel).foregroundStyle(.secondary).accessibilityIdentifier("settings-version")
-            }
+            .padding(16)
         }
         .navigationTitle(SettingsText.title)
         .task { await model.load() }
@@ -48,13 +62,23 @@ struct SettingsScreen: View {
         }
     }
 
-    /// Un campo con su nombre a la izquierda: con el campo relleno, el texto de ayuda ya no se ve.
+    /// Un campo de la PWA (`.input-group`): el nombre encima, en mayúsculas pequeñas, y la caja.
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
-        LabeledContent(label) {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(size: 12, weight: .semibold))
+                .textCase(.uppercase)
+                .tracking(0.5)
+                .foregroundStyle(Theme.textSecondary)
             content()
-                .multilineTextAlignment(.trailing)
+                .font(.system(size: 15))
+                .foregroundStyle(Theme.text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+                .background(Theme.input, in: .rect(cornerRadius: Theme.radiusSmall))
+                .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
         }
     }
 

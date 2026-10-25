@@ -31,11 +31,14 @@ struct RootView: View {
             }
         }
         .syncPresentation(root.sync)
+        .tint(Theme.accentLight)
+        .preferredColorScheme(.dark)
     }
 
     private func stack(@ViewBuilder _ content: () -> some View) -> some View {
         NavigationStack {
             content()
+                .screenBackground()
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: root.sync) }
                 }

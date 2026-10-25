@@ -11,17 +11,20 @@ struct ActiveWorkoutView: View {
     var body: some View {
         List {
             Section {
-                Label(model.activeStatus, systemImage: "circle.fill")
-                    .symbolEffect(.pulse)
-                    .foregroundStyle(.green)
-                    .font(.subheadline.weight(.semibold))
-                    .listRowBackground(Color.clear)
+                HStack(spacing: 10) {
+                    Image(systemName: "circle.fill").font(.system(size: 10)).foregroundStyle(Theme.green).symbolEffect(.pulse)
+                    Text(model.activeStatus).font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.text)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Theme.accentTint, in: .rect(cornerRadius: Theme.radiusSmall))
+                .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.accent.opacity(0.22)) }
+                .cardRow()
             }
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
-                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                    .cardRow()
             }
             .onMove { source, destination in
                 guard let from = source.first else { return }
@@ -31,6 +34,7 @@ struct ActiveWorkoutView: View {
             }
         }
         .listStyle(.plain)
+        .screenBackground()
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -44,12 +48,12 @@ struct ActiveWorkoutView: View {
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.openAddPicker() } label: { Label(TodayText.addExercise, systemImage: "plus") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.pill(.subtle))
                     .fixedSize()
                     .accessibilityIdentifier("add-exercise")
             } primary: {
                 Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.pill())
                     .accessibilityIdentifier("finish-workout")
             }
         }
@@ -120,6 +124,7 @@ struct ExercisePickerSheet: View {
                 }
             }
             .searchable(text: $model.pickerQuery, prompt: TodayText.searchPlaceholder)
+            .screenBackground()
             .navigationTitle(model.picker?.title ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

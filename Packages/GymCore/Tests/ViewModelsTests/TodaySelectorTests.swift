@@ -75,6 +75,12 @@ struct RoutineRowTests {
         #expect(longer.model.routineRows[0].subtitle == "4 ejercicios · Press Banca, Curl Bíceps, Ejercicio Sin Historial...")
     }
 
+    @Test("cada rutina lleva su color (filete y título de la PWA)")
+    func tint() async {
+        let today = await TodayHarness.make()
+        #expect(today.model.routineRows.map(\.tint) == [.day1, .day2, .day3])
+    }
+
     @Test("el título de la vista previa es el de la rutina")
     func previewTitle() async {
         let today = await TodayHarness.make()

@@ -20,6 +20,7 @@ struct ChartsScreen: View {
                     get: { model.to.date }, set: { model.setRange(from: model.from, to: LocalDate($0)) }
                 ), displayedComponents: .date)
             }
+            .listRowBackground(Theme.surface)
             Section {
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
@@ -42,15 +43,23 @@ struct ChartsScreen: View {
                     }
                 }
             }
+            .listRowBackground(Theme.surface)
             if model.charts.isEmpty {
-                Section { Text(ChartsText.empty).foregroundStyle(.secondary) }
+                Section { Text(ChartsText.empty).foregroundStyle(Theme.textMuted) }
+                    .listRowBackground(Theme.surface)
             } else {
                 ForEach(model.charts, id: \.label) { chart in
-                    Section(chart.axisTitle) { ProgressChart(chart: chart) }
+                    Section {
+                        ProgressChart(chart: chart)
+                    } header: {
+                        Text(chart.axisTitle).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.text).textCase(nil)
+                    }
+                    .listRowBackground(Theme.surface)
                 }
             }
         }
         .navigationTitle(ChartsText.title)
+        .foregroundStyle(Theme.text)
         .toolbar {
             if model.canGoBack {
                 ToolbarItem(placement: .topBarLeading) {
@@ -69,10 +78,10 @@ struct ChartsScreen: View {
             HStack {
                 Text(option.name)
                 Spacer()
-                if option.isSelected { Image(systemName: "checkmark").foregroundStyle(.tint) }
+                if option.isSelected { Image(systemName: "checkmark").foregroundStyle(Theme.accentLight) }
             }
         }
-        .foregroundStyle(.primary)
+        .foregroundStyle(option.isSelected ? Theme.accentLight : Theme.text)
     }
 }
 
@@ -86,20 +95,24 @@ private struct ProgressChart: View {
             ForEach(chart.points, id: \.date) { point in
                 LineMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
                     .interpolationMethod(.monotone)
+                    .foregroundStyle(Theme.accent)
                 AreaMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
-                    .foregroundStyle(.tint.opacity(0.12))
+                    .foregroundStyle(Theme.accent.opacity(0.08))
                 PointMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
+                    .foregroundStyle(Theme.accent)
                     .symbolSize(point.isCarriedForward ? 15 : 30)
                     .opacity(point.isCarriedForward ? 0.4 : 1)
             }
             if let selected = nearest {
                 RuleMark(x: .value("Fecha", selected.date.date))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textMuted)
                     .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
                         Text(ChartsText.pointLabel(chart.label, value: selected.value, carriedForward: selected.isCarriedForward))
-                            .font(.caption)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Theme.text)
                             .padding(6)
-                            .background(.regularMaterial, in: .rect(cornerRadius: 6))
+                            .background(Theme.cardSolid, in: .rect(cornerRadius: 4))
+                            .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.border, lineWidth: 0.5) }
                     }
             }
         }

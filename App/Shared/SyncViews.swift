@@ -12,6 +12,7 @@ struct SyncIndicator: View {
             sync.tapIndicator()
         } label: {
             Image(systemName: symbol)
+                .foregroundStyle(color)
                 .symbolEffect(.pulse, isActive: sync.status.state == .pending)
         }
         .accessibilityIdentifier("sync-indicator")
@@ -23,6 +24,15 @@ struct SyncIndicator: View {
         case .ok: "checkmark.icloud"
         case .pending: sync.status.conflict ? "exclamationmark.icloud" : "icloud.and.arrow.up"
         case .disabled: "icloud.slash"
+        }
+    }
+
+    /// Verde sincronizado, dorado pendiente, gris sin configurar (`.sync-indicator`).
+    private var color: Color {
+        switch sync.status.state {
+        case .ok: Theme.green
+        case .pending: Theme.gold
+        case .disabled: Theme.textMuted
         }
     }
 
@@ -79,12 +89,28 @@ struct NoticeView: View {
     let notice: Notice
 
     var body: some View {
-        Label(notice.text, systemImage: symbol)
-            .font(.subheadline)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .glassEffect()
+        Label {
+            Text(notice.text).foregroundStyle(Theme.text)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(color)
+        }
+            .font(.system(size: 13, weight: .medium))
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Theme.surface2, in: .rect(cornerRadius: Theme.radiusSmall))
+            .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
+            .shadow(color: .black.opacity(0.45), radius: 15, y: 8)
             .accessibilityIdentifier("notice")
+    }
+
+    private var color: Color {
+        switch notice.kind {
+        case .info: Theme.textSecondary
+        case .success: Theme.green
+        case .saved: Theme.textMuted
+        case .warning: Theme.gold
+        case .error: Theme.red
+        }
     }
 
     private var symbol: String {

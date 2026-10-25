@@ -224,6 +224,12 @@ struct HistoryListTests {
         #expect(rows[1].summary == "2 ejercicios · Press Banca · Curl Bíceps")
     }
 
+    @Test("cada sesión lleva el color de su rutina (filete y etiqueta de la PWA)")
+    func tint() async {
+        let history = await HistoryHarness.make()
+        #expect(history.model.rows[1].tint == .day1)
+    }
+
     @Test("sin sesiones, la lista está vacía (y la vista dice que no hay)")
     func empty() async {
         let history = await HistoryHarness.make(TrainingData())

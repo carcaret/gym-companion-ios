@@ -23,25 +23,32 @@ struct TodayScreen: View {
     }
 
     private var selector: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(spacing: 12) {
+                Text(TodayText.selectorPrompt)
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.bottom, 8)
                 ForEach(model.routineRows, id: \.id) { row in
                     Button { model.select(row.id) } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(row.title).font(.headline)
-                            Text(row.subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                            Text(row.title)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Theme.color(row.tint) ?? Theme.text)
+                            Text(row.subtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
                             if let note = row.pendingNote {
-                                Label(note, systemImage: "arrow.left.arrow.right").font(.caption).foregroundStyle(.orange)
+                                Text(note).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.accent).padding(.top, 4)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .card(padding: 20, stripe: Theme.color(row.tint))
+                        .contentShape(.rect)
                     }
-                    .foregroundStyle(.primary)
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("routine-\(row.id.rawValue)")
                 }
-            } header: {
-                Text(TodayText.selectorPrompt)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
         }
     }
 
@@ -57,34 +64,39 @@ struct TodayScreen: View {
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.backToSelector() } label: { Label(TodayText.back, systemImage: "chevron.left") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.pill(.secondary))
                     .fixedSize()
             } primary: {
                 Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.pill())
                     .accessibilityIdentifier("start-workout")
             }
         }
     }
 
     private var completed: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                    .font(.headline)
-            }
-            Section {
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.text)
+                    .symbolRenderingMode(.multicolor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Theme.greenTint, in: .rect(cornerRadius: Theme.radiusSmall))
+                    .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.greenSoft.opacity(0.3)) }
                 ForEach(Array(model.completedRows.enumerated()), id: \.offset) { _, row in
                     SummaryRowView(title: row.title, subtitle: row.subtitle, isSkipped: row.isSkipped)
                 }
-            }
-            Section {
                 Button { model.backFromCompleted() } label: {
                     Label(TodayText.backToRoutines, systemImage: "chevron.left").frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.pill(.secondary))
                 .accessibilityIdentifier("back-to-routines")
+                .padding(.top, 4)
             }
+            .padding(16)
         }
     }
 }
@@ -99,25 +111,24 @@ struct BottomActions<Secondary: View, Primary: View>: View {
             secondary
             primary
         }
-        .controlSize(.large)
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(.bar)
+        .background(Theme.background)
     }
 }
 
-/// Una línea de un entreno terminado (también la usa el historial).
+/// Una línea de un entreno terminado (también la usa el historial): una tarjeta compacta; la de
+/// un ejercicio saltado, con el tinte rojo apagado de la PWA.
 struct SummaryRowView: View {
     let title: String
     let subtitle: String
     let isSkipped: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.body.weight(.medium))
-            Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
+            Text(subtitle).font(.system(size: 12)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
         }
-        .opacity(isSkipped ? 0.5 : 1)
-        .listRowBackground(isSkipped ? Color.gray.opacity(0.15) : nil)
+        .card(background: isSkipped ? Theme.skipTint : Theme.surface)
     }
 }
