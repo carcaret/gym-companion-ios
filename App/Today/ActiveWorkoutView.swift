@@ -25,6 +25,15 @@ struct ActiveWorkoutView: View {
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
+                    // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
+                    .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(
+                        get: { model.removalPrompt?.exerciseID == card.exerciseID }, set: { if !$0 { model.cancelRemoval() } }
+                    ), titleVisibility: .visible) {
+                        Button(TodayText.removeConfirm, role: .destructive) { Task { await model.confirmRemoval() } }
+                        Button(TodayText.cancel, role: .cancel) { model.cancelRemoval() }
+                    } message: {
+                        Text(model.removalPrompt?.message ?? "")
+                    }
             }
             .onMove { source, destination in
                 guard let from = source.first else { return }
@@ -35,14 +44,10 @@ struct ActiveWorkoutView: View {
         }
         .listStyle(.plain)
         .screenBackground()
-        .scrollDismissesKeyboard(.interactively)
+        .numberPadDismissal()
         .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("OK") { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
-            }
             ToolbarItem(placement: .topBarLeading) {
-                if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(.yellow).accessibilityLabel("Récord") }
+                if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(Theme.gold).accessibilityLabel("Récord") }
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -60,14 +65,6 @@ struct ActiveWorkoutView: View {
         .sheet(isPresented: Binding(get: { model.picker != nil }, set: { if !$0 { model.closePicker() } })) {
             ExercisePickerSheet(model: model)
         }
-        .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(
-            get: { model.removalPrompt != nil }, set: { if !$0 { model.cancelRemoval() } }
-        ), titleVisibility: .visible) {
-            Button(TodayText.removeConfirm, role: .destructive) { Task { await model.confirmRemoval() } }
-            Button(TodayText.cancel, role: .cancel) { model.cancelRemoval() }
-        } message: {
-            Text(model.removalPrompt?.message ?? "")
-        }
         .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(
             get: { model.reciprocalOffer != nil }, set: { if !$0 { model.declineReciprocal() } }
         )) {
@@ -81,7 +78,8 @@ struct ActiveWorkoutView: View {
     private func actions(_ index: Int) -> ExerciseCardView.CardActions {
         ExerciseCardView.CardActions(
             adjust: { parameter, direction in Task { await model.adjust(parameter, direction: direction, at: index) } },
-            set: { parameter, text in Task { await model.set(parameter, text: text, at: index) } },
+            type: { parameter, text in model.type(parameter, text: text, at: index) },
+            commit: { Task { await model.commitTyping() } },
             focusSeries: { series in model.focusSeries(series, at: index) },
             chooseRep: { value, series in Task { await model.chooseRep(value, series: series, at: index) } },
             swap: { model.openSwapPicker(at: index) },

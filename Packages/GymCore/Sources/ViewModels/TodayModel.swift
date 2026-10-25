@@ -87,6 +87,8 @@ public final class TodayModel {
     public var isCreatePresented = false
     public var createName = ""
     public private(set) var removalPrompt: RemovalPrompt?
+    /// Lo tecleado en un campo del entreno que aún no se ha aplicado (`TypedValue`).
+    public private(set) var typed: TypedValue?
     public private(set) var reciprocalOffer: ReciprocalOffer?
 
     private let app: AppModel
@@ -222,6 +224,18 @@ public final class TodayModel {
         await editLog(at: index) { $0.set(parameter, text: text) }
     }
 
+    /// Lo que se va tecleando en un campo: se aplica al salir de él o antes de la siguiente acción.
+    public func type(_ parameter: LogParameter, text: String, at index: Int) {
+        typed = TypedValue(parameter: parameter, text: text, index: index)
+    }
+
+    /// Aplica lo tecleado pendiente, si lo hay.
+    public func commitTyping() async {
+        guard let typed else { return }
+        self.typed = nil
+        await set(typed.parameter, text: typed.text, at: typed.index)
+    }
+
     /// Tocar una serie enseña sus chips; tocarla otra vez los esconde.
     public func focusSeries(_ series: Int, at index: Int) {
         if let focused = focusedSeries, focused.log == index, focused.series == series {
@@ -243,6 +257,7 @@ public final class TodayModel {
     /// Arrastrar una tarjeta. Con entreno en curso los logs mandan y la rutina se deriva de ellos:
     /// sin los puntuales y con cada cambio guardado por su ejercicio original.
     public func reorder(from source: Int, to destination: Int) async {
+        await commitTyping()
         guard var session = activeSession, source != destination, session.logs.indices.contains(source),
               session.logs.indices.contains(destination) else { return }
         var data = data
@@ -259,6 +274,7 @@ public final class TodayModel {
     /// Terminar: si falta algo, se marca y se abre la primera tarjeta con errores; si no, se
     /// termina, se borra el pendiente de la rutina y se sube ya.
     public func finish() async {
+        await commitTyping()
         guard var session = activeSession else { return }
         focusedSeries = nil
         let validation = session.validation
@@ -347,6 +363,7 @@ public final class TodayModel {
     }
 
     public func choose(_ exercise: ExerciseID) async {
+        await commitTyping()
         guard let purpose = pickerPurpose else { return }
         pickerPurpose = nil
         switch purpose {
@@ -452,6 +469,7 @@ public final class TodayModel {
 
     /// "Quitar" (puntual: sin preguntar) o "Quitar de rutina" (pide confirmación).
     public func requestRemoval(at index: Int) async {
+        await commitTyping()
         guard let session = activeSession, session.logs.indices.contains(index) else { return }
         let log = session.logs[index]
         if log.oneOff {
@@ -492,6 +510,7 @@ public final class TodayModel {
     // MARK: - Ayudas
 
     private func editLog(at index: Int, _ change: (inout ExerciseLog) -> Void) async {
+        await commitTyping()
         guard var session = activeSession, session.logs.indices.contains(index) else { return }
         change(&session.logs[index])
         var data = data

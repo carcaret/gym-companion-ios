@@ -8,20 +8,20 @@ struct HistoryScreen: View {
     @Bindable var model: HistoryModel
 
     var body: some View {
-        Group {
-            if model.selectedDate != nil { detail } else { list }
-        }
-        .navigationTitle(model.selectedDate == nil ? HistoryText.title : model.detailTitle)
-        .navigationBarTitleDisplayMode(model.selectedDate == nil ? .large : .inline)
-        .onAppear { model.appear() }
-        .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(
-            get: { model.deletePrompt != nil }, set: { if !$0 { model.cancelDelete() } }
-        ), titleVisibility: .visible) {
-            Button(HistoryText.deleteConfirm, role: .destructive) { Task { await model.confirmDelete() } }
-            Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
-        } message: {
-            Text(model.deletePrompt?.message ?? "")
-        }
+        list
+            .navigationTitle(HistoryText.title)
+            .navigationBarTitleDisplayMode(.large)
+            .onAppear { model.appear() }
+            // El detalle entra empujado, como en cualquier app de iOS: se vuelve también con el
+            // botón de la barra o deslizando desde el borde.
+            .navigationDestination(isPresented: Binding(
+                get: { model.selectedDate != nil }, set: { if !$0 { model.back() } }
+            )) {
+                detail
+                    .navigationTitle(model.detailTitle)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .screenBackground()
+            }
     }
 
     @ViewBuilder
@@ -35,6 +35,15 @@ struct HistoryScreen: View {
                     .cardRow()
                     .swipeActions {
                         Button(HistoryText.deleteConfirm, systemImage: "trash", role: .destructive) { model.requestDelete(row.date) }
+                    }
+                    // Colgado de su fila: en iOS 26 el diálogo sale como globo que apunta a su vista.
+                    .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(
+                        get: { model.deletePrompt?.date == row.date }, set: { if !$0 { model.cancelDelete() } }
+                    ), titleVisibility: .visible) {
+                        Button(HistoryText.deleteConfirm, role: .destructive) { Task { await model.confirmDelete() } }
+                        Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
+                    } message: {
+                        Text(model.deletePrompt?.message ?? "")
                     }
                     .accessibilityIdentifier("history-\(row.date.iso)")
             }
@@ -63,6 +72,7 @@ struct HistoryScreen: View {
             }
             .padding()
         }
+        .numberPadDismissal()
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.back() } label: { Label(HistoryText.back, systemImage: "chevron.left") }
@@ -82,7 +92,8 @@ struct HistoryScreen: View {
     private func actions(_ index: Int) -> ExerciseCardView.CardActions {
         ExerciseCardView.CardActions(
             adjust: { parameter, direction in model.adjust(parameter, direction: direction, at: index) },
-            set: { parameter, text in model.set(parameter, text: text, at: index) },
+            type: { parameter, text in model.type(parameter, text: text, at: index) },
+            commit: { model.commitTyping() },
             focusSeries: { series in model.focusSeries(series, at: index) },
             chooseRep: { value, series in model.chooseRep(value, series: series, at: index) },
             swap: nil, toggleSkip: nil, remove: nil

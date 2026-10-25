@@ -38,6 +38,8 @@ public final class HistoryModel {
     public private(set) var dirtyCards: Set<Int> = []
     public private(set) var focusedSeries: (log: Int, series: Int)?
     public private(set) var deletePrompt: DeletePrompt?
+    /// Lo tecleado en un campo de la sesión abierta que aún no se ha aplicado (`TypedValue`).
+    public private(set) var typed: TypedValue?
 
     private let app: AppModel
     private let navigation: NavigationModel
@@ -82,6 +84,7 @@ public final class HistoryModel {
     }
 
     private func resetDetail() {
+        typed = nil
         openCards = []
         drafts = [:]
         dirtyCards = []
@@ -164,6 +167,18 @@ public final class HistoryModel {
         edit(index) { $0.set(parameter, text: text) }
     }
 
+    /// Lo que se va tecleando en un campo: se aplica al salir de él o antes de la siguiente acción.
+    public func type(_ parameter: LogParameter, text: String, at index: Int) {
+        typed = TypedValue(parameter: parameter, text: text, index: index)
+    }
+
+    /// Aplica lo tecleado pendiente, si lo hay.
+    public func commitTyping() {
+        guard let typed else { return }
+        self.typed = nil
+        set(typed.parameter, text: typed.text, at: typed.index)
+    }
+
     public func focusSeries(_ series: Int, at index: Int) {
         if let focused = focusedSeries, focused.log == index, focused.series == series {
             focusedSeries = nil
@@ -177,6 +192,7 @@ public final class HistoryModel {
     }
 
     private func edit(_ index: Int, _ change: (inout ExerciseLog) -> Void) {
+        commitTyping()
         guard var log = drafts[index] else { return }
         change(&log)
         drafts[index] = log
@@ -185,6 +201,7 @@ public final class HistoryModel {
 
     /// "Guardar": si hay errores se marcan y no se guarda.
     public func save(_ index: Int) async {
+        commitTyping()
         guard let date = selectedDate, let log = drafts[index] else { return }
         guard log.validationErrors.isEmpty else {
             app.notice = HistoryText.fixBeforeSaving

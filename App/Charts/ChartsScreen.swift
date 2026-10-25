@@ -96,7 +96,8 @@ private struct ProgressChart: View {
                 LineMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
                     .interpolationMethod(.monotone)
                     .foregroundStyle(Theme.accent)
-                AreaMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
+                AreaMark(x: .value("Fecha", point.date.date), yStart: .value(chart.label, chart.valueRange.lowerBound),
+                         yEnd: .value(chart.label, point.value))
                     .foregroundStyle(Theme.accent.opacity(0.08))
                 PointMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
                     .foregroundStyle(Theme.accent)
@@ -117,7 +118,8 @@ private struct ProgressChart: View {
             }
         }
         .chartXSelection(value: $selectedDate)
-        .chartYScale(domain: .automatic(includesZero: false))
+        .chartYScale(domain: chart.valueRange)
+        .chartXScale(range: .plotDimension(padding: 16))  // que la primera y la última fecha no se corten
         .frame(height: 200)
         .accessibilityLabel(chart.axisTitle)
     }

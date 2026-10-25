@@ -21,6 +21,22 @@ public final class ChartsModel {
         public let label: String
         public let axisTitle: String
         public let points: [ChartPoint]
+
+        public init(label: String, axisTitle: String, points: [ChartPoint]) {
+            self.label = label
+            self.axisTitle = axisTitle
+            self.points = points
+        }
+
+        /// El eje vertical, ajustado a los valores como en Chart.js (que no empieza en 0) con un
+        /// margen de un 10 % arriba y abajo, sin bajar de 0. Swift Charts, con el relleno bajo la
+        /// línea, incluiría el 0 y aplastaría la línea arriba.
+        public var valueRange: ClosedRange<Double> {
+            let values = points.map(\.value)
+            guard let low = values.min(), let high = values.max() else { return 0...1 }
+            let margin = high > low ? (high - low) / 10 : max(abs(high) / 10, 1)
+            return max(0, low - margin)...(high + margin)
+        }
     }
 
     public private(set) var from: LocalDate
