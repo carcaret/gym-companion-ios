@@ -12,7 +12,10 @@ final class KeyboardTests: XCTestCase {
     func testTocarFueraCierraElTeclado() {
         let app = openSettingsWithKeyboard()
         app.staticTexts["Estado"].tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
+        let closed = app.keyboards.firstMatch.waitForNonExistence(timeout: 5)
+        // DIAGNÓSTICO TEMPORAL: qué ha visto el reconocedor.
+        let trace = app.descendants(matching: .any)["keyboard-debug"].value as? String ?? "sin rastro"
+        XCTAssertTrue(closed, "El teclado sigue abierto. Rastro: \(trace)")
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 5))
     }
