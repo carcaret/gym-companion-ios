@@ -14,7 +14,9 @@ struct ExerciseCardView: View {
 
     struct CardActions {
         let adjust: (LogParameter, Int) -> Void
-        let set: (LogParameter, String) -> Void
+        /// Lo que se va tecleando (`TypedValue`) y salir del campo, que lo aplica.
+        let type: (LogParameter, String) -> Void
+        let commit: () -> Void
         let focusSeries: (Int) -> Void
         let chooseRep: (Int, Int) -> Void
         /// Solo en el entreno (en el historial no se cambia, salta ni quita).
@@ -75,12 +77,9 @@ struct ExerciseCardView: View {
                 divider
             }
             VStack(spacing: 8) {
-                ParameterRow(label: TodayText.weightLabel, value: LogText.kilograms(card.weight), decimal: true, hasError: card.errors.contains(.negativeWeight),
-                             adjust: actions.map { a in { a.adjust(.weight, $0) } }, set: actions.map { a in { a.set(.weight, $0) } })
-                ParameterRow(label: TodayText.seriesLabel, value: "\(card.series)", decimal: false, hasError: card.errors.contains(.invalidSeries),
-                             adjust: actions.map { a in { a.adjust(.series, $0) } }, set: actions.map { a in { a.set(.series, $0) } })
-                ParameterRow(label: TodayText.targetRepsLabel, value: "\(card.targetReps)", decimal: false, hasError: card.errors.contains(.invalidTargetReps),
-                             adjust: actions.map { a in { a.adjust(.targetReps, $0) } }, set: actions.map { a in { a.set(.targetReps, $0) } })
+                parameterRow(.weight, TodayText.weightLabel, LogText.kilograms(card.weight), decimal: true, hasError: card.errors.contains(.negativeWeight))
+                parameterRow(.series, TodayText.seriesLabel, "\(card.series)", decimal: false, hasError: card.errors.contains(.invalidSeries))
+                parameterRow(.targetReps, TodayText.targetRepsLabel, "\(card.targetReps)", decimal: false, hasError: card.errors.contains(.invalidTargetReps))
             }
             .padding(.vertical, 10)
             divider
@@ -108,27 +107,41 @@ struct ExerciseCardView: View {
         }
     }
 
+    private func parameterRow(_ parameter: LogParameter, _ label: String, _ value: String, decimal: Bool, hasError: Bool) -> some View {
+        ParameterRow(label: label, value: value, decimal: decimal, hasError: hasError,
+                     adjust: actions.map { a in { a.adjust(parameter, $0) } },
+                     type: actions.map { a in { a.type(parameter, $0) } },
+                     commit: actions?.commit)
+    }
+
     @ViewBuilder
     private var footer: some View {
         if card.isEditable, let actions, let swap = actions.swap, let toggleSkip = actions.toggleSkip, let remove = actions.remove {
             HStack {
-                Button(TodayText.swapLabel, action: swap)
+                footerButton(TodayText.swapLabel, action: swap)
                 Spacer()
-                Button(card.skipLabel, action: toggleSkip)
+                footerButton(card.skipLabel, action: toggleSkip)
                     .foregroundStyle(card.isSkipped ? Theme.redSoft : Theme.textMuted)
-                Button(card.removeLabel, role: .destructive, action: remove)
+                footerButton(card.removeLabel, role: .destructive, action: remove)
                     .padding(.leading, 12)
             }
             .font(.system(size: 12))
             .foregroundStyle(Theme.textMuted)
             .buttonStyle(.plain)
-            .padding(.top, 14)
+            .padding(.top, 4)
         }
         if card.isDirty, let save {
             Button(action: save) { Text(HistoryText.save).frame(maxWidth: .infinity) }
                 .buttonStyle(.pill())
                 .accessibilityIdentifier("history-save")
                 .padding(.top, 14)
+        }
+    }
+
+    /// Texto pequeño como en la PWA, pero con la zona de toque de 44 pt que pide iOS.
+    private func footerButton(_ title: String, role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
+        Button(role: role, action: action) {
+            Text(title).frame(minHeight: 44).contentShape(.rect)
         }
     }
 
@@ -159,7 +172,8 @@ private struct ParameterRow: View {
     let decimal: Bool
     let hasError: Bool
     let adjust: ((Int) -> Void)?
-    let set: ((String) -> Void)?
+    let type: ((String) -> Void)?
+    let commit: (() -> Void)?
     @State private var text = ""
     @FocusState private var focused: Bool
 
@@ -167,7 +181,7 @@ private struct ParameterRow: View {
         HStack(spacing: 10) {
             Text(label).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textSecondary)
             Spacer()
-            if let adjust, let set {
+            if let adjust, let type, let commit {
                 RoundIconButton(systemImage: "minus") { adjust(-1) }
                 TextField(label, text: $text)
                     .keyboardType(decimal ? .decimalPad : .numberPad)
@@ -181,8 +195,12 @@ private struct ParameterRow: View {
                     }
                     .focused($focused)
                     .onAppear { text = value }
-                    .onChange(of: value) { _, new in if !focused { text = new } }
-                    .onChange(of: focused) { _, isFocused in if !isFocused, text != value { set(text) } }
+                    .onChange(of: value) { _, new in text = new }
+                    // Un botón no quita el foco: el modelo se queda con lo tecleado y lo aplica
+                    // al salir del campo o antes de la siguiente acción (`TypedValue`).
+                    .onChange(of: text) { _, new in if focused, new != value { type(new) } }
+                    .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                    .onDisappear { if focused { commit() } }
                 RoundIconButton(systemImage: "plus") { adjust(1) }
             } else {
                 Text(value)

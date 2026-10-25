@@ -173,3 +173,32 @@ struct ChartsModelTests {
         #expect(ChartsText.pointLabel("Peso", value: 52.5, carriedForward: true) == "Peso: 52.5 · saltado (mantiene)")
     }
 }
+
+@Suite("Eje de las gráficas")
+struct ChartValueRangeTests {
+    private func chart(_ values: [Double]) -> ChartsModel.Chart {
+        let points = values.enumerated().map { ChartPoint(date: LocalDate(iso: "2026-10-0\($0.offset + 1)")!, value: $0.element) }
+        return ChartsModel.Chart(label: "e1RM", axisTitle: "e1RM (kg)", points: points)
+    }
+
+    @Test("se ajusta a los valores con un 10 % de margen, sin empezar en 0")
+    func fitsTheValues() {
+        #expect(chart([70, 85, 90]).valueRange == 68...92)
+    }
+
+    @Test("nunca baja de 0")
+    func neverBelowZero() {
+        #expect(chart([0, 50]).valueRange.lowerBound == 0)
+    }
+
+    @Test("con un solo valor deja margen a los dos lados")
+    func singleValue() {
+        #expect(chart([60]).valueRange == 54...66)
+        #expect(chart([0.5]).valueRange == 0...1.5)
+    }
+
+    @Test("sin puntos, un eje cualquiera")
+    func empty() {
+        #expect(chart([]).valueRange == 0...1)
+    }
+}

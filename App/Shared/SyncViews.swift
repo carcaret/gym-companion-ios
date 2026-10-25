@@ -63,7 +63,9 @@ struct SyncPresentation: ViewModifier {
                 }
             }
             .animation(.default, value: sync.notice)
-            .confirmationDialog(SyncText.conflictTitle, isPresented: $sync.isConflictPresented, titleVisibility: .visible) {
+            // Alerta y no confirmationDialog: no sale de un botón concreto (en iOS 26 el diálogo
+            // sería un globo apuntando a la pantalla entera).
+            .alert(SyncText.conflictTitle, isPresented: $sync.isConflictPresented) {
                 Button(SyncText.keepLocalLabel) { Task { await sync.keepLocal() } }
                 Button(SyncText.keepRemoteLabel) { Task { await sync.keepRemote() } }
                 Button(SyncText.cancelLabel, role: .cancel) { sync.cancelConflict() }
@@ -101,6 +103,7 @@ struct NoticeView: View {
             .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
             .shadow(color: .black.opacity(0.45), radius: 15, y: 8)
             .accessibilityIdentifier("notice")
+            .onAppear { AccessibilityNotification.Announcement(notice.text).post() }
     }
 
     private var color: Color {

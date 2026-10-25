@@ -90,3 +90,15 @@ Para comprobar un despliegue: el run en `GET /repos/carcaret/gym-companion-ios/a
 - Límites de la cuenta gratuita de Apple: sin iCloud/CloudKit ni notificaciones push; cada target extra (widget, Apple Watch) gasta uno de los 10 identificadores de app por semana. Si un día hace falta algo de eso, la salida es la cuenta de pago (TestFlight).
 - **Capacidades (HealthKit, App Groups...)**: plumesign las activa según los entitlements del binario, así que hay que firmar ad hoc en CI con el `.entitlements` (`codesign --force --sign - --entitlements …`); ver #3. **Apple Watch**: la app del reloj no se puede instalar a través del iPhone con la cuenta gratuita; ios-signer tendrá que instalarla directamente en el reloj (ver #2).
 - Los datos irán en local en el iPhone, con copia en GitHub como hace la PWA (`db.json`). La PWA es de un solo usuario y un solo aparato: nada de sincronización multi-aparato ni CRDT.
+
+## Lo que en nativo es distinto que en la PWA
+
+Cosas que la web daba hechas y en iOS hay que cuidar (repaso del 2026-10-25):
+
+- **Un botón no quita el foco del campo que se edita** (en la web el campo se aplica al perder el foco, antes del toque). Los campos de las tarjetas pasan lo tecleado al modelo (`type`, `TypedValue`) y el modelo lo aplica antes de cada acción y al salir del campo (`commitTyping`). Un campo nuevo que edite datos tiene que seguir el mismo camino; lo prueba `UITests/TypingTests.swift`.
+- **El teclado numérico no tiene tecla de cerrar**: toda pantalla con campos numéricos lleva `numberPadDismissal()` (botón OK encima del teclado y cerrar al desplazar).
+- **`confirmationDialog` en iOS 26 es un globo que apunta a la vista de la que cuelga**: se cuelga del botón o de la fila que lo abre, nunca de la pantalla entera. Si no sale de nada concreto (el conflicto de la sincronización), `.alert`.
+- **Swift Charts con `AreaMark` incluye el 0 en el eje**: el relleno va con `yStart` en el mínimo del eje (`Chart.valueRange`), como el eje ajustado de Chart.js.
+- **Fechas y números del sistema siguen la región del iPhone**: la raíz fija `es_ES` para los selectores de fecha y los ejes; los textos propios ya salen de `Presentation`.
+- Zonas de toque de 44 pt aunque el texto sea pequeño (`frame(minHeight: 44)` + `contentShape`).
+- El detalle de una lista entra empujado (`navigationDestination`), para que se pueda volver deslizando desde el borde.

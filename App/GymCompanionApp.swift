@@ -27,7 +27,10 @@ struct GymCompanionApp: App {
                 Task { await root.sync.synchronize() }
             // Al irse a segundo plano, lo pendiente de subir sale ya (`beforeunload` en la PWA).
             case .background:
-                Task { await root.repository.flush() }
+                Task {
+                    await root.today.commitTyping()
+                    await root.repository.flush()
+                }
             default:
                 break
             }

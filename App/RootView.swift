@@ -33,6 +33,8 @@ struct RootView: View {
         .syncPresentation(root.sync)
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
+        // La app está solo en español: selectores de fecha y ejes de las gráficas también.
+        .environment(\.locale, Locale(identifier: "es_ES"))
     }
 
     private func stack(@ViewBuilder _ content: () -> some View) -> some View {
