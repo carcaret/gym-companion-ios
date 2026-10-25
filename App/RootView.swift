@@ -30,6 +30,16 @@ struct RootView: View {
                 stack { SettingsScreen(model: root.settings) }
             }
         }
+        // Al volver a Rutinas o a Historial, su pantalla de entrada, como en la PWA. Al cambiar de
+        // pestaña y no en el `onAppear` de la pantalla: ese salta también al empezar a deslizar
+        // para volver, y cerraba el detalle de golpe en mitad del gesto.
+        .onChange(of: navigation.selectedTab) { _, tab in
+            switch tab {
+            case .routines: root.today.appear()
+            case .history: root.history.appear()
+            case .progress, .charts, .settings: break
+            }
+        }
         .syncPresentation(root.sync)
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
