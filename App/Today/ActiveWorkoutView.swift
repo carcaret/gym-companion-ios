@@ -26,13 +26,14 @@ struct ActiveWorkoutView: View {
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
                     // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
+                    // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes de ejecutarla.
                     .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(
                         get: { model.removalPrompt?.exerciseID == card.exerciseID }, set: { if !$0 { model.cancelRemoval() } }
-                    ), titleVisibility: .visible) {
-                        Button(TodayText.removeConfirm, role: .destructive) { Task { await model.confirmRemoval() } }
+                    ), titleVisibility: .visible, presenting: model.removalPrompt) { prompt in
+                        Button(TodayText.removeConfirm, role: .destructive) { Task { await model.confirmRemoval(prompt) } }
                         Button(TodayText.cancel, role: .cancel) { model.cancelRemoval() }
-                    } message: {
-                        Text(model.removalPrompt?.message ?? "")
+                    } message: { prompt in
+                        Text(prompt.message)
                     }
             }
             .onMove { source, destination in
@@ -67,11 +68,11 @@ struct ActiveWorkoutView: View {
         }
         .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(
             get: { model.reciprocalOffer != nil }, set: { if !$0 { model.declineReciprocal() } }
-        )) {
+        ), presenting: model.reciprocalOffer) { offer in
             Button(TodayText.no, role: .cancel) { model.declineReciprocal() }
-            Button(TodayText.yes) { Task { await model.acceptReciprocal() } }
-        } message: {
-            Text(model.reciprocalOffer?.message ?? "")
+            Button(TodayText.yes) { Task { await model.acceptReciprocal(offer) } }
+        } message: { offer in
+            Text(offer.message)
         }
     }
 

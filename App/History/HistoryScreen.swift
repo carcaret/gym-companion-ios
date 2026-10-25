@@ -34,21 +34,26 @@ struct HistoryScreen: View {
                     .buttonStyle(.plain)
                     .cardRow()
                     .swipeActions {
+                        // En rojo a mano: las acciones de deslizar heredan el tinte de la raíz aunque
+                        // sean destructivas.
                         Button(HistoryText.deleteConfirm, systemImage: "trash", role: .destructive) { model.requestDelete(row.date) }
-                    }
-                    // Colgado de su fila: en iOS 26 el diálogo sale como globo que apunta a su vista.
-                    .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(
-                        get: { model.deletePrompt?.date == row.date }, set: { if !$0 { model.cancelDelete() } }
-                    ), titleVisibility: .visible) {
-                        Button(HistoryText.deleteConfirm, role: .destructive) { Task { await model.confirmDelete() } }
-                        Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
-                    } message: {
-                        Text(model.deletePrompt?.message ?? "")
+                            .tint(Theme.red)
                     }
                     .accessibilityIdentifier("history-\(row.date.iso)")
             }
             .listStyle(.plain)
             .screenBackground()
+            // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
+            // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
+            // cierra la alerta (y la descarta) antes de ejecutarla.
+            .alert(model.deletePrompt?.title ?? "", isPresented: Binding(
+                get: { model.deletePrompt != nil }, set: { if !$0 { model.cancelDelete() } }
+            ), presenting: model.deletePrompt) { prompt in
+                Button(HistoryText.deleteConfirm, role: .destructive) { Task { await model.confirmDelete(prompt) } }
+                Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
+            } message: { prompt in
+                Text(prompt.message)
+            }
         }
     }
 

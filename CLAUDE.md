@@ -97,7 +97,9 @@ Cosas que la web daba hechas y en iOS hay que cuidar (repaso del 2026-10-25):
 
 - **Un botón no quita el foco del campo que se edita** (en la web el campo se aplica al perder el foco, antes del toque). Los campos de las tarjetas pasan lo tecleado al modelo (`type`, `TypedValue`) y el modelo lo aplica antes de cada acción y al salir del campo (`commitTyping`). Un campo nuevo que edite datos tiene que seguir el mismo camino; lo prueba `UITests/TypingTests.swift`.
 - **El teclado numérico no tiene tecla de cerrar**: toda pantalla con campos numéricos lleva `numberPadDismissal()` (botón OK encima del teclado y cerrar al desplazar).
-- **`confirmationDialog` en iOS 26 es un globo que apunta a la vista de la que cuelga**: se cuelga del botón o de la fila que lo abre, nunca de la pantalla entera. Si no sale de nada concreto (el conflicto de la sincronización), `.alert`.
+- **`confirmationDialog` en iOS 26 es un globo que apunta a la vista de la que cuelga**: se cuelga del botón o de la fila que lo abre, nunca de la pantalla entera. Si no sale de nada concreto (el conflicto de la sincronización, o una acción de deslizar, que desaparece al tocarla), `.alert`.
+- **SwiftUI cierra un diálogo o alerta antes de ejecutar la acción del botón**: el `set` del `isPresented` (que descarta el aviso del modelo) va primero. La acción no puede leer el aviso del modelo: se usa `presenting:` y el modelo recibe el aviso (`confirmDelete(prompt)`). Así borrar del historial no hacía nada (2026-10-25); los tests del modelo lo prueban en ese orden y `UITests/HistoryTests.swift`, con el gesto real.
+- **Las acciones de deslizar (`swipeActions`) heredan el `.tint` de la raíz** aunque sean `.destructive`: las de borrar llevan `.tint(Theme.red)`.
 - **Swift Charts con `AreaMark` incluye el 0 en el eje**: el relleno va con `yStart` en el mínimo del eje (`Chart.valueRange`), como el eje ajustado de Chart.js.
 - **Fechas y números del sistema siguen la región del iPhone**: la raíz fija `es_ES` para los selectores de fecha y los ejes; los textos propios ya salen de `Presentation`.
 - Zonas de toque de 44 pt aunque el texto sea pequeño (`frame(minHeight: 44)` + `contentShape`).
