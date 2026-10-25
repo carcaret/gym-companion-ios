@@ -18,13 +18,19 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
   Sources/Domain/            modelo (TrainingData, Catalog, Routine, Session, ExerciseLog, LocalDate...) y reglas puras
   Sources/Presentation/      textos en español para la interfaz (fechas, resúmenes, frases, mensajes) y
                              lectura de lo tecleado. Depende de Domain
-  Sources/Application/       casos de uso y puertos (protocolos: Clock...). Depende de Domain
+  Sources/Application/       casos de uso y puertos (protocolos: Clock, TrainingDataStore, SyncSettingsStore,
+                             CredentialStore, RemoteTrainingDataSource, BackgroundActivity) y TrainingRepository,
+                             el actor que guarda y sincroniza con la política de la PWA. Depende de Domain
   Sources/ViewModels/        estado de cada pantalla (@Observable, @MainActor). Depende de Application,
                              Presentation y Domain; las vistas SwiftUI de App/ solo los pintan
-  Sources/Adapters/          implementaciones de los puertos (SystemClock, JSONFileTrainingDataStore,
-                             PWAFormat para leer db.json; después GitHub, Llavero...)
-  Sources/GymCoreTesting/    para los tests: dobles de los puertos (InMemoryTrainingDataStore) y tests de
-                             contrato que todo adaptador de un puerto pasa (TrainingDataStoreContract)
+  Sources/Adapters/          implementaciones de los puertos que compilan en Linux (SystemClock,
+                             JSONFileTrainingDataStore, JSONFileSyncSettingsStore, PWAFormat para leer y
+                             escribir db.json, GitHubTrainingDataSource con URLSession)
+  Sources/AppleAdapters/     los que solo existen en Apple, tras `#if canImport` (KeychainCredentialStore,
+                             UIKitBackgroundActivity, ConnectivityMonitor); en Linux compila vacío
+  Sources/GymCoreTesting/    para los tests: dobles de los puertos (InMemoryTrainingDataStore, InMemoryRemote...),
+                             tests de contrato que todo adaptador de un puerto pasa (TrainingDataStoreContract...)
+                             y el arnés de la sincronización (SyncHarness, SyncFixtures)
   Tests/<Módulo>Tests/       Swift Testing
   test.sh                    los tests en el NAS
 App/                         app iOS: vistas SwiftUI finas y CompositionRoot.swift
@@ -33,10 +39,11 @@ project.yml                  XcodeGen (el .xcodeproj no se versiona)
 scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Tests)
 ```
 
-- Solo `Adapters` importa Foundation (y lo que compila en Linux); `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
-- Puertos (`Application`): `Clock`, `TrainingDataStore`. Cada adaptador de un puerto pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y los casos de uso se prueban con los dobles en memoria.
-- Datos en el iPhone: `Application Support/GymCompanion/training-data.json`, formato propio versionado (`StoredTrainingData`, `version`), escrito de forma atómica. Se conserva al reinstalar encima (lo que hace ios-signer). `db.json` solo se lee (`PWAFormat`) y, desde #7, se escribe para sincronizar.
-- Un adaptador que solo exista en Apple (SwiftData, HealthKit, WatchConnectivity...) va en su propio módulo, para que el resto del paquete siga compilando en Linux.
+- Solo `Adapters` (lo que compila en Linux: Foundation, FoundationNetworking) y `AppleAdapters` (Security, UIKit, Network, siempre tras `#if canImport`) importan frameworks; `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
+- Puertos (`Application`): `Clock`, `TrainingDataStore`, `SyncSettingsStore`, `CredentialStore`, `RemoteTrainingDataSource`, `BackgroundActivity`. Cada adaptador de un puerto pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y los casos de uso se prueban con los dobles en memoria.
+- Datos en el iPhone: `Application Support/GymCompanion/training-data.json`, formato propio versionado (`StoredTrainingData`, `version`), escrito de forma atómica. Se conserva al reinstalar encima (lo que hace ios-signer). Al lado, `sync.json` (repo, rama, ruta y si hay cambios sin subir); el token de GitHub va al Llavero.
+- Sincronización (#7): `TrainingRepository` es la única puerta a los datos. Lo local manda; cada cambio se guarda y se sube a los 500 ms (nada con un entreno en curso; al terminarlo, al momento); al arrancar, al volver a la app o al volver la red, sube lo pendiente o aplica lo remoto si es distinto; un 409/422 es un conflicto que elige el usuario. `PWAFormat.json(from:)` escribe el `db.json` byte a byte como `JSON.stringify(db, null, 2)` de la PWA. Con la app vacía, configurar GitHub baja los datos (no sube la app vacía encima).
+- Un adaptador que solo exista en Apple va en `AppleAdapters` (o en su propio módulo si es grande: HealthKit, WatchConnectivity...), para que el resto del paquete siga compilando en Linux.
 - `App/CompositionRoot.swift` es el único sitio que crea adaptadores concretos.
 - Reglas de negocio en `Domain`; lo que es texto para la interfaz, en `Presentation` (p. ej. el error es `LogValidationError.negativeWeight` y el mensaje "Peso debe ser >= 0" lo da `ValidationText`).
 - El modelo no calca `db.json`: el log no copia el nombre del ejercicio, las rutinas son entidades, las fechas son `LocalDate`. La traducción a `db.json` es cosa del adaptador (#6, #7).

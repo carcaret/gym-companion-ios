@@ -26,4 +26,21 @@ Para cada PR fusionada, después de que el CI publique la release:
 
 ### #7 Sincronización con GitHub
 
-(se rellena al cerrar la PR)
+Hecho y probado en Docker (600 tests, con la ida y vuelta del `db.json` real idéntica) y en el CI.
+Falta lo que necesita el iPhone o el NAS:
+
+- [ ] El Llavero en el iPhone firmado con la cuenta gratuita: guardar el token desde Ajustes (#14)
+      y comprobar que sigue tras cerrar la app y tras una reinstalación de ios-signer. Si
+      `SecItemAdd` falla en el iPhone (`KeychainError`), mirar si plumesign pone
+      `keychain-access-groups` en los entitlements; la salida sería firmar ad hoc con un
+      `.entitlements` como en #3.
+- [ ] Sincronización real contra `carcaret/gym-companion`: configurar en Ajustes (#14) con un PAT
+      con permiso de escritura en ese repo. Con la app vacía, configurar **baja** los datos (no
+      sube nada). Comprobar después que un cambio en la app crea un commit "Gym Companion update
+      AAAA-MM-DD" y que el diff solo muestra lo cambiado (el primer commit reordena las claves de
+      `exercises` por id: es normal, la app las escribe en orden alfabético).
+- [ ] Que la PWA lee bien el `db.json` que escribe la app (abrirla tras una subida de la app).
+- [ ] Segundo plano: hacer un cambio fuera de un entreno y bloquear el iPhone en menos de 500 ms;
+      el commit debe llegar igual (tarea en segundo plano de `UIKitBackgroundActivity`).
+- [ ] El job `app` del CI pasa el contrato del Llavero en macOS. Si falla por permisos del
+      Llavero del runner, no borrar el test: preguntar al usuario.
