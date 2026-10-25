@@ -13,8 +13,9 @@ struct CompositionRoot {
     let repository: TrainingRepository
     let model: AppModel
     let sync: SyncModel
-    let navigation = NavigationModel()
+    let navigation: NavigationModel
     let today: TodayModel
+    let history: HistoryModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
@@ -32,7 +33,10 @@ struct CompositionRoot {
         )
         model = AppModel(repository: repository)
         sync = SyncModel(repository: repository, app: model)
+        let navigation = NavigationModel()
+        self.navigation = navigation
         today = TodayModel(app: model, sync: sync, clock: SystemClock())
+        history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
     }
 
     /// Cada vez que vuelve la red.

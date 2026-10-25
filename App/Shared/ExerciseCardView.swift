@@ -6,18 +6,21 @@ import ViewModels
 /// Una tarjeta de ejercicio. En la vista previa es de solo lectura; en el entreno, `actions` trae
 /// lo que se puede hacer con ella.
 struct ExerciseCardView: View {
-    let card: TodayModel.Card
+    let card: ExerciseCard
     let toggle: () -> Void
     var actions: CardActions?
+    /// Historial: "Guardar" cuando hay cambios.
+    var save: (() -> Void)?
 
     struct CardActions {
         let adjust: (LogParameter, Int) -> Void
         let set: (LogParameter, String) -> Void
         let focusSeries: (Int) -> Void
         let chooseRep: (Int, Int) -> Void
-        let swap: () -> Void
-        let toggleSkip: () -> Void
-        let remove: () -> Void
+        /// Solo en el entreno (en el historial no se cambia, salta ni quita).
+        let swap: (() -> Void)?
+        let toggleSkip: (() -> Void)?
+        let remove: (() -> Void)?
     }
 
     var body: some View {
@@ -84,16 +87,21 @@ struct ExerciseCardView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        if card.isEditable, let actions {
+        if card.isEditable, let actions, let swap = actions.swap, let toggleSkip = actions.toggleSkip, let remove = actions.remove {
             HStack {
-                Button(TodayText.swapLabel, action: actions.swap)
+                Button(TodayText.swapLabel, action: swap)
                 Spacer()
-                Button(card.skipLabel, action: actions.toggleSkip)
+                Button(card.skipLabel, action: toggleSkip)
                 Spacer()
-                Button(card.removeLabel, role: .destructive, action: actions.remove)
+                Button(card.removeLabel, role: .destructive, action: remove)
             }
             .font(.subheadline)
             .buttonStyle(.borderless)
+        }
+        if card.isDirty, let save {
+            Button(action: save) { Text(HistoryText.save).frame(maxWidth: .infinity) }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("history-save")
         }
     }
 }
@@ -146,7 +154,7 @@ private struct ParameterRow: View {
 }
 
 private struct SeriesCellView: View {
-    let cell: TodayModel.SeriesCell
+    let cell: ExerciseCard.SeriesCell
     let onTap: (() -> Void)?
 
     var body: some View {
@@ -173,8 +181,8 @@ private struct SeriesCellView: View {
 
     private var background: Color {
         switch cell.state {
-        case .done: .green.opacity(0.25)
-        case .filled: .blue.opacity(0.25)
+        case .done: .blue.opacity(0.25)
+        case .filled: .green.opacity(0.25)
         case .empty: Color(.tertiarySystemFill)
         }
     }
