@@ -12,6 +12,7 @@ struct RootView: View {
     let history: HistoryModel
     let charts: ChartsModel
     let progress: ProgressModel
+    let catalog: CatalogModel
     @Bindable var navigation: NavigationModel
 
     var body: some View {
@@ -34,7 +35,7 @@ struct RootView: View {
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 NavigationStack {
-                    ProgressScreen(model: progress)
+                    ProgressScreen(model: progress, footer: AnyView(CatalogCard(model: catalog)))
                         .toolbar {
                             ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: sync) }
                         }
