@@ -1,9 +1,11 @@
 extension ExerciseLog {
-    /// Media de reps por serie. Con reps hechas, una serie vacía cuenta como 0 (como en la PWA);
-    /// sin ninguna, el objetivo.
+    /// Media de reps de las series rellenadas (0 si no hay ninguna). Sin lista de reps, el objetivo.
+    /// (En la PWA las series vacías contaban como 0 y bajaban la media de un entreno a medias.)
     public var averageReps: Double {
         guard !actualReps.isEmpty else { return Double(targetReps) }
-        return Double(actualReps.reduce(0) { $0 + ($1 ?? 0) }) / Double(actualReps.count)
+        let filled = actualReps.compactMap { $0 }
+        guard !filled.isEmpty else { return 0 }
+        return Double(filled.reduce(0, +)) / Double(filled.count)
     }
 
     /// kg · series · reps medias; sin peso, series · reps medias.

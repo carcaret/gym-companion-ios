@@ -77,7 +77,12 @@ struct E1RMTests {
 @Suite("computeAvgReps (edge cases)")
 struct AverageRepsEdgeCaseTests {
     @Test("actual con nulls mezclados → suma incluye 0 por los nulls")
-    func nullsAsZero() { #expect(isClose(metricsLog(weight: 50, series: 3, expected: 10, actual: [10, nil, 10]).averageReps, 6.667, digits: 2)) }
+    func nullsAsZero() {
+        // CAMBIO aprobado por el usuario (2026-10-25): la PWA contaba las series vacías como 0
+        // (10, vacía, 10 → 6,67) y un entreno a medias salía con menos volumen del hecho. Ahora la
+        // media es solo de las series rellenadas.
+        #expect(metricsLog(weight: 50, series: 3, expected: 10, actual: [10, nil, 10]).averageReps == 10)
+    }
 
     @Test("actual todo nulls → reduce da 0/N = 0")
     func allNull() { #expect(metricsLog(weight: 50, series: 3, expected: 10, actual: [nil, nil, nil]).averageReps == 0) }
