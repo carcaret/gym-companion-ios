@@ -96,7 +96,7 @@ Para comprobar un despliegue: el run en `GET /repos/carcaret/gym-companion-ios/a
 Cosas que la web daba hechas y en iOS hay que cuidar (repaso del 2026-10-25):
 
 - **Un botón no quita el foco del campo que se edita** (en la web el campo se aplica al perder el foco, antes del toque). Los campos de las tarjetas pasan lo tecleado al modelo (`type`, `TypedValue`) y el modelo lo aplica antes de cada acción y al salir del campo (`commitTyping`). Un campo nuevo que edite datos tiene que seguir el mismo camino; lo prueba `UITests/TypingTests.swift`.
-- **El teclado numérico no tiene tecla de cerrar**: toda pantalla con campos numéricos lleva `numberPadDismissal()` (botón OK encima del teclado y cerrar al desplazar).
+- **El teclado no se cierra solo**: toda pantalla con campos lleva `keyboardDismissal()` (botón OK encima del teclado, que el numérico necesita porque no tiene tecla de cerrar, y cerrar al desplazar), y tocar fuera de un campo lo cierra en toda la app (`dismissesKeyboardOnTapOutside()` en la raíz, `App/Shared/Keyboard.swift`; lo prueba `UITests/KeyboardTests.swift`).
 - **`confirmationDialog` en iOS 26 es un globo que apunta a la vista de la que cuelga**: se cuelga del botón o de la fila que lo abre, nunca de la pantalla entera. Si no sale de nada concreto (el conflicto de la sincronización), `.alert`.
 - **Swift Charts con `AreaMark` incluye el 0 en el eje**: el relleno va con `yStart` en el mínimo del eje (`Chart.valueRange`), como el eje ajustado de Chart.js.
 - **Fechas y números del sistema siguen la región del iPhone**: la raíz fija `es_ES` para los selectores de fecha y los ejes; los textos propios ya salen de `Presentation`.
