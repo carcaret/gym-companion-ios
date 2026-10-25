@@ -77,19 +77,37 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Tests del paquete (macOS)
-        working-directory: Packages/GymCore
-        run: swift test
-
-      - name: Tests de la app en el simulador
+      # El simulador arranca mientras se compila; los tests esperan a que acabe.
+      - name: Arrancar el simulador
         run: |
           udid=$(xcrun simctl list devices available -j \
             | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
           echo "Simulador: $udid"
-          xcodebuild test \
+          echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+          xcrun simctl boot "$udid"
+
+      - name: Tests del paquete (macOS)
+        working-directory: Packages/GymCore
+        run: swift test
+
+      - name: Compilar la app y los tests
+        run: |
+          xcodebuild build-for-testing \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
-            -destination "id=$udid" \
+            -destination "id=$SIMULATOR" \
+            -derivedDataPath build \
+            -showBuildTimingSummary \
+            | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Tests de la app en el simulador
+        run: |
+          xcrun simctl bootstatus "$SIMULATOR" -b
+          xcodebuild test-without-building \
+            -project GymCompanion.xcodeproj \
+            -scheme GymCompanion \
+            -destination "id=$SIMULATOR" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
             | tail -n 40
