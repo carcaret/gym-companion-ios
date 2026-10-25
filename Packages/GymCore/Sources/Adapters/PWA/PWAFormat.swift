@@ -10,6 +10,57 @@ public enum PWAFormatError: Error, Hashable {
 
 /// Traducción entre el `db.json` de la PWA y el modelo de la app.
 public enum PWAFormat {
+    /// Escribe `db.json` como lo haría la PWA: el nombre del ejercicio copiado en cada log, las
+    /// rutinas como `{ DIA1: [ids] }` (sin nombre: la PWA no lo tiene), los opcionales solo si
+    /// tienen valor, y el mismo orden de claves y sangría que `JSON.stringify(db, null, 2)`.
+    public static func json(from data: TrainingData) -> Data {
+        let exercises = OrderedJSON.object(data.catalog.all.map { exercise in
+            var members: [(String, OrderedJSON)] = [("id", .string(exercise.id.rawValue)), ("name", .string(exercise.name))]
+            if let group = exercise.group { members.append(("grupo", .string(group.rawValue))) }
+            if let secondary = exercise.secondaryGroups { members.append(("secundarios", .array(secondary.map { .string($0.rawValue) }))) }
+            return (exercise.id.rawValue, .object(members))
+        })
+        let routines = OrderedJSON.object(data.routines.map { routine in
+            (routine.id.rawValue, .array(routine.exerciseIDs.map { .string($0.rawValue) }))
+        })
+        let history = OrderedJSON.array(data.history.map { session in
+            .object([
+                ("date", .string(session.date.iso)),
+                ("type", .string(session.routineID.rawValue)),
+                ("completed", .bool(session.completed)),
+                ("logs", .array(session.logs.map { log(for: $0, in: data.catalog) })),
+            ])
+        })
+        let pendingSwaps = OrderedJSON.object(data.pendingSwaps.keys.sorted().compactMap { routine in
+            data.pendingSwaps[routine].map { swap in
+                (routine.rawValue, .object([
+                    ("fromExerciseId", .string(swap.from.rawValue)),
+                    ("toExerciseId", .string(swap.to.rawValue)),
+                    ("weekStart", .string(swap.weekStart.iso)),
+                ]))
+            }
+        })
+        let database = OrderedJSON.object([("exercises", exercises), ("routines", routines), ("history", history), ("pendingSwaps", pendingSwaps)])
+        return Data(database.text.utf8)
+    }
+
+    private static func log(for log: ExerciseLog, in catalog: Catalog) -> OrderedJSON {
+        var members: [(String, OrderedJSON)] = [
+            ("exercise_id", .string(log.exerciseID.rawValue)),
+            ("name", .string(catalog.name(of: log.exerciseID))),
+            ("series", .number(Double(log.series))),
+            ("reps", .object([
+                ("expected", .number(Double(log.targetReps))),
+                ("actual", .array(log.actualReps.map { $0.map { .number(Double($0)) } ?? .null })),
+            ])),
+            ("weight", .number(log.weight)),
+        ]
+        if log.skipped { members.append(("skipped", .bool(true))) }
+        if let original = log.swappedFrom { members.append(("swappedFrom", .string(original.rawValue))) }
+        if log.oneOff { members.append(("oneOff", .bool(true))) }
+        return .object(members)
+    }
+
     /// Lee un `db.json`. Lo que falta en las DB viejas toma su valor de entonces: sin `routines`,
     /// las tres de siempre vacías; sin `pendingSwaps`, ninguno; sin `completed`, terminada; sin
     /// `reps.actual`, ninguna serie. Un ejercicio del historial que ya no está en el catálogo
