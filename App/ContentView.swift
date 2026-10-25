@@ -13,7 +13,7 @@ struct ContentView: View {
                 .font(.largeTitle.bold())
             Text("Versión \(version) (\(build))")
                 .foregroundStyle(.secondary)
-            Text("Instalada desde el NAS por WiFi")
+            Text("Desplegada sola: push → GitHub → NAS → iPhone")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
