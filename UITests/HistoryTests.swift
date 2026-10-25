@@ -70,14 +70,18 @@ final class HistoryTests: XCTestCase {
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 10))
 
-        // Un tirón largo, aguantando abajo: la lista se estira menos que el dedo y el refresco
-        // salta solo si pasa del umbral antes de soltar.
-        let start = first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 500)),
-                    withVelocity: .fast, thenHoldForDuration: 1)
-        // El aviso (`notice`) dura 2,5 s; cualquier tipo de elemento, con su texto.
-        let notice = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'notice' AND label == 'GitHub no configurado'")).firstMatch
+        // Desde la parte vacía de la lista, debajo de las filas (que son botones), hasta abajo del
+        // todo, aguantando antes de soltar: el refresco salta solo si se pasa del umbral.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.62))
+            .press(forDuration: 0, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                   withVelocity: .default, thenHoldForDuration: 1)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "historial-tras-tirar"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        // El aviso (`notice`) dura 2,5 s; el texto que lleva puede incluir el del icono.
+        let notice = app.descendants(matching: .any).matching(identifier: "notice").firstMatch
         XCTAssertTrue(notice.waitForExistence(timeout: 8))
+        XCTAssertTrue(notice.label.contains("GitHub no configurado"), "El aviso dice «\(notice.label)»")
     }
 }
