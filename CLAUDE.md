@@ -21,8 +21,10 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
   Sources/Application/       casos de uso y puertos (protocolos: Clock, TrainingDataStore, SyncSettingsStore,
                              CredentialStore, RemoteTrainingDataSource, BackgroundActivity) y TrainingRepository,
                              el actor que guarda y sincroniza con la política de la PWA. Depende de Domain
-  Sources/ViewModels/        estado de cada pantalla (@Observable, @MainActor). Depende de Application,
-                             Presentation y Domain; las vistas SwiftUI de App/ solo los pintan
+  Sources/ViewModels/        estado de cada pantalla (@Observable, @MainActor): AppModel (datos y aviso único),
+                             SyncModel, NavigationModel, TodayModel, HistoryModel, ChartsModel, ProgressModel,
+                             CatalogModel, SettingsModel y ExerciseCard (tarjeta compartida). Depende de
+                             Application, Presentation y Domain; las vistas SwiftUI de App/ solo los pintan
   Sources/Adapters/          implementaciones de los puertos que compilan en Linux (SystemClock,
                              JSONFileTrainingDataStore, JSONFileSyncSettingsStore, PWAFormat para leer y
                              escribir db.json, GitHubTrainingDataSource con URLSession)
@@ -33,10 +35,14 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
                              y el arnés de la sincronización (SyncHarness, SyncFixtures)
   Tests/<Módulo>Tests/       Swift Testing
   test.sh                    los tests en el NAS
-App/                         app iOS: vistas SwiftUI finas y CompositionRoot.swift
+App/                         app iOS: vistas SwiftUI finas por pantalla (Today/, History/, Charts/, Progress/,
+                             Catalog/, Settings/, Shared/), RootView y CompositionRoot.swift. Con `-demo` arranca
+                             con DemoData en una carpeta temporal y sin GitHub (solo para las capturas del CI)
 UITests/                     XCUITest: pocos flujos y las capturas de pantalla
 project.yml                  XcodeGen (el .xcodeproj no se versiona)
 scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Tests)
+docs/paridad.md              la tabla de los 829 tests de la PWA con su test nativo o el motivo (#15)
+docs/pendiente-nas.md        lo que queda por comprobar desde el NAS o con el iPhone en la mano
 ```
 
 - Solo `Adapters` (lo que compila en Linux: Foundation, FoundationNetworking) y `AppleAdapters` (Security, UIKit, Network, siempre tras `#if canImport`) importan frameworks; `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
@@ -62,9 +68,11 @@ docker run --rm --user 1000:10 -e HOME=/tmp -v ~/git/gym-companion-ios:/w -w /w/
 
 En CI (`.github/workflows/build.yml`), en cada PR y en `master`: `core-linux` (paquete en Linux), `pwa-tests` (cruce con la PWA) y `app` (paquete en macOS y tests de la app en el simulador). La release solo se publica en `master` y si todos pasan. Los jobs de macOS compilan de forma incremental: guardan en la caché de Actions la carpeta de compilación (la de `master` es la que usan las PR) y `scripts/restore-mtimes.sh` pone a cada fichero la fecha de su commit, para que solo se recompile lo que cambia.
 
-**Tests portados de la PWA**: cada test lleva en Swift el mismo nombre que en Vitest (`@Suite` = el `describe`, `@Test` = el `test`), para poder cruzarlos. `scripts/pwa_tests.py ~/git/gym-companion` comprueba los ficheros de `docs/pwa-tests-ficheros.txt` (cada sub-issue añade los suyos) y falla si alguno no está portado ni en `docs/pwa-tests-no-aplican.tsv` con su motivo; con `--markdown` saca la tabla del PR. Cambiar lo que comprueba un test portado necesita la aprobación del usuario y se anota en el propio test (p. ej. la media de reps, aprobado el 2026-10-25).
+**Tests portados de la PWA**: cada test lleva en Swift el mismo nombre que en Vitest o Playwright (`@Suite` = el `describe`, `@Test` = el `test`), para poder cruzarlos; también los e2e, que se portan por comportamiento a tests de ViewModel. `scripts/pwa_tests.py ~/git/gym-companion` comprueba los ficheros de `docs/pwa-tests-ficheros.txt` (unitarios por nombre, e2e como `e2e/<fichero>`; ya están todos) y falla si alguno no está portado ni en `docs/pwa-tests-no-aplican.tsv` con su motivo; con `--markdown` saca la tabla del PR. Cambiar lo que comprueba un test portado necesita la aprobación del usuario y se anota en el propio test (p. ej. la media de reps, aprobado el 2026-10-25).
 
-**Capturas**: `UITests/ScreenshotTests.swift` guarda una captura por pantalla principal; el job `app` las sube como artefacto `capturas` (PNG con el nombre de la captura). Para verlas: `GET /repos/carcaret/gym-companion-ios/actions/runs/{id}/artifacts` → `archive_download_url` (zip, con el token) y abrir los PNG con Read. Al añadir una pantalla, añadir su captura.
+**Fixtures**: `PWATestDB` (`GymCoreTesting`) es el `db-test.json` de los e2e en Swift (un test lo ata al JSON); `SyncHarness` monta el repositorio con los dobles de todos los puertos.
+
+**Capturas**: `UITests/ScreenshotTests.swift` guarda una captura por pantalla principal (`testHoy` recorre la app con `-demo`); el job `app` las sube como artefacto `capturas` (PNG con el nombre de la captura). Para verlas: `GET /repos/carcaret/gym-companion-ios/actions/runs/{id}/artifacts` → `archive_download_url` (zip, con el token) y abrir los PNG con Read. Al añadir una pantalla, añadir su captura.
 
 ## Cómo se despliega (sin Mac y sin cuenta de pago de Apple)
 

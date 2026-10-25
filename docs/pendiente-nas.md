@@ -73,3 +73,38 @@ Falta lo que necesita el iPhone o el NAS:
       sube a GitHub (un commit nuevo en `db.json`). Cerrar la tarjeta sin guardar no debe cambiar
       nada.
 - [ ] Deslizar una sesión a la izquierda para borrarla pide confirmación.
+
+### #11 Gráficas
+
+- [ ] En el iPhone: elegir un ejercicio y ver las dos gráficas (1RM estimado y peso); tocar la
+      gráfica enseña el valor del punto. Cambiar las fechas con los selectores.
+
+### #12 Progreso
+
+- [ ] Con los datos reales: la tarjeta de ejercicios dice cuántos hay estancados y la de grupos
+      pinta las barras con la franja de 32–80 series. "Ver en Gráficas" abre Gráficas con el
+      ejercicio elegido y el botón de volver.
+
+### #13 Catálogo
+
+- [ ] Renombrar un ejercicio y comprobar que el nombre nuevo sale en Rutinas y que llega a
+      `db.json` (y que la PWA lo enseña también).
+
+### #14 Ajustes
+
+- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en Ajustes, repositorio
+      `carcaret/gym-companion`, rama `master`, ruta `db.json` y un PAT con permiso de escritura
+      en ese repo. Con la app vacía, "Guardar" baja los datos; comprobar que salen las 297+
+      sesiones en Historial.
+- [ ] "Probar conexión" con un token malo da "Error 401 — verifica repo, PAT y rama".
+
+### #15 Paridad y paso definitivo
+
+Hecho fuera del NAS: la tabla global (`docs/paridad.md`, 829 de 829 tests de la PWA portados o
+justificados) y `CLAUDE.md` al día. Falta, y es del usuario:
+
+- [ ] Entrenar una semana solo con la app nativa y decir si se echa algo en falta.
+- [ ] Decidir el futuro de la PWA (archivarla, dejarla de solo lectura…) y, si se retira, si
+      cambia el formato de `db.json` y si los datos pasan a un repo privado (hoy están en el
+      repo público `carcaret/gym-companion`).
+- [ ] Cerrar #15 y la épica #1 cuando lo anterior esté hecho.
