@@ -20,6 +20,24 @@ final class KeyboardTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 5))
     }
 
+    /// También en una pantalla que es una lista (Gráficas): tocar fuera del buscador lo cierra.
+    @MainActor
+    func testTocarFueraEnUnaLista() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Gráficas"].tap()
+        let search = app.textFields["chart-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "No se abrió el teclado")
+        app.staticTexts["Desde"].tap()
+        let closed = app.keyboards.firstMatch.waitForNonExistence(timeout: 5)
+        // DIAGNÓSTICO TEMPORAL: qué ha visto el reconocedor.
+        let trace = app.descendants(matching: .any)["keyboard-debug"].value as? String ?? "sin rastro"
+        XCTAssertTrue(closed, "El teclado sigue abierto. Rastro: \(trace)")
+    }
+
     /// "OK" encima del teclado lo cierra.
     @MainActor
     func testOKCierraElTeclado() {
