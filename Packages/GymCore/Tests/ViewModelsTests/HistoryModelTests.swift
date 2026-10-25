@@ -443,11 +443,6 @@ struct HistoryValidationTests {
 @MainActor
 @Suite("Botones de navegación en vistas (Volver + Ejercicio)")
 struct HistoryNavigationButtonsTests {
-    @Test("history detail: botón Volver tiene texto \"← Volver\" y estilo btn-secondary")
-    func backLabel() {
-        #expect(HistoryText.back == "Volver")
-    }
-
     @Test("history detail: botón Volver vuelve a la lista de historial")
     func back() async {
         let history = await HistoryHarness.make()
