@@ -61,6 +61,7 @@ struct SettingsScreen: View {
             .padding(16)
         }
         .navigationTitle(SettingsText.title)
+        .keyboardDismissal()
         .task { await model.load() }
     }
 

@@ -72,7 +72,7 @@ struct HistoryScreen: View {
             }
             .padding()
         }
-        .numberPadDismissal()
+        .keyboardDismissal()
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.back() } label: { Label(HistoryText.back, systemImage: "chevron.left") }

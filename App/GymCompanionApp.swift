@@ -8,6 +8,7 @@ struct GymCompanionApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(root: root)
+                .onAppear { Keyboard.dismissOnTapOutside() }
                 .task {
                     await root.model.start()
                     await root.sync.synchronize()
