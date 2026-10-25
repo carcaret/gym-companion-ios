@@ -43,7 +43,9 @@ struct HistoryScreen: View {
             }
             .listStyle(.plain)
             .screenBackground()
-            // Tirar hacia abajo sincroniza con GitHub al momento y dice cómo ha quedado.
+            // Tirar hacia abajo sincroniza con GitHub al momento y dice cómo ha quedado. Con pocas
+            // sesiones la lista cabe en la pantalla y no se estiraría: que se estire siempre.
+            .scrollBounceBehavior(.always)
             .refreshable { await sync.pullToRefresh() }
             // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
             // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
