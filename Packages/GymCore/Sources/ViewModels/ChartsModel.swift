@@ -3,8 +3,8 @@ import Domain
 import Observation
 import Presentation
 
-/// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas, un buscador de
-/// ejercicios (los de alguna rutina primero) y, con un ejercicio elegido, sus gráficas de 1RM
+/// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas, el ejercicio elegido
+/// (en su propia pantalla, con buscador y los de alguna rutina primero) y sus gráficas de 1RM
 /// estimado y de peso. Sin ejercicio elegido no se pinta nada.
 @MainActor
 @Observable
@@ -41,6 +41,8 @@ public final class ChartsModel {
 
     public private(set) var from: LocalDate
     public private(set) var to: LocalDate
+    /// Lo buscado en la pantalla de elegir ejercicio. Solo filtra: la PWA dejaba en el campo el
+    /// nombre del elegido porque hacía de desplegable; aquí el elegido se ve en `selectedName`.
     public var query = ""
     public private(set) var selected: ExerciseID?
 
@@ -94,12 +96,13 @@ public final class ChartsModel {
     /// "Sin resultados" en vez de la lista.
     public var hasNoResults: Bool { options.inRoutine.isEmpty && options.others.isEmpty }
 
-    /// La "x" del buscador, solo con texto.
-    public var showsClear: Bool { !query.isEmpty }
+    /// El nombre del ejercicio elegido, para la fila que abre la pantalla de elegir.
+    public var selectedName: String? { selected.map { data.catalog.name(of: $0) } }
 
+    /// Elegir deja el buscador vacío para la próxima vez.
     public func select(_ exercise: ExerciseID) {
         selected = exercise
-        query = data.catalog.name(of: exercise)
+        query = ""
     }
 
     public func clear() {

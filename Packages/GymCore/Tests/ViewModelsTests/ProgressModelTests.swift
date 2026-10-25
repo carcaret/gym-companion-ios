@@ -134,7 +134,10 @@ struct StatsTests {
         #expect(navigation.selectedTab == .charts)
         let charts = ChartsModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today))
         charts.appear()
-        #expect(charts.query == row.name)
+        // La PWA lo comprobaba en el campo de búsqueda; en la app el elegido se ve en su fila
+        // (`selectedName`) y el buscador solo filtra (aprobado por el usuario, 2026-10-25).
+        #expect(charts.selected == row.exerciseID)
+        #expect(charts.selectedName == row.name)
         #expect(charts.canGoBack)
     }
 
