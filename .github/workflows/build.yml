@@ -1,8 +1,12 @@
-# Compila la app sin firmar y la publica como release "latest".
-# La firma (Apple ID gratuito) y la instalación en el iPhone las hace el NAS (ios-signer).
+# Tests en cada PR y en master. Solo en master, y solo si pasan, compila la app sin firmar y la
+# publica como release "latest": la firma (Apple ID gratuito) y la instalación en el iPhone las
+# hace el NAS (ios-signer). Si los tests fallan, el iPhone se queda con la versión anterior.
+# (El fichero se sigue llamando build.yml para que el número de ejecución, que es el número de
+# compilación de la app, siga creciendo.)
 name: build
 
 on:
+  pull_request:
   push:
     branches: [master]
 
@@ -10,11 +14,71 @@ permissions:
   contents: write
 
 concurrency:
-  group: build
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ipa:
+  core-linux:
+    # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
+    # Linux, con la misma imagen que en el NAS.
+    runs-on: ubuntu-latest
+    container: swift:6.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests del paquete (Linux)
+        working-directory: Packages/GymCore
+        run: swift test
+
+  app:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar proyecto
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -version
+          swift --version
+
+      - name: Tests del paquete (macOS)
+        working-directory: Packages/GymCore
+        run: swift test
+
+      - name: Tests de la app en el simulador
+        run: |
+          udid=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "Simulador: $udid"
+          xcodebuild test \
+            -project GymCompanion.xcodeproj \
+            -scheme GymCompanion \
+            -destination "id=$udid" \
+            -derivedDataPath build \
+            -resultBundlePath build/Tests.xcresult \
+            | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Extraer capturas
+        if: always()
+        run: |
+          [ -d build/Tests.xcresult ] || exit 0
+          xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path attachments
+          mkdir -p capturas
+          jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
+            | while IFS=$'\t' read -r file name; do cp "attachments/$file" "capturas/${name%%_*}.png"; done
+          ls capturas
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas
+          path: capturas
+          if-no-files-found: ignore
+
+  release:
+    needs: [core-linux, app]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +94,6 @@ jobs:
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
             -configuration Release \
-            -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \

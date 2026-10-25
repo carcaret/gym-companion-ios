@@ -1,8 +1,8 @@
+import Domain
 import SwiftUI
 
 struct ContentView: View {
-    private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
-    private let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+    let version: AppVersion
 
     var body: some View {
         VStack(spacing: 12) {
@@ -11,10 +11,7 @@ struct ContentView: View {
                 .foregroundStyle(.tint)
             Text("Gym Companion")
                 .font(.largeTitle.bold())
-            Text("Versión \(version) (\(build))")
-                .foregroundStyle(.secondary)
-            Text("Desplegada sola: push → GitHub → NAS → iPhone")
-                .font(.footnote)
+            Text("Versión \(version.label)")
                 .foregroundStyle(.secondary)
         }
         .padding()
@@ -22,5 +19,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(version: AppVersion(marketing: "0.1", build: "1"))
 }
