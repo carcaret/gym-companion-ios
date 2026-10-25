@@ -60,7 +60,7 @@ docker run --rm --user 1000:10 -e HOME=/tmp -v ~/git/gym-companion-ios:/w -w /w/
 ```
  La imagen lleva la misma versión de Swift que el Xcode del runner `macos-26` (Xcode 26.6 → Swift 6.3.3, sale en el paso "Generar proyecto" del CI) y la misma que el job `core-linux` de `build.yml`: si Xcode cambia de versión, cambiarla en los dos sitios.
 
-En CI (`.github/workflows/build.yml`), en cada PR y en `master`: `core-linux` (paquete en Linux), `pwa-tests` (cruce con la PWA) y `app` (paquete en macOS y tests de la app en el simulador). La release solo se publica en `master` y si todos pasan.
+En CI (`.github/workflows/build.yml`), en cada PR y en `master`: `core-linux` (paquete en Linux), `pwa-tests` (cruce con la PWA) y `app` (paquete en macOS y tests de la app en el simulador). La release solo se publica en `master` y si todos pasan. Los jobs de macOS compilan de forma incremental: guardan en la caché de Actions la carpeta de compilación (la de `master` es la que usan las PR) y `scripts/restore-mtimes.sh` pone a cada fichero la fecha de su commit, para que solo se recompile lo que cambia.
 
 **Tests portados de la PWA**: cada test lleva en Swift el mismo nombre que en Vitest (`@Suite` = el `describe`, `@Test` = el `test`), para poder cruzarlos. `scripts/pwa_tests.py ~/git/gym-companion` comprueba los ficheros de `docs/pwa-tests-ficheros.txt` (cada sub-issue añade los suyos) y falla si alguno no está portado ni en `docs/pwa-tests-no-aplican.tsv` con su motivo; con `--markdown` saca la tabla del PR. Cambiar lo que comprueba un test portado necesita la aprobación del usuario y se anota en el propio test (p. ej. la media de reps, aprobado el 2026-10-25).
 
