@@ -41,7 +41,7 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["finish-workout"].waitForExistence(timeout: 10))
         capture(app, "12-hoy-entreno")
 
-        app.otherElements["card-press_banca"].buttons.firstMatch.tap()
+        app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "13-hoy-tarjeta")
 
         app.buttons["finish-workout"].tap()

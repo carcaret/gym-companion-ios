@@ -26,7 +26,7 @@ struct ExerciseCardView: View {
             if card.isOpen { content }
         }
         .padding()
-        .background(card.isSkipped ? Color.gray.opacity(0.15) : Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 14))
+        .background(card.isSkipped ? Color.gray.opacity(0.15) : Color(.secondarySystemBackground), in: .rect(cornerRadius: 14))
         .accessibilityIdentifier("card-\(card.exerciseID.rawValue)")
     }
 

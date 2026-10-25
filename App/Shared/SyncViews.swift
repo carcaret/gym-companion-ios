@@ -44,7 +44,7 @@ struct SyncPresentation: ViewModifier {
             .overlay(alignment: .bottom) {
                 if let notice = sync.notice {
                     NoticeView(notice: notice)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 96)  // por encima de la barra de pestañas
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: notice) {
                             try? await Task.sleep(for: .seconds(2.5))

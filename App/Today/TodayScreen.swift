@@ -55,21 +55,15 @@ struct TodayScreen: View {
             .padding()
         }
         .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 12) {
-                Button { model.backToSelector() } label: {
-                    Label(TodayText.back, systemImage: "chevron.left").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                Button { Task { await model.start() } } label: {
-                    Text(TodayText.start).frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .layoutPriority(1)
-                .accessibilityIdentifier("start-workout")
+            BottomActions {
+                Button { model.backToSelector() } label: { Label(TodayText.back, systemImage: "chevron.left") }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+            } primary: {
+                Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("start-workout")
             }
-            .controlSize(.large)
-            .padding()
-            .background(.bar)
         }
     }
 
@@ -92,6 +86,22 @@ struct TodayScreen: View {
                 .accessibilityIdentifier("back-to-routines")
             }
         }
+    }
+}
+
+/// La fila de botones de abajo: uno secundario a su tamaño y el principal con el resto del ancho.
+struct BottomActions<Secondary: View, Primary: View>: View {
+    @ViewBuilder let secondary: Secondary
+    @ViewBuilder let primary: Primary
+
+    var body: some View {
+        HStack(spacing: 12) {
+            secondary
+            primary
+        }
+        .controlSize(.large)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 }
 

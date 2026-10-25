@@ -42,22 +42,16 @@ struct ActiveWorkoutView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 12) {
-                Button { Task { await model.finish() } } label: {
-                    Text(TodayText.finish).frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .layoutPriority(1)
-                .accessibilityIdentifier("finish-workout")
-                Button { model.openAddPicker() } label: {
-                    Label(TodayText.addExercise, systemImage: "plus").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("add-exercise")
+            BottomActions {
+                Button { model.openAddPicker() } label: { Label(TodayText.addExercise, systemImage: "plus") }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+                    .accessibilityIdentifier("add-exercise")
+            } primary: {
+                Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("finish-workout")
             }
-            .controlSize(.large)
-            .padding()
-            .background(.bar)
         }
         .sheet(isPresented: Binding(get: { model.picker != nil }, set: { if !$0 { model.closePicker() } })) {
             ExercisePickerSheet(model: model)
