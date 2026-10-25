@@ -77,7 +77,12 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # El simulador arranca mientras se compila; los tests esperan a que acabe.
+      - name: Tests del paquete (macOS)
+        working-directory: Packages/GymCore
+        run: swift test
+
+      # El simulador arranca mientras se compila la app (con los tests del paquete a la vez, los
+      # frena); los tests de la app esperan a que acabe.
       - name: Arrancar el simulador
         run: |
           udid=$(xcrun simctl list devices available -j \
@@ -85,10 +90,6 @@ jobs:
           echo "Simulador: $udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
           xcrun simctl boot "$udid"
-
-      - name: Tests del paquete (macOS)
-        working-directory: Packages/GymCore
-        run: swift test
 
       - name: Compilar la app y los tests
         run: |
