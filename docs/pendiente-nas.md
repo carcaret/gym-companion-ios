@@ -61,7 +61,7 @@ Falta lo que necesita el iPhone o el NAS:
 
 - [ ] Entrenar de verdad con la app un día en el gimnasio: elegir rutina, ajustar pesos y reps con
       una mano, cambiar un ejercicio, terminar. Mirar sobre todo:
-  - que los campos de peso, series y objetivo aceptan lo tecleado al tocar fuera o "OK";
+  - que los campos de peso, series y objetivo aceptan lo tecleado al tocar fuera;
   - que arrastrar para reordenar funciona en la lista (mantener pulsada la tarjeta);
   - que el aviso "Entreno guardado localmente" sale si no hay red al terminar.
 - [ ] Ver que la PWA lee bien el entreno que sube la app (lo mismo que en #7, ahora con datos de un
@@ -98,7 +98,7 @@ Falta lo que necesita el iPhone o el NAS:
       sesiones en Historial.
 - [ ] "Probar conexión" con un token malo da "Error 401 — verifica repo, PAT y rama".
 - [ ] Teclado (PR #32): escribir en un campo y tocar fuera lo cierra y vuelve la barra de
-      pestañas; también "OK" encima del teclado y desplazar la pantalla. Probarlo además en las
+      pestañas; también desplazar la pantalla. Probarlo además en las
       reps del entreno, el buscador de Gráficas y el editor del Catálogo.
 
 ### #15 Paridad y paso definitivo
