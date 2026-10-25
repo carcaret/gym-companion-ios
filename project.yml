@@ -4,6 +4,7 @@ options:
   bundleIdPrefix: com.carcaret
   deploymentTarget:
     iOS: "18.0"
+    watchOS: "26.0"
 settings:
   base:
     MARKETING_VERSION: "0.1"
@@ -13,6 +14,8 @@ targets:
     type: application
     platform: iOS
     sources: [App]
+    dependencies:
+      - target: GymCompanionWatch
     info:
       path: App/Info.plist
       properties:
@@ -26,4 +29,20 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion
         TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+  GymCompanionWatch:
+    type: application
+    platform: watchOS
+    sources: [Watch]
+    info:
+      path: Watch/Info.plist
+      properties:
+        CFBundleDisplayName: Gym
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.carcaret.gymcompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.watchkitapp
         GENERATE_INFOPLIST_FILE: NO
