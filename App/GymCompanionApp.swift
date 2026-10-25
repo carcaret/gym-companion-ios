@@ -7,6 +7,7 @@ struct GymCompanionApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(version: root.appVersion)
+                .task { await root.model.start() }
         }
     }
 }

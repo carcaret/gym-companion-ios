@@ -1,0 +1,40 @@
+{
+  "exercises": {
+    "press_banca": { "id": "press_banca", "name": "Press Banca", "grupo": "pecho" },
+    "curl_biceps": { "id": "curl_biceps", "name": "Curl Bíceps", "grupo": "biceps" },
+    "sentadilla": { "id": "sentadilla", "name": "Sentadilla", "grupo": "piernas" },
+    "ejercicio_sin_historial": { "id": "ejercicio_sin_historial", "name": "Ejercicio Sin Historial", "grupo": "otro" }
+  },
+  "routines": {
+    "DIA1": ["press_banca", "curl_biceps", "ejercicio_sin_historial"],
+    "DIA2": ["sentadilla"],
+    "DIA3": ["press_banca", "sentadilla"]
+  },
+  "history": [
+    {
+      "date": "2024-01-08",
+      "type": "DIA1",
+      "completed": true,
+      "logs": [
+        { "exercise_id": "press_banca", "name": "Press Banca", "series": 3, "reps": { "expected": 10, "actual": [10, 10, 8] }, "weight": 60 },
+        { "exercise_id": "curl_biceps", "name": "Curl Bíceps", "series": 3, "reps": { "expected": 12, "actual": [12, 12, 10] }, "weight": 15 }
+      ]
+    },
+    {
+      "date": "2024-01-10",
+      "type": "DIA2",
+      "completed": true,
+      "logs": [
+        { "exercise_id": "sentadilla", "name": "Sentadilla", "series": 3, "reps": { "expected": 8, "actual": [8, 8, 8] }, "weight": 100 }
+      ]
+    },
+    {
+      "date": "2024-01-05",
+      "type": "DIA1",
+      "completed": true,
+      "logs": [
+        { "exercise_id": "press_banca", "name": "Press Banca", "series": 3, "reps": { "expected": 10, "actual": [] }, "weight": 50 }
+      ]
+    }
+  ]
+}
