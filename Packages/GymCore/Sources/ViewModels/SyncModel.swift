@@ -56,19 +56,6 @@ public final class SyncModel {
         await refresh()
     }
 
-    /// Tirar hacia abajo en Historial: sincroniza al momento y, como lo ha pedido el usuario, dice
-    /// siempre cómo ha quedado (lo de tocar el indicador).
-    public func pullToRefresh() async {
-        if case .remoteApplied(let remote) = await repository.synchronize() {
-            app.replace(with: remote)
-            notice = SyncText.remoteApplied
-            await refresh()
-            return
-        }
-        await refresh()
-        tapIndicator()
-    }
-
     public func tapIndicator() {
         switch status.state {
         case .pending where status.conflict: isConflictPresented = true

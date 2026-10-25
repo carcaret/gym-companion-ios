@@ -22,7 +22,7 @@ struct RootView: View {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
             Tab("Historial", systemImage: "clock", value: AppTab.history) {
-                stack(.history) { HistoryScreen(model: root.history, sync: root.sync) }
+                stack(.history) { HistoryScreen(model: root.history) }
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
