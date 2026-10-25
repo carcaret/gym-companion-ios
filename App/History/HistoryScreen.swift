@@ -59,22 +59,18 @@ struct HistoryScreen: View {
             .padding()
         }
         .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 12) {
-                Button { model.back() } label: {
-                    Label(HistoryText.back, systemImage: "chevron.left").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
+            BottomActions {
+                Button { model.back() } label: { Label(HistoryText.back, systemImage: "chevron.left") }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+            } primary: {
                 if model.isIncomplete {
-                    Button { Task { await model.completeWorkout() } } label: {
-                        Text(HistoryText.completeWorkout).frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .layoutPriority(1)
+                    Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
+                        .buttonStyle(.borderedProminent)
+                } else {
+                    Spacer()
                 }
             }
-            .controlSize(.large)
-            .padding()
-            .background(.bar)
         }
     }
 
