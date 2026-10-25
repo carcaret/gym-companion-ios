@@ -47,6 +47,8 @@ struct ExercisePageView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Sin tocar los puntos de página que watchOS pinta a la derecha.
+        .padding(.trailing, 14)
         .opacity(page.isSkipped ? 0.45 : 1)
     }
 }
