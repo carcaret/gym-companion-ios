@@ -19,6 +19,7 @@ struct CompositionRoot {
     let charts: ChartsModel
     let progress: ProgressModel
     let catalog: CatalogModel
+    let settings: SettingsModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
@@ -43,6 +44,7 @@ struct CompositionRoot {
         charts = ChartsModel(app: model, navigation: navigation, clock: SystemClock())
         progress = ProgressModel(app: model, navigation: navigation, clock: SystemClock())
         catalog = CatalogModel(app: model)
+        settings = SettingsModel(sync: sync, repository: repository, version: appVersion)
     }
 
     /// Cada vez que vuelve la red.

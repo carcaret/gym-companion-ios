@@ -323,6 +323,11 @@ public actor TrainingRepository {
 
     // MARK: - Configuración
 
+    /// Lo guardado, para rellenar Ajustes (la PWA enseña el token en claro en su campo).
+    public var configuration: (location: SyncLocation?, token: String?) {
+        (settings.location, token)
+    }
+
     /// Botón "Probar conexión": pregunta a GitHub sin tocar los datos.
     public func testConnection(_ location: SyncLocation, token: String) async -> ConnectionResult {
         do {

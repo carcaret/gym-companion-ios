@@ -78,6 +78,10 @@ final class ScreenshotTests: XCTestCase {
         catalog.tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].waitForExistence(timeout: 10))
         capture(app, "50-catalogo")
+
+        app.tabBars.buttons["Ajustes"].tap()
+        XCTAssertTrue(app.staticTexts["settings-version"].waitForExistence(timeout: 10))
+        capture(app, "60-ajustes")
     }
 
     @MainActor
