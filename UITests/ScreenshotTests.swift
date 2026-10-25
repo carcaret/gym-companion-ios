@@ -7,12 +7,19 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Cada pestaña se abre y enseña su título.
     @MainActor
-    func testInicio() {
+    func testPestanas() {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.staticTexts["Gym Companion"].waitForExistence(timeout: 10))
-        capture(app, "01-inicio")
+        let tabs = [("Rutinas", "01-rutinas"), ("Historial", "02-historial"), ("Progreso", "03-progreso"),
+                    ("Gráficas", "04-graficas"), ("Ajustes", "05-ajustes")]
+        for (title, name) in tabs {
+            app.tabBars.buttons[title].tap()
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "No se abrió \(title)")
+            capture(app, name)
+        }
+        XCTAssertTrue(app.buttons["sync-indicator"].exists)
     }
 
     @MainActor

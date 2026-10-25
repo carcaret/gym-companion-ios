@@ -16,3 +16,10 @@ constants.test.js
 github.test.js
 json-parse-safety.test.js
 keepalive.test.js
+# e2e (tests/e2e), portados por comportamiento con el mismo describe y nombre.
+e2e/github-sync.spec.js
+e2e/sync-canonicos.spec.js
+e2e/sync-ui.spec.js
+e2e/workout-github-sync.spec.js
+e2e/persistence.spec.js
+e2e/tabbar-keyboard.spec.js
