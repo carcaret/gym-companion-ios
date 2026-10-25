@@ -66,6 +66,17 @@ extension Collection where Element == Session {
         return Array(sessions.suffix(maxSessions))
     }
 
+    /// Las `limit` últimas sesiones terminadas en las que se hizo el ejercicio (sin saltarlo), de
+    /// la más reciente a la más antigua, sin límite de fechas. Son las del reloj.
+    public func lastSessions(for exercise: ExerciseID, excluding excluded: LocalDate? = nil, limit: Int) -> [ExerciseSession] {
+        let sessions = sortedNewestFirst().lazy.compactMap { session -> ExerciseSession? in
+            guard session.completed, session.date != excluded,
+                  let log = session.logs.first(where: { $0.exerciseID == exercise }), !log.skipped else { return nil }
+            return ExerciseSession(date: session.date, log: log)
+        }
+        return Array(sessions.prefix(limit))
+    }
+
     /// Las últimas `weeks` semanas hasta la de `anchor`, de la más antigua a la actual, cada una
     /// con su sesión terminada de mayor volumen del ejercicio (a igualdad, la más reciente).
     public func weeklyBuckets(

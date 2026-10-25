@@ -5,6 +5,7 @@ options:
   developmentLanguage: es
   deploymentTarget:
     iOS: "26.0"
+    watchOS: "26.0"
 settings:
   base:
     MARKETING_VERSION: "0.1"
@@ -34,6 +35,10 @@ targets:
         product: Adapters
       - package: GymCore
         product: AppleAdapters
+      - package: GymCore
+        product: WatchAdapters
+      # La app del reloj va dentro (Watch/); ios-signer la instala directamente en el reloj (#2).
+      - target: GymCompanionWatch
     info:
       path: App/Info.plist
       properties:
@@ -66,3 +71,51 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: GymCompanion
+  # App del reloj (#16): solo lectura, lo que le envía el iPhone. Comparte con la app los datos de
+  # ejemplo de las capturas y los colores.
+  GymCompanionWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - Watch
+      - App/DemoData.swift
+      - App/Shared/Theme.swift
+    dependencies:
+      - package: GymCore
+        product: Domain
+      - package: GymCore
+        product: Presentation
+      - package: GymCore
+        product: ViewModels
+      - package: GymCore
+        product: Adapters
+      - package: GymCore
+        product: WatchAdapters
+    info:
+      path: Watch/Info.plist
+      properties:
+        CFBundleDisplayName: Gym
+        CFBundleDevelopmentRegion: es
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        # plumesign lo reescribe con el team ID, igual que el identificador del bundle.
+        WKCompanionAppBundleIdentifier: com.carcaret.gymcompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.watchkitapp
+        GENERATE_INFOPLIST_FILE: NO
+    scheme:
+      testTargets: [GymCompanionWatchUITests]
+      gatherCoverageData: false
+  GymCompanionWatchUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    sources: [WatchUITests]
+    dependencies:
+      - target: GymCompanionWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.watchkitapp.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: GymCompanionWatch

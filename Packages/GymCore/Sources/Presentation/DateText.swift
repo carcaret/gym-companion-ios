@@ -21,6 +21,11 @@ public enum DateText {
         "\(weekdays[date.weekday.rawValue]), \(date.day) \(months[date.month - 1]) \(date.year)"
     }
 
+    /// "21 oct": día y mes abreviado.
+    public static func dayMonth(_ date: LocalDate) -> String {
+        "\(date.day) \(months[date.month - 1])"
+    }
+
     /// "5/4": día y mes sin ceros.
     public static func short(_ date: LocalDate) -> String {
         "\(date.day)/\(date.month)"
