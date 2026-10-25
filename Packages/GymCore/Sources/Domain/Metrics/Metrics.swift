@@ -28,6 +28,12 @@ extension ExerciseLog {
         actualReps.compactMap { $0 }.reduce(0) { $0 + Swift.max(0, targetReps - $1) }
     }
 
+    /// La métrica con la que se compara una sesión con otra: el 1RM estimado si hay peso; sin
+    /// peso, el volumen (en reps). (`getPrimaryMetric` en la PWA.)
+    public var primaryMetric: Double {
+        estimatedOneRepMax > 0 ? estimatedOneRepMax : volume
+    }
+
     /// Reps realmente hechas, sumando las series rellenadas.
     public var totalReps: Int {
         actualReps.compactMap { $0 }.reduce(0, +)

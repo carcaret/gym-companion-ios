@@ -26,10 +26,11 @@ Para cada PR fusionada, después de que el CI publique la release:
 
 Para que no se pierda nada al repartir tests entre issues:
 
-- [ ] `e2e/view-nav-buttons.spec.js` (de #8): sus 15 tests son de pantallas de otras issues. Los
-      de "routine preview" y "completed view" (11) se portan con Hoy en #9; los de "history
-      detail" (4), con Historial en #10. Al portarlos, añadir el fichero a
+- [ ] `e2e/view-nav-buttons.spec.js` (de #8): los 11 de Hoy ya están portados o en el TSV (#9).
+      Faltan los 4 de "history detail", con Historial en #10; entonces se añade el fichero a
       `docs/pwa-tests-ficheros.txt` (el cruce falla si queda alguno sin portar).
+- [x] `unit/builders.test.js` y `unit/bar-colors.test.js` (de #10) se portaron en #9: la tira de
+      historial también sale en las tarjetas de Hoy. En #10 solo queda pintarla en el detalle.
 
 ## Por sub-issue
 
@@ -56,3 +57,13 @@ Falta lo que necesita el iPhone o el NAS:
 
 - [ ] Ver en el iPhone las cinco pestañas (Rutinas, Historial, Progreso, Gráficas, Ajustes) con
       el indicador de sincronización arriba a la derecha; en Ajustes, la versión y la compilación.
+
+### #9 Hoy
+
+- [ ] Entrenar de verdad con la app un día en el gimnasio: elegir rutina, ajustar pesos y reps con
+      una mano, cambiar un ejercicio, terminar. Mirar sobre todo:
+  - que los campos de peso, series y objetivo aceptan lo tecleado al tocar fuera o "OK";
+  - que arrastrar para reordenar funciona en la lista (mantener pulsada la tarjeta);
+  - que el aviso "Entreno guardado localmente" sale si no hay red al terminar.
+- [ ] Ver que la PWA lee bien el entreno que sube la app (lo mismo que en #7, ahora con datos de un
+      entreno de verdad).

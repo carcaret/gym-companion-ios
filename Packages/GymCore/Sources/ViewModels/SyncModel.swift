@@ -9,8 +9,11 @@ import Presentation
 @Observable
 public final class SyncModel {
     public private(set) var status = SyncStatus(state: .disabled)
-    /// El aviso que hay que enseñar; la vista lo quita cuando se ha visto.
-    public var notice: Notice?
+    /// El aviso de la app (`AppModel.notice`).
+    public var notice: Notice? {
+        get { app.notice }
+        set { app.notice = newValue }
+    }
     /// Diálogo de conflicto: subir lo local, bajar lo remoto o cancelar.
     public var isConflictPresented = false
     /// Aviso de que el entreno terminado se quedó en el iPhone sin subir.

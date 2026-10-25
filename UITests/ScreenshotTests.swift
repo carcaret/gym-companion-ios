@@ -22,6 +22,33 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["sync-indicator"].exists)
     }
 
+    /// Hoy con datos de ejemplo (`-demo`): selector, vista previa, entreno, tarjeta abierta y
+    /// entreno terminado.
+    @MainActor
+    func testHoy() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Rutinas"].tap()
+        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10))
+        capture(app, "10-hoy-selector")
+
+        app.buttons["routine-DIA1"].tap()
+        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 10))
+        capture(app, "11-hoy-vista-previa")
+
+        app.buttons["start-workout"].tap()
+        XCTAssertTrue(app.buttons["finish-workout"].waitForExistence(timeout: 10))
+        capture(app, "12-hoy-entreno")
+
+        app.buttons["card-press_banca"].firstMatch.tap()
+        capture(app, "13-hoy-tarjeta")
+
+        app.buttons["finish-workout"].tap()
+        XCTAssertTrue(app.buttons["back-to-routines"].waitForExistence(timeout: 10))
+        capture(app, "14-hoy-terminado")
+    }
+
     @MainActor
     private func capture(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())

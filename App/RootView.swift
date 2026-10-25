@@ -8,12 +8,18 @@ struct RootView: View {
     let version: AppVersion
     let app: AppModel
     let sync: SyncModel
+    let today: TodayModel
     @Bindable var navigation: NavigationModel
 
     var body: some View {
         TabView(selection: $navigation.selectedTab) {
             Tab("Rutinas", systemImage: "dumbbell", value: AppTab.routines) {
-                screen("Rutinas") { PendingScreen(issue: 9) }
+                NavigationStack {
+                    TodayScreen(model: today)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: sync) }
+                        }
+                }
             }
             Tab("Historial", systemImage: "clock", value: AppTab.history) {
                 screen("Historial") { PendingScreen(issue: 10) }
