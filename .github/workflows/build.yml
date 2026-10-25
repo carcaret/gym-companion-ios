@@ -25,8 +25,14 @@ jobs:
     container: swift:6.3.3
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: carcaret/gym-companion
+          path: pwa
       - name: Tests del paquete (Linux)
         working-directory: Packages/GymCore
+        env:
+          PWA_DB_JSON: ${{ github.workspace }}/pwa/db.json   # los datos reales, para el test de importación
         run: swift test
 
   pwa-tests:

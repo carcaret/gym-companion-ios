@@ -19,16 +19,23 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
   Sources/Presentation/      textos en español para la interfaz (fechas, resúmenes, frases, mensajes) y
                              lectura de lo tecleado. Depende de Domain
   Sources/Application/       casos de uso y puertos (protocolos: Clock...). Depende de Domain
-  Sources/Adapters/          implementaciones de los puertos (SystemClock; después GitHub, almacenamiento...)
+  Sources/ViewModels/        estado de cada pantalla (@Observable, @MainActor). Depende de Application,
+                             Presentation y Domain; las vistas SwiftUI de App/ solo los pintan
+  Sources/Adapters/          implementaciones de los puertos (SystemClock, JSONFileTrainingDataStore,
+                             PWAFormat para leer db.json; después GitHub, Llavero...)
+  Sources/GymCoreTesting/    para los tests: dobles de los puertos (InMemoryTrainingDataStore) y tests de
+                             contrato que todo adaptador de un puerto pasa (TrainingDataStoreContract)
   Tests/<Módulo>Tests/       Swift Testing
   test.sh                    los tests en el NAS
-App/                         app iOS: vistas SwiftUI finas, ViewModels @Observable y CompositionRoot.swift
+App/                         app iOS: vistas SwiftUI finas y CompositionRoot.swift
 UITests/                     XCUITest: pocos flujos y las capturas de pantalla
 project.yml                  XcodeGen (el .xcodeproj no se versiona)
 scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Tests)
 ```
 
-- `Domain`, `Presentation` y `Application` **no importan frameworks de Apple** (hoy ni siquiera Foundation; si hiciera falta, solo lo que compile en Linux): sus tests corren en el NAS y en un job de Linux del CI, que es quien lo vigila.
+- Solo `Adapters` importa Foundation (y lo que compila en Linux); `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
+- Puertos (`Application`): `Clock`, `TrainingDataStore`. Cada adaptador de un puerto pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y los casos de uso se prueban con los dobles en memoria.
+- Datos en el iPhone: `Application Support/GymCompanion/training-data.json`, formato propio versionado (`StoredTrainingData`, `version`), escrito de forma atómica. Se conserva al reinstalar encima (lo que hace ios-signer). `db.json` solo se lee (`PWAFormat`) y, desde #7, se escribe para sincronizar.
 - Un adaptador que solo exista en Apple (SwiftData, HealthKit, WatchConnectivity...) va en su propio módulo, para que el resto del paquete siga compilando en Linux.
 - `App/CompositionRoot.swift` es el único sitio que crea adaptadores concretos.
 - Reglas de negocio en `Domain`; lo que es texto para la interfaz, en `Presentation` (p. ej. el error es `LogValidationError.negativeWeight` y el mensaje "Peso debe ser >= 0" lo da `ValidationText`).
@@ -39,7 +46,7 @@ scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Te
 
 ## Tests
 
-En el NAS (segundos; la primera vez descarga la imagen): `Packages/GymCore/test.sh` (admite los argumentos de `swift test`, p. ej. `--filter LocalDate`). Es esto, con el usuario propio para que `.build` no quede de root:
+En el NAS (segundos; la primera vez descarga la imagen): `Packages/GymCore/test.sh` (admite los argumentos de `swift test`, p. ej. `--filter LocalDateTests`; el filtro es por nombre de tipo o función, no por el texto del `@Test`). Si `~/git/gym-companion` está clonado, le pasa su `db.json` real en `PWA_DB_JSON` para el test de importación (el CI hace lo mismo). Es esto, con el usuario propio para que `.build` no quede de root:
 
 ```sh
 docker run --rm --user 1000:10 -e HOME=/tmp -v ~/git/gym-companion-ios:/w -w /w/Packages/GymCore swift:6.3.3 swift test
