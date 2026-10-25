@@ -123,7 +123,11 @@ jobs:
           xcrun xcresulttool export attachments --path Tests.xcresult --output-path attachments
           mkdir -p capturas
           jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
-            | while IFS=$'\t' read -r file name; do cp "attachments/$file" "capturas/${name%%_*}.png"; done
+            | while IFS=$'\t' read -r file name; do
+                # upload-artifact no admite " : < > | * ? en los nombres (salen en las descripciones de un fallo).
+                name=$(printf '%s' "${name%%_*}" | tr -d '":<>|*?')
+                cp "attachments/$file" "capturas/$name.png"
+              done
           ls capturas
 
       - uses: actions/upload-artifact@v4
