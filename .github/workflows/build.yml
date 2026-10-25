@@ -52,6 +52,23 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # para restore-mtimes.sh
+
+      # Compilación incremental: la carpeta de compilación de Xcode y la de SwiftPM de la última
+      # ejecución, con cada fichero en la fecha de su commit para que solo se recompile lo que
+      # cambia. Las ejecuciones de master guardan la caché que usan las PR.
+      - name: Fechas de los ficheros
+        run: |
+          scripts/restore-mtimes.sh
+          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - uses: actions/cache@v4
+        with:
+          path: |
+            build
+            Packages/GymCore/.build
+          key: app-debug-${{ github.sha }}
+          restore-keys: app-debug-
 
       - name: Generar proyecto
         run: |
@@ -74,15 +91,15 @@ jobs:
             -scheme GymCompanion \
             -destination "id=$udid" \
             -derivedDataPath build \
-            -resultBundlePath build/Tests.xcresult \
+            -resultBundlePath Tests.xcresult \
             | tail -n 40
           test "${PIPESTATUS[0]}" -eq 0
 
       - name: Extraer capturas
         if: always()
         run: |
-          [ -d build/Tests.xcresult ] || exit 0
-          xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path attachments
+          [ -d Tests.xcresult ] || exit 0
+          xcrun xcresulttool export attachments --path Tests.xcresult --output-path attachments
           mkdir -p capturas
           jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
             | while IFS=$'\t' read -r file name; do cp "attachments/$file" "capturas/${name%%_*}.png"; done
@@ -101,6 +118,18 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fechas de los ficheros   # ver el job app
+        run: |
+          scripts/restore-mtimes.sh
+          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: app-release-${{ github.sha }}
+          restore-keys: app-release-
 
       - name: Generar proyecto
         run: |
