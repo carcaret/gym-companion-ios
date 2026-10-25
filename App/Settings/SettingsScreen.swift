@@ -41,6 +41,14 @@ struct SettingsScreen: View {
                             .buttonStyle(.pill(.secondary))
                         Button(role: .destructive) { model.requestDownload() } label: { Text(SettingsText.download).frame(maxWidth: .infinity) }
                             .buttonStyle(.pill(.danger))
+                            // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
+                            .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
+                                                titleVisibility: .visible) {
+                                Button(SyncText.downloadConfirm, role: .destructive) { Task { await model.confirmDownload() } }
+                                Button(SyncText.cancelLabel, role: .cancel) {}
+                            } message: {
+                                Text(SyncText.downloadWarning)
+                            }
                     }
                 }
                 .card()
@@ -54,12 +62,6 @@ struct SettingsScreen: View {
         }
         .navigationTitle(SettingsText.title)
         .task { await model.load() }
-        .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented, titleVisibility: .visible) {
-            Button(SyncText.downloadConfirm, role: .destructive) { Task { await model.confirmDownload() } }
-            Button(SyncText.cancelLabel, role: .cancel) {}
-        } message: {
-            Text(SyncText.downloadWarning)
-        }
     }
 
     /// Un campo de la PWA (`.input-group`): el nombre encima, en mayúsculas pequeñas, y la caja.
