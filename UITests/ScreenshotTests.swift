@@ -70,7 +70,12 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["stats-exercises"].tap()
         capture(app, "40-progreso")
 
-        app.buttons["catalog-card"].firstMatch.tap()
+        // La tarjeta del catálogo está al final de la lista: la List no la crea hasta que se ve.
+        let catalog = app.buttons["catalog-card"].firstMatch
+        for _ in 0..<6 where !catalog.isHittable {
+            app.swipeUp()
+        }
+        catalog.tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].waitForExistence(timeout: 10))
         capture(app, "50-catalogo")
     }
