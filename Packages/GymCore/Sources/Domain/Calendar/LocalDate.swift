@@ -48,13 +48,12 @@ public struct LocalDate: Hashable, Comparable, Sendable {
 
     public var weekday: Weekday {
         // El 1970-01-01 fue jueves.
-        let index = ((daysSinceEpoch + 3) % 7 + 7) % 7
-        return Weekday.allCases[index]
+        Weekday(rawValue: ((daysSinceEpoch + 3) % 7 + 7) % 7)!
     }
 
     /// El lunes de la semana (las semanas van de lunes a domingo).
     public var weekStart: LocalDate {
-        adding(days: -Weekday.allCases.firstIndex(of: weekday)!)
+        adding(days: -weekday.rawValue)
     }
 
     public static func < (lhs: LocalDate, rhs: LocalDate) -> Bool {
@@ -102,7 +101,7 @@ public struct LocalDate: Hashable, Comparable, Sendable {
     }
 }
 
-/// Días de la semana, empezando por el lunes.
-public enum Weekday: CaseIterable, Sendable {
+/// Días de la semana; el valor es la posición empezando por el lunes (0).
+public enum Weekday: Int, CaseIterable, Sendable {
     case monday, tuesday, wednesday, thursday, friday, saturday, sunday
 }

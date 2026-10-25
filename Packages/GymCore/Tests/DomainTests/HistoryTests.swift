@@ -299,6 +299,22 @@ struct WeeklyBucketsTests {
         #expect(history.weeklyBuckets(for: "otro_ejercicio", anchor: anchor).allSatisfy { $0.session == nil })
     }
 
+    @Test("db null devuelve buckets vacíos bien formados")
+    func emptyHistory() {
+        // Sin `db` nulo en Swift: con el historial vacío, los buckets salen igual de bien formados.
+        let buckets = [Session]().weeklyBuckets(for: "press_banca", anchor: anchor)
+        #expect(buckets.count == 4)
+        #expect(buckets.allSatisfy { $0.session == nil })
+        #expect(buckets[3].weekStart == "2026-04-20")
+    }
+
+    @Test("no muta db.history")
+    func immutable() {
+        let history = [completed("2026-04-15", "DIA1", weekLog(55, 3, [10, 10, 10])), completed("2026-04-22", "DIA1", weekLog(60, 3, [10, 10, 10]))]
+        _ = history.weeklyBuckets(for: "press_banca", anchor: anchor)
+        #expect(history.map(\.date) == ["2026-04-15", "2026-04-22"])
+    }
+
     @Test("ancla en lunes funciona igual (W0 empieza ese día)")
     func mondayAnchor() {
         let buckets = [completed("2026-04-20", "DIA1", weekLog(60, 3, [10, 10, 10]))].weeklyBuckets(for: "press_banca", anchor: "2026-04-20")
@@ -372,6 +388,13 @@ struct RecentSessionsTests {
 
     @Test("history vacía devuelve []")
     func empty() { #expect([Session]().recentSessions(for: "press_banca", anchor: anchor).isEmpty) }
+
+    @Test("no muta db.history")
+    func immutable() {
+        let history = [entry("2026-04-28", 70, 3, [10, 10, 10]), entry("2026-04-21", 60, 3, [10, 10, 10])]
+        _ = history.recentSessions(for: "press_banca", anchor: anchor)
+        #expect(history.map(\.date) == ["2026-04-28", "2026-04-21"])
+    }
 
     @Test("historia desordenada → resultado ordenado cronológicamente")
     func unordered() {
