@@ -57,6 +57,12 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["Volver"].waitForExistence(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "21-historial-detalle")
+
+        app.tabBars.buttons["Gráficas"].tap()
+        let search = app.textFields["chart-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        app.buttons["Press Banca"].firstMatch.tap()
+        capture(app, "30-graficas")
     }
 
     @MainActor

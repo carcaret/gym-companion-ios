@@ -10,6 +10,7 @@ struct RootView: View {
     let sync: SyncModel
     let today: TodayModel
     let history: HistoryModel
+    let charts: ChartsModel
     @Bindable var navigation: NavigationModel
 
     var body: some View {
@@ -34,7 +35,12 @@ struct RootView: View {
                 screen("Progreso") { PendingScreen(issue: 12) }
             }
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
-                screen("Gráficas") { PendingScreen(issue: 11) }
+                NavigationStack {
+                    ChartsScreen(model: charts)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: sync) }
+                        }
+                }
             }
             Tab("Ajustes", systemImage: "gearshape", value: AppTab.settings) {
                 screen("Ajustes") {

@@ -16,6 +16,7 @@ struct CompositionRoot {
     let navigation: NavigationModel
     let today: TodayModel
     let history: HistoryModel
+    let charts: ChartsModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
@@ -37,6 +38,7 @@ struct CompositionRoot {
         self.navigation = navigation
         today = TodayModel(app: model, sync: sync, clock: SystemClock())
         history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
+        charts = ChartsModel(app: model, navigation: navigation, clock: SystemClock())
     }
 
     /// Cada vez que vuelve la red.
