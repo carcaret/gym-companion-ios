@@ -1,0 +1,51 @@
+# Pruebas de viabilidad (#2, #3): compila la rama y deja la .ipa como artefacto, sin publicar release.
+name: spike
+
+on:
+  push:
+    branches: ['spike/**']
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar proyecto
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Compilar (sin firmar)
+        run: |
+          xcodebuild build \
+            -project GymCompanion.xcodeproj \
+            -scheme GymCompanion \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Firma ad hoc con entitlements
+        run: |
+          app=build/Build/Products/Release-iphoneos/GymCompanion.app
+          for e in $(find . -path ./build -prune -o -name '*.entitlements' -print); do echo "$e"; done
+          if [ -f App/GymCompanion.entitlements ]; then
+            codesign --force --sign - --entitlements App/GymCompanion.entitlements "$app"
+          fi
+          find "$app" -name '*.app' -maxdepth 3 -print -exec codesign -d --entitlements - {} \; || true
+
+      - name: Empaquetar .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/GymCompanion.app Payload/
+          find Payload -maxdepth 4 -name '*.app' -o -maxdepth 4 -name Info.plist
+          zip -qr GymCompanion.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GymCompanion-ipa
+          path: GymCompanion.ipa

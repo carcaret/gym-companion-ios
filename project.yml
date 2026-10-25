@@ -22,6 +22,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        NSHealthShareUsageDescription: Gym lee tu peso corporal de Salud.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion
