@@ -17,3 +17,6 @@ charts.test.js	buildChartDatasets	chartType bar → fill=false y type=bar en e1R
 routine-rename.test.js	consistencia ROUTINE_KEYS / DAY_LABELS	ROUTINE_KEYS coincide con claves de DAY_LABELS	Ids y nombres van juntos en cada `Routine`: no pueden desincronizarse.
 constants.test.js	constants	las claves de localStorage están definidas	No hay localStorage: dónde se guardan los datos y la configuración es del adaptador de persistencia (#6) y de Ajustes (#14).
 constants.test.js	constants	SESSION_KEY y SALT ya no existen (sistema de auth eliminado)	La app nunca tuvo ese sistema de acceso.
+e2e/tabbar-keyboard.spec.js	Tab bar y teclado	enfocar el input de peso retira la tab bar y desenfocar la devuelve	La barra es la nativa de iOS (`TabView`): el teclado la tapa sin dejarla flotando sobre los campos. El fallo de `position: fixed` de la PWA standalone no existe.
+e2e/tabbar-keyboard.spec.js	Tab bar y teclado	cerrar la card con el input enfocado devuelve la tab bar	Ídem: no hay barra que retirar ni devolver; la gestiona el sistema con el teclado.
+e2e/tabbar-keyboard.spec.js	Tab bar y teclado	los tabs siguen siendo clicables tras enfocar y desenfocar	Ídem; que las pestañas se tocan y cambian de pantalla lo comprueba `ScreenshotTests.testPestanas` (XCUITest) y la selección, `NavigationModelTests`.

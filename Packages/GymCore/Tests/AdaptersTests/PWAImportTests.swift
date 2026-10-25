@@ -1,6 +1,7 @@
 import Adapters
 import Domain
 import Foundation
+import GymCoreTesting
 import Testing
 
 @Suite("Importación de db.json de la PWA")
@@ -29,6 +30,11 @@ struct PWAImportTests {
         #expect(data.history.map(\.date.iso) == ["2024-01-08", "2024-01-10", "2024-01-05"])
         #expect(data.history[0].logs[0] == ExerciseLog(exerciseID: "press_banca", series: 3, targetReps: 10, actualReps: [10, 10, 8], weight: 60))
         #expect(data.history[2].logs[0].actualReps == [])
+    }
+
+    @Test("el fixture de la PWA es el PWATestDB de los tests de los ViewModels")
+    func fixtureMatchesSwiftCopy() throws {
+        #expect(try PWAFormat.trainingData(from: fixture()) == PWATestDB.data)
     }
 
     @Test("saltados, cambiados, puntuales y series vacías")

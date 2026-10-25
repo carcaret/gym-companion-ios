@@ -22,6 +22,15 @@ Para cada PR fusionada, después de que el CI publique la release:
       `house_arrest` antes y después de una instalación que `Application Support/GymCompanion/`
       sigue ahí).
 
+## Trabajo que pasa de una issue a otra
+
+Para que no se pierda nada al repartir tests entre issues:
+
+- [ ] `e2e/view-nav-buttons.spec.js` (de #8): sus 15 tests son de pantallas de otras issues. Los
+      de "routine preview" y "completed view" (11) se portan con Hoy en #9; los de "history
+      detail" (4), con Historial en #10. Al portarlos, añadir el fichero a
+      `docs/pwa-tests-ficheros.txt` (el cruce falla si queda alguno sin portar).
+
 ## Por sub-issue
 
 ### #7 Sincronización con GitHub
@@ -42,5 +51,8 @@ Falta lo que necesita el iPhone o el NAS:
 - [ ] Que la PWA lee bien el `db.json` que escribe la app (abrirla tras una subida de la app).
 - [ ] Segundo plano: hacer un cambio fuera de un entreno y bloquear el iPhone en menos de 500 ms;
       el commit debe llegar igual (tarea en segundo plano de `UIKitBackgroundActivity`).
-- [ ] El job `app` del CI pasa el contrato del Llavero en macOS. Si falla por permisos del
-      Llavero del runner, no borrar el test: preguntar al usuario.
+
+### #8 Navegación
+
+- [ ] Ver en el iPhone las cinco pestañas (Rutinas, Historial, Progreso, Gráficas, Ajustes) con
+      el indicador de sincronización arriba a la derecha; en Ajustes, la versión y la compilación.

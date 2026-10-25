@@ -7,7 +7,7 @@ struct GymCompanionApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(version: root.appVersion, app: root.model, sync: root.sync)
+            RootView(version: root.appVersion, app: root.model, sync: root.sync, navigation: root.navigation)
                 .task {
                     await root.model.start()
                     await root.sync.synchronize()

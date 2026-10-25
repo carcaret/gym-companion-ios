@@ -13,6 +13,7 @@ struct CompositionRoot {
     let repository: TrainingRepository
     let model: AppModel
     let sync: SyncModel
+    let navigation = NavigationModel()
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(

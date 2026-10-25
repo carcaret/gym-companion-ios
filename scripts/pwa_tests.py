@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Cruza los tests unitarios de la PWA con los de la app: cada test de la PWA tiene que tener
-uno en Swift con el mismo `describe` (@Suite) y el mismo nombre (@Test), o estar en
-docs/pwa-tests-no-aplican.tsv con el motivo.
+"""Cruza los tests de la PWA con los de la app: cada test de la PWA tiene que tener uno en Swift
+con el mismo `describe` (@Suite) y el mismo nombre (@Test), o estar en
+docs/pwa-tests-no-aplican.tsv con el motivo. Los unitarios se nombran por su fichero
+(`dates.test.js`, en tests/unit) y los e2e con su carpeta (`e2e/routine.spec.js`, en tests/e2e).
 
-Uso: scripts/pwa_tests.py <repo de la PWA> [<fichero.test.js>...] [--markdown]
+Uso: scripts/pwa_tests.py <repo de la PWA> [<fichero>...] [--markdown]
 Sin ficheros, los de docs/pwa-tests-ficheros.txt.
 Sale con error si falta alguno. Con --markdown imprime la tabla para el PR.
 """
@@ -17,7 +18,7 @@ SWIFT_TESTS = [ROOT / "Packages/GymCore/Tests", ROOT / "UITests", ROOT / "AppTes
 NOT_APPLICABLE = ROOT / "docs/pwa-tests-no-aplican.tsv"
 PORTED_FILES = ROOT / "docs/pwa-tests-ficheros.txt"
 
-JS_BLOCK = re.compile(r"^(\s*)(describe|test|it)\(\s*(['\"`])(.*?)\3\s*,")
+JS_BLOCK = re.compile(r"^(\s*)(test\.describe|describe|test|it)\(\s*(['\"`])(.*?)\3\s*,")
 SWIFT_SUITE = re.compile(r'@Suite\("((?:[^"\\]|\\.)*)"')
 SWIFT_TEST = re.compile(r'@Test\("((?:[^"\\]|\\.)*)"')
 SWIFT_TYPE = re.compile(r"^\s*(?:private |fileprivate )?struct (\w+)")
@@ -32,7 +33,8 @@ def js_tests(path):
             continue
         indent, kind, name = len(m.group(1)), m.group(2), m.group(4)
         stack = [(i, n) for i, n in stack if i < indent]
-        if kind == "describe":
+        name = name.replace("\\'", "'").replace('\\"', '"')
+        if kind.endswith("describe"):
             stack.append((indent, name))
         else:
             out.append((stack[-1][1] if stack else "", name))
@@ -69,7 +71,7 @@ def main(argv):
     ported, skipped = swift_tests(), not_applicable()
     rows, missing = [], []
     for name in files:
-        for describe, test in js_tests(pwa / "tests/unit" / name):
+        for describe, test in js_tests(pwa / "tests" / (name if "/" in name else "unit/" + name)):
             if (describe, test) in ported:
                 rows.append((name, describe, test, ported[(describe, test)], ""))
             elif (name, describe, test) in skipped:
