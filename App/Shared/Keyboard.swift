@@ -16,6 +16,27 @@ extension View {
     }
 }
 
+extension View {
+    /// Tocar fuera de un campo de texto cierra el teclado, en toda la ventana. Se pone una vez, en
+    /// la raíz: la vista invisible del fondo instala el reconocedor cuando ya está en la ventana
+    /// (en `onAppear` la ventana aún no existe).
+    func dismissesKeyboardOnTapOutside() -> some View {
+        background(WindowHook().allowsHitTesting(false))
+    }
+}
+
+private struct WindowHook: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView { HookView() }
+    func updateUIView(_ view: UIView, context: Context) {}
+
+    private final class HookView: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if let window { Keyboard.dismissOnTapOutside(in: window) }
+        }
+    }
+}
+
 /// Cerrar el teclado, también al tocar fuera de un campo de texto en cualquier pantalla.
 @MainActor
 enum Keyboard {
@@ -27,14 +48,12 @@ enum Keyboard {
 
     /// Pone en la ventana un reconocedor de toques que cierra el teclado. No se queda con el toque
     /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto.
-    static func dismissOnTapOutside() {
-        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
-        for window in windows where !(window.gestureRecognizers ?? []).contains(where: { $0.delegate === tapOutside }) {
-            let recognizer = UITapGestureRecognizer(target: tapOutside, action: #selector(TapOutside.tap(_:)))
-            recognizer.cancelsTouchesInView = false
-            recognizer.delegate = tapOutside
-            window.addGestureRecognizer(recognizer)
-        }
+    static func dismissOnTapOutside(in window: UIWindow) {
+        guard !(window.gestureRecognizers ?? []).contains(where: { $0.delegate === tapOutside }) else { return }
+        let recognizer = UITapGestureRecognizer(target: tapOutside, action: #selector(TapOutside.tap(_:)))
+        recognizer.cancelsTouchesInView = false
+        recognizer.delegate = tapOutside
+        window.addGestureRecognizer(recognizer)
     }
 
     private final class TapOutside: NSObject, UIGestureRecognizerDelegate {
