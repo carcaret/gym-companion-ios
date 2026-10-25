@@ -1,0 +1,56 @@
+# Compila la app sin firmar y la publica como release "latest".
+# La firma (Apple ID gratuito) y la instalación en el iPhone las hace el NAS (ios-signer).
+name: build
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar proyecto
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Compilar (sin firmar)
+        run: |
+          xcodebuild build \
+            -project GymCompanion.xcodeproj \
+            -scheme GymCompanion \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -n 30
+          test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Empaquetar .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/GymCompanion.app Payload/
+          zip -qr GymCompanion.ipa Payload
+          shasum -a 256 GymCompanion.ipa | tee GymCompanion.ipa.sha256
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest GymCompanion.ipa GymCompanion.ipa.sha256 \
+            --title "Build ${{ github.run_number }}" \
+            --notes "Commit ${{ github.sha }}" \
+            --target ${{ github.sha }}

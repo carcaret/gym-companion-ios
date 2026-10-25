@@ -1,0 +1,29 @@
+# Proyecto de Xcode generado con XcodeGen (el .xcodeproj no se versiona).
+name: GymCompanion
+options:
+  bundleIdPrefix: com.carcaret
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"   # el workflow lo sustituye por el número de ejecución
+targets:
+  GymCompanion:
+    type: application
+    platform: iOS
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Gym
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
