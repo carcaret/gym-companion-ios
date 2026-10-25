@@ -11,15 +11,25 @@ struct TodayScreen: View {
     var body: some View {
         Group {
             switch model.stage {
-            case .selector: selector
-            case .preview: preview
-            case .active: ActiveWorkoutView(model: model)
-            case .completed: completed
+            // La vista previa entra empujada sobre el selector: se vuelve con la flecha de la
+            // barra o deslizando desde el borde, como en cualquier app de iOS.
+            case .selector, .preview: selector.navigationTitle(TodayText.selectorTitle)
+            case .active: ActiveWorkoutView(model: model).navigationTitle(model.title)
+            case .completed: completed.navigationTitle(model.title)
             }
         }
-        .navigationTitle(model.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { model.appear() }
+        .navigationDestination(isPresented: Binding(get: { isPreviewing }, set: { if !$0 { model.backToSelector() } })) {
+            preview
+                .navigationTitle(model.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .screenBackground()
+        }
+    }
+
+    private var isPreviewing: Bool {
+        if case .preview = model.stage { true } else { false }
     }
 
     private var selector: some View {
@@ -62,15 +72,11 @@ struct TodayScreen: View {
             .padding()
         }
         .safeAreaInset(edge: .bottom) {
-            BottomActions {
-                Button { model.backToSelector() } label: { Label(TodayText.back, systemImage: "chevron.left") }
-                    .buttonStyle(.pill(.secondary))
-                    .fixedSize()
-            } primary: {
+            BottomActions(primary: {
                 Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
                     .buttonStyle(.pill())
                     .accessibilityIdentifier("start-workout")
-            }
+            })
         }
     }
 
@@ -101,7 +107,8 @@ struct TodayScreen: View {
     }
 }
 
-/// La fila de botones de abajo: uno secundario a su tamaño y el principal con el resto del ancho.
+/// La fila de botones fija abajo, encima de la barra de pestañas: uno secundario a su tamaño y el
+/// principal con el resto del ancho, o solo el principal a todo el ancho.
 struct BottomActions<Secondary: View, Primary: View>: View {
     @ViewBuilder let secondary: Secondary
     @ViewBuilder let primary: Primary
@@ -114,6 +121,12 @@ struct BottomActions<Secondary: View, Primary: View>: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Theme.background)
+    }
+}
+
+extension BottomActions where Secondary == EmptyView {
+    init(@ViewBuilder primary: () -> Primary) {
+        self.init(secondary: { EmptyView() }, primary: primary)
     }
 }
 

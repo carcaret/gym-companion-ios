@@ -781,12 +781,12 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/bar-tooltip-position.spec.js` › Posición del tooltip de barras (no se recorta en los bordes) › barra CENTRAL queda centrada (sin desplazar, --tt-shift ~0) | — | Ídem. |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botones Volver e Iniciar están en workout-actions | — | Contenedor del DOM de la PWA. Que la vista previa ofrece volver y empezar lo prueban «botón Volver vuelve al selector» y el selector de rutinas. |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botón Volver es el primero (izquierda) | — | Orden visual de dos botones: lo decide la vista. |
-| `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botón Volver tiene texto "← Volver" y estilo btn-secondary | `TodayEditingTests.swift` |  |
+| `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botón Volver tiene texto "← Volver" y estilo btn-secondary | — | En iOS no hay botón «Volver» abajo: la pantalla entra empujada y se vuelve con la flecha de la barra o deslizando desde el borde (decisión del usuario, 2026-10-25). Que volver funciona lo prueba «botón Volver vuelve…». |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: no existe botón + Ejercicio | `TodayEditingTests.swift` |  |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botón Volver vuelve al selector de rutinas | `TodayEditingTests.swift` |  |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › routine preview: botón Volver ocupa 1/3 del ancho, Iniciar 2/3 | — | Anchuras CSS (flex 1 / flex 2). |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › history detail: botón Volver está en view-nav-actions | — | Contenedor del DOM de la PWA. |
-| `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › history detail: botón Volver tiene texto "← Volver" y estilo btn-secondary | `HistoryModelTests.swift` |  |
+| `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › history detail: botón Volver tiene texto "← Volver" y estilo btn-secondary | — | En iOS no hay botón «Volver» abajo: la pantalla entra empujada y se vuelve con la flecha de la barra o deslizando desde el borde (decisión del usuario, 2026-10-25). Que volver funciona lo prueba «botón Volver vuelve…». |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › history detail: botón Volver vuelve a la lista de historial | `HistoryModelTests.swift` |  |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › history detail: botón Volver ocupa mitad del ancho del contenedor | — | Anchura CSS. |
 | `e2e/view-nav-buttons.spec.js` › Botones de navegación en vistas (Volver + Ejercicio) › completed view: botón Volver lleva al selector de rutinas | `TodayEditingTests.swift` |  |
@@ -844,4 +844,5 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/login.spec.js` › Arranque directo (sin login) › el indicador de sync es visible en el header | `SettingsModelTests.swift` |  |
 | `e2e/login.spec.js` › Arranque directo (sin login) › sin GitHub configurado → indicador en estado disabled | `SettingsModelTests.swift` |  |
 
-**Total:** 779 portados, 50 no aplican, 0 sin portar, de 829.
+
+**Total:** 777 portados, 52 no aplican, 0 sin portar, de 829.

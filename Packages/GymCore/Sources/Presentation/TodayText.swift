@@ -34,7 +34,6 @@ public enum TodayText {
     public static let e1rmRecord = "e1RM"
 
     // Botones
-    public static let back = "Volver"
     public static let start = "Iniciar entreno"
     public static let finish = "Finalizar entreno"
     public static let addExercise = "Ejercicio"

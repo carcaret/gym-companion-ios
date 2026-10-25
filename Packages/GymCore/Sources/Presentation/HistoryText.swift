@@ -5,7 +5,6 @@ public enum HistoryText {
     public static let title = "Historial"
     public static let empty = "No hay sesiones registradas"
     public static let incomplete = "Incompleto"
-    public static let back = "Volver"
     public static let completeWorkout = "Completar entreno"
     public static let save = "Guardar"
 

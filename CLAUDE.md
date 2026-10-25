@@ -103,4 +103,4 @@ Cosas que la web daba hechas y en iOS hay que cuidar (repaso del 2026-10-25):
 - **Swift Charts con `AreaMark` incluye el 0 en el eje**: el relleno va con `yStart` en el mínimo del eje (`Chart.valueRange`), como el eje ajustado de Chart.js.
 - **Fechas y números del sistema siguen la región del iPhone**: la raíz fija `es_ES` para los selectores de fecha y los ejes; los textos propios ya salen de `Presentation`.
 - Zonas de toque de 44 pt aunque el texto sea pequeño (`frame(minHeight: 44)` + `contentShape`).
-- El detalle de una lista entra empujado (`navigationDestination`), para que se pueda volver deslizando desde el borde.
+- **Volver es el de iOS**: la vista previa de una rutina y el detalle del historial entran empujados (`navigationDestination`) y se vuelve con la flecha de la barra o deslizando desde el borde; sin botón «Volver» abajo (decisión del usuario, 2026-10-25). Abajo, fija sobre la barra de pestañas, solo la acción principal a todo el ancho (`BottomActions(primary:)`), o secundaria y principal cuando hay dos de verdad (el entreno en curso). Borrar una sesión es deslizando la fila.

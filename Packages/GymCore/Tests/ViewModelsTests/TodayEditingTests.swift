@@ -727,11 +727,6 @@ struct CompletedViewTests {
 @MainActor
 @Suite("Botones de navegación en vistas (Volver + Ejercicio)")
 struct TodayNavigationButtonsTests {
-    @Test("routine preview: botón Volver tiene texto \"← Volver\" y estilo btn-secondary")
-    func backLabel() {
-        #expect(TodayText.back == "Volver")
-    }
-
     @Test("routine preview: no existe botón + Ejercicio")
     func noAddInPreview() async {
         let today = await TodayHarness.make()
