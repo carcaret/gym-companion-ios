@@ -13,6 +13,9 @@ struct ContentView: View {
                 .font(.largeTitle.bold())
             Text("Versión \(version) (\(build))")
                 .foregroundStyle(.secondary)
+            Text("Instalada desde el NAS por WiFi")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
         .padding()
     }
