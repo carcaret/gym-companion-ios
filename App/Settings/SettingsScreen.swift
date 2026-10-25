@@ -12,15 +12,19 @@ struct SettingsScreen: View {
         Form {
             Section {
                 LabeledContent(SettingsText.status) { Text(statusText).foregroundStyle(.secondary) }
-                TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    .accessibilityIdentifier("settings-repository")
-                TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                field(SettingsText.repository) {
+                    TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
+                        .accessibilityIdentifier("settings-repository")
+                }
+                field(SettingsText.branch) {
+                    TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
+                }
+                field(SettingsText.path) {
+                    TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
+                }
+                field(SettingsText.token) {
+                    SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
+                }
             } header: {
                 Text(SettingsText.githubSection)
             }
@@ -41,6 +45,16 @@ struct SettingsScreen: View {
             Button(SyncText.cancelLabel, role: .cancel) {}
         } message: {
             Text(SyncText.downloadWarning)
+        }
+    }
+
+    /// Un campo con su nombre a la izquierda: con el campo relleno, el texto de ayuda ya no se ve.
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        LabeledContent(label) {
+            content()
+                .multilineTextAlignment(.trailing)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
         }
     }
 
