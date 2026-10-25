@@ -98,6 +98,7 @@ private struct ProgressChart: View {
                     .foregroundStyle(Theme.accent)
                 AreaMark(x: .value("Fecha", point.date.date), yStart: .value(chart.label, chart.valueRange.lowerBound),
                          yEnd: .value(chart.label, point.value))
+                    .interpolationMethod(.monotone)  // la misma curva que la línea
                     .foregroundStyle(Theme.accent.opacity(0.08))
                 PointMark(x: .value("Fecha", point.date.date), y: .value(chart.label, point.value))
                     .foregroundStyle(Theme.accent)
@@ -120,6 +121,7 @@ private struct ProgressChart: View {
         .chartXSelection(value: $selectedDate)
         .chartYScale(domain: chart.valueRange)
         .chartXScale(range: .plotDimension(padding: 16))  // que la primera y la última fecha no se corten
+        .chartYAxis { AxisMarks(position: .leading) }      // a la izquierda, como en la PWA: a la derecha tapaba la última fecha
         .frame(height: 200)
         .accessibilityLabel(chart.axisTitle)
     }
