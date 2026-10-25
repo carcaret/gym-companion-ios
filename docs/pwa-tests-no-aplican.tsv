@@ -1,0 +1,19 @@
+fichero	describe	test	motivo
+workout.test.js	validateLog	series decimal → error en field series	Las series son `Int`: un número decimal no compila.
+workout.test.js	adjustParam — casos borde	param inválido no hace nada	El parámetro es el enum `LogParameter`: uno inexistente no compila.
+workout.test.js	setParam — casos borde	param inválido no hace nada	El parámetro es el enum `LogParameter`: uno inexistente no compila.
+workout.test.js	swapLogExercise	10 — nombre del log actualizado al nuevo ejercicio	El log ya no copia el nombre: se busca en el catálogo por `exerciseID` (cubierto por getExerciseName).
+workout-sync.test.js	isWorkoutActive	db null → false	El historial es una lista no opcional; vacía, cubierto por «historial vacío → false».
+workout-sync.test.js	isWorkoutActive	db sin history → false	Ídem: no hay `db` sin historial.
+workout-sync.test.js	isWorkoutActive	db con history null → false	Ídem: el historial no puede ser nulo.
+workout-sync.test.js	isWorkoutActive	entry de hoy sin campo completed (undefined) → false	`completed` es `Bool`, nunca ausente. Qué hacer con una sesión de `db.json` sin `completed` lo decide la importación (#6).
+data.test.js	ensureHistorySorted	db null no lanza error	No hay `db` nulo; con la lista vacía, «array vacío no lanza error».
+data.test.js	ensureHistorySorted	db sin history no lanza error	Ídem.
+data.test.js	getRecentSessionsForExercise	db null devuelve []	No hay `db` nulo; cubierto por «history vacía devuelve []».
+charts.test.js	buildChartDatasets	e1RM dataset usa eje Y primario (yAxisID: y)	Formato de Chart.js; en la app lo decide la vista con Swift Charts (#11).
+charts.test.js	buildChartDatasets	e1RM dataset no tiene borderDash (es la métrica principal)	Formato de Chart.js (#11).
+charts.test.js	buildChartDatasets	chartType line → fill=true en e1RM y peso	Línea o barras es una opción de la vista, no de los datos (#11).
+charts.test.js	buildChartDatasets	chartType bar → fill=false y type=bar en e1RM y peso	Línea o barras es una opción de la vista, no de los datos (#11).
+routine-rename.test.js	consistencia ROUTINE_KEYS / DAY_LABELS	ROUTINE_KEYS coincide con claves de DAY_LABELS	Ids y nombres van juntos en cada `Routine`: no pueden desincronizarse.
+constants.test.js	constants	las claves de localStorage están definidas	No hay localStorage: dónde se guardan los datos y la configuración es del adaptador de persistencia (#6) y de Ajustes (#14).
+constants.test.js	constants	SESSION_KEY y SALT ya no existen (sistema de auth eliminado)	La app nunca tuvo ese sistema de acceso.

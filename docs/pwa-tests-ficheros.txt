@@ -1,0 +1,15 @@
+# Ficheros de tests/unit de la PWA ya portados (los comprueba scripts/pwa_tests.py en el CI).
+# Cada sub-issue añade los suyos.
+dates.test.js
+formatting.test.js
+metrics.test.js
+workout.test.js
+workout-sync.test.js
+data.test.js
+history.test.js
+stats.test.js
+catalog.test.js
+charts.test.js
+routine-rename.test.js
+routine-reorder.test.js
+constants.test.js

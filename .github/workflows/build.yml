@@ -29,6 +29,19 @@ jobs:
         working-directory: Packages/GymCore
         run: swift test
 
+  pwa-tests:
+    # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
+    # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: carcaret/gym-companion
+          path: pwa
+      - name: Tests de la PWA portados
+        run: python3 scripts/pwa_tests.py pwa
+
   app:
     runs-on: macos-26
     steps:
@@ -77,7 +90,7 @@ jobs:
           if-no-files-found: ignore
 
   release:
-    needs: [core-linux, app]
+    needs: [core-linux, pwa-tests, app]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: macos-26
     steps:
