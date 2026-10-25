@@ -5,7 +5,7 @@ import Domain
 /// mismo `Storage` ven los mismos datos, como dos arranques de la app sobre el mismo fichero.
 public final class InMemoryTrainingDataStore: TrainingDataStore {
     public actor Storage {
-        var data: TrainingData?
+        public private(set) var data: TrainingData?
         public private(set) var saves = 0
 
         public init(_ data: TrainingData? = nil) {

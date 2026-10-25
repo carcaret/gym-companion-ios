@@ -69,3 +69,69 @@ public enum PWAFormat {
         return date
     }
 }
+
+// MARK: - Exportación
+
+extension PWAFormat {
+    /// Escribe el `db.json` que lee la PWA: los mismos campos y en el mismo orden que ella, con el
+    /// nombre del ejercicio copiado en cada log, y los campos opcionales solo cuando hacen falta
+    /// (`skipped` y `oneOff` solo si son `true`; `grupo` y `secundarios` solo si existen).
+    /// Formato de `JSON.stringify(db, null, 2)`, para que los commits muestren solo lo que cambia.
+    ///
+    /// Lo que la PWA no puede guardar se pierde: el nombre de las rutinas que no son DIA1–DIA3
+    /// (vuelven con el id por nombre).
+    public static func json(from data: TrainingData) -> Data {
+        Data(value(from: data).stringified().utf8)
+    }
+
+    static func value(from data: TrainingData) -> JSONValue {
+        let exercises = data.catalog.all.map { exercise -> (key: String, value: JSONValue) in
+            var fields: [(key: String, value: JSONValue)] = [("id", .string(exercise.id.rawValue)), ("name", .string(exercise.name))]
+            if let group = exercise.group { fields.append(("grupo", .string(group.rawValue))) }
+            if let secondaries = exercise.secondaryGroups { fields.append(("secundarios", .array(secondaries.map { .string($0.rawValue) }))) }
+            return (exercise.id.rawValue, .object(fields))
+        }
+        let routines = data.routines.map { routine -> (key: String, value: JSONValue) in
+            (routine.id.rawValue, .array(routine.exerciseIDs.map { .string($0.rawValue) }))
+        }
+        let history = data.history.map { session -> JSONValue in
+            .object([
+                ("date", .string(session.date.iso)),
+                ("type", .string(session.routineID.rawValue)),
+                ("logs", .array(session.logs.map { log(from: $0, catalog: data.catalog) })),
+                ("completed", .bool(session.completed)),
+            ])
+        }
+        let swaps = data.pendingSwaps.keys.sorted().map { routine -> (key: String, value: JSONValue) in
+            let swap = data.pendingSwaps[routine]!
+            return (routine.rawValue, .object([
+                ("fromExerciseId", .string(swap.from.rawValue)),
+                ("toExerciseId", .string(swap.to.rawValue)),
+                ("weekStart", .string(swap.weekStart.iso)),
+            ]))
+        }
+        return .object([
+            ("exercises", .object(exercises)),
+            ("routines", .object(routines)),
+            ("history", .array(history)),
+            ("pendingSwaps", .object(swaps)),
+        ])
+    }
+
+    private static func log(from log: ExerciseLog, catalog: Catalog) -> JSONValue {
+        var fields: [(key: String, value: JSONValue)] = [
+            ("exercise_id", .string(log.exerciseID.rawValue)),
+            ("name", .string(catalog.name(of: log.exerciseID))),
+            ("series", .number(Double(log.series))),
+            ("reps", .object([
+                ("expected", .number(Double(log.targetReps))),
+                ("actual", .array(log.actualReps.map { $0.map { .number(Double($0)) } ?? .null })),
+            ])),
+            ("weight", .number(log.weight)),
+        ]
+        if log.skipped { fields.append(("skipped", true)) }
+        if let swappedFrom = log.swappedFrom { fields.append(("swappedFrom", .string(swappedFrom.rawValue))) }
+        if log.oneOff { fields.append(("oneOff", true)) }
+        return .object(fields)
+    }
+}
