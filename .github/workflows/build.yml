@@ -89,6 +89,8 @@ jobs:
             | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
           echo "Simulador: $udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+          # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
           xcrun simctl boot "$udid"
 
       - name: Compilar la app y los tests
