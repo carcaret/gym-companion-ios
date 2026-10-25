@@ -21,6 +21,7 @@ public final class HistoryModel {
         public let summary: String
         /// Sin terminar: se pinta con tinte azul y el icono de pausa.
         public let isIncomplete: Bool
+        public let tint: RoutineTint?
     }
 
     public struct DeletePrompt: Hashable, Sendable {
@@ -59,7 +60,8 @@ public final class HistoryModel {
             return Row(date: session.date, routine: routineName(session.routineID), day: block.day, month: block.month,
                        relative: DateText.relative(session.date, today: today),
                        summary: HistoryText.sessionSummary(session.logs.map { data.catalog.name(of: $0.exerciseID) }),
-                       isIncomplete: !session.completed)
+                       isIncomplete: !session.completed,
+                       tint: RoutineTint.of(session.routineID, in: data.routines.map(\.id)))
         }
     }
 

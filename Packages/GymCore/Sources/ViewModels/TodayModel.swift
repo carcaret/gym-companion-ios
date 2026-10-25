@@ -22,6 +22,7 @@ public final class TodayModel {
         public let subtitle: String
         /// "Próxima vez: B en vez de A", si hay un cambio recíproco pendiente esta semana.
         public let pendingNote: String?
+        public let tint: RoutineTint?
     }
 
     public typealias SeriesState = ExerciseCard.SeriesState
@@ -127,7 +128,8 @@ public final class TodayModel {
             if let pending = data.pendingSwaps[routine.id], pending.weekStart == today.weekStart {
                 note = TodayText.pendingSwapNote(to: data.catalog.name(of: pending.to), from: data.catalog.name(of: pending.from))
             }
-            return RoutineRow(id: routine.id, title: routine.name, subtitle: TodayText.routineSummary(names), pendingNote: note)
+            return RoutineRow(id: routine.id, title: routine.name, subtitle: TodayText.routineSummary(names), pendingNote: note,
+                              tint: RoutineTint.of(routine.id, in: data.routines.map(\.id)))
         }
     }
 
