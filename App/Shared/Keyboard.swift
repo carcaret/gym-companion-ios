@@ -2,17 +2,10 @@ import SwiftUI
 import UIKit
 
 extension View {
-    /// En una pantalla con campos de texto: el teclado se cierra al desplazar la pantalla y con
-    /// "OK" encima del teclado (el numérico no tiene tecla de retorno). Una vez por pantalla, o el
-    /// botón sale repetido.
+    /// En una pantalla con campos de texto: el teclado se cierra al desplazar la pantalla. Sin botón
+    /// "OK" encima del teclado: tocar fuera de un campo ya lo cierra (decisión del usuario, 2026-10-25).
     func keyboardDismissal() -> some View {
         scrollDismissesKeyboard(.interactively)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("OK") { Keyboard.dismiss() }
-                }
-            }
     }
 }
 
@@ -41,10 +34,6 @@ private struct WindowHook: UIViewRepresentable {
 @MainActor
 enum Keyboard {
     private static let tapOutside = TapOutside()
-
-    static func dismiss() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 
     /// Pone en la ventana un reconocedor de toques que cierra el teclado. No se queda con el toque
     /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto.

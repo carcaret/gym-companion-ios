@@ -19,7 +19,6 @@ struct TodayScreen: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { model.appear() }
         .navigationDestination(isPresented: Binding(get: { isPreviewing }, set: { if !$0 { model.backToSelector() } })) {
             preview
                 .navigationTitle(model.title)

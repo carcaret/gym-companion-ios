@@ -11,7 +11,6 @@ struct HistoryScreen: View {
         list
             .navigationTitle(HistoryText.title)
             .navigationBarTitleDisplayMode(.large)
-            .onAppear { model.appear() }
             // El detalle entra empujado, como en cualquier app de iOS: se vuelve también con el
             // botón de la barra o deslizando desde el borde.
             .navigationDestination(isPresented: Binding(
