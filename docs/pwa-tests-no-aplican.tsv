@@ -47,3 +47,5 @@ e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercici
 e2e/view-nav-buttons.spec.js	Botones de navegación en vistas (Volver + Ejercicio)	history detail: botón Volver ocupa mitad del ancho del contenedor	Anchura CSS.
 e2e/charts-full.spec.js	Graficas completo	tooltip usa colores del dark theme	Colores del tema oscuro de Chart.js. En la app el detalle de Swift Charts usa los colores del sistema, claros u oscuros según el iPhone.
 e2e/estadisticas.spec.js	Estadísticas	las cinco pestañas caben sin solaparse	La barra de pestañas es la nativa de iOS (`TabView`): el sistema la reparte. Las cinco pestañas las prueba `ScreenshotTests.testPestanas`.
+e2e/settings.spec.js	Ajustes — GitHub y PAT en claro	no hay sección "Cambiar contraseña" en ajustes	Regresión de un acceso con contraseña que la PWA quitó; la app nunca lo tuvo.
+e2e/settings.spec.js	Ajustes — GitHub y PAT en claro	no hay botón de logout	Ídem: no hay sesión de la que salir.

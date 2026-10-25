@@ -54,3 +54,5 @@ e2e/view-nav-buttons.spec.js
 e2e/charts-full.spec.js
 e2e/estadisticas.spec.js
 e2e/catalogo.spec.js
+e2e/settings.spec.js
+e2e/login.spec.js

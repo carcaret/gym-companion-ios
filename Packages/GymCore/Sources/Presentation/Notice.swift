@@ -67,6 +67,7 @@ public enum SyncText {
     public static let repoAndTokenRequired = Notice("Repo y PAT requeridos", .warning)
     public static let configSaved = Notice("Configuración guardada — sincronizando...", .success)
     public static let testing = Notice("Probando conexión...")
+    public static let saveFirst = Notice("Guarda la configuración primero", .warning)
     public static let connected = Notice("Conexión exitosa", .success)
     public static let cannotConnectAtAll = Notice("No se pudo conectar", .error)
     public static let invalidRemoteContent = Notice("Conectado, pero el fichero no es un db.json válido", .error)
