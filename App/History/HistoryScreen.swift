@@ -74,17 +74,11 @@ struct HistoryScreen: View {
         }
         .numberPadDismissal()
         .safeAreaInset(edge: .bottom) {
-            BottomActions {
-                Button { model.back() } label: { Label(HistoryText.back, systemImage: "chevron.left") }
-                    .buttonStyle(.pill(.secondary))
-                    .fixedSize()
-            } primary: {
-                if model.isIncomplete {
+            if model.isIncomplete {
+                BottomActions(primary: {
                     Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
                         .buttonStyle(.pill())
-                } else {
-                    Spacer()
-                }
+                })
             }
         }
     }
