@@ -430,6 +430,8 @@ public final class TodayModel {
         let id = ExerciseID(ExerciseID.slug(from: name))
         guard data.catalog[id] == nil else {
             app.notice = TodayText.alreadyExists
+            // La alerta de la vista se cierra sola al pulsar: se vuelve a abrir con el nombre.
+            isCreatePresented = true
             return
         }
         isCreatePresented = false

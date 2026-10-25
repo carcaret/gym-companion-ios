@@ -14,15 +14,17 @@ struct CompositionRoot {
     let model: AppModel
     let sync: SyncModel
     let navigation = NavigationModel()
+    let today: TodayModel
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
             marketing: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
             build: bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
         )
+        let demo = ProcessInfo.processInfo.arguments.contains("-demo")
         repository = TrainingRepository(
-            store: Self.store(),
-            settings: Self.settings(),
+            store: demo ? Self.demoStore() : Self.store(),
+            settings: demo ? Self.demoSettings() : Self.settings(),
             credentials: KeychainCredentialStore(),
             remote: GitHubTrainingDataSource(),
             clock: SystemClock(),
@@ -30,6 +32,7 @@ struct CompositionRoot {
         )
         model = AppModel(repository: repository)
         sync = SyncModel(repository: repository, app: model)
+        today = TodayModel(app: model, sync: sync, clock: SystemClock())
     }
 
     /// Cada vez que vuelve la red.
@@ -42,6 +45,26 @@ struct CompositionRoot {
     private static func store() -> any TrainingDataStore {
         (try? JSONFileTrainingDataStore.applicationSupport())
             ?? JSONFileTrainingDataStore(file: FileManager.default.temporaryDirectory.appendingPathComponent("training-data.json"))
+    }
+
+    /// Para las capturas del CI (`-demo`): datos de ejemplo en una carpeta temporal nueva y sin
+    /// GitHub. No toca los datos de verdad.
+    private static func demoStore() -> any TrainingDataStore {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("demo-\(UUID().uuidString)")
+        let file = folder.appendingPathComponent("training-data.json")
+        let store = JSONFileTrainingDataStore(file: file)
+        let data = DemoData.make(today: SystemClock().today())
+        let semaphore = DispatchSemaphore(value: 0)
+        Task.detached {
+            try? await store.save(data)
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return store
+    }
+
+    private static func demoSettings() -> any SyncSettingsStore {
+        JSONFileSyncSettingsStore(file: FileManager.default.temporaryDirectory.appendingPathComponent("demo-\(UUID().uuidString)/sync.json"))
     }
 
     private static func settings() -> any SyncSettingsStore {
