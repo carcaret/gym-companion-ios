@@ -250,7 +250,7 @@ struct ReciprocalSwapTests {
         await swap(today, at: 0, to: "curl_biceps")
         try await today.model.acceptReciprocal(#require(today.model.reciprocalOffer))
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         return today
     }
 
@@ -704,11 +704,13 @@ struct CompletedViewTests {
         #expect(await completed().model.stage == .completed)
     }
 
-    // En la app es el «Hecho» de la barra de arriba, como al terminar algo en iOS, en vez de un
-    // botón al pie del resumen (decisión del usuario, 2026-10-25).
+    // Cambiado con la aprobación del usuario (2026-10-26): no hay botón ni texto para volver
+    // (arriba solo va la nube); se vuelve tocando otra vez la pestaña Rutinas, como en iOS.
     @Test("vista completada: botón Volver tiene texto \"← Volver a rutinas\"")
-    func backLabel() {
-        #expect(TodayText.done == "Hecho")
+    func backLabel() async {
+        let today = await completed()
+        today.model.reselect()
+        #expect(today.model.stage == .selector)
     }
 
     @Test("durante el entreno activo NO existe el botón Volver a rutinas")
@@ -721,7 +723,7 @@ struct CompletedViewTests {
     @Test("tras pulsar Volver, aparece el selector de rutinas con título \"Rutinas\"")
     func back() async {
         let today = await completed()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.stage == .selector)
         #expect(today.model.title == "Rutinas")
     }
@@ -760,7 +762,7 @@ struct TodayNavigationButtonsTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.stage == .selector)
         #expect(!today.model.routineRows.isEmpty)
     }
@@ -770,7 +772,7 @@ struct TodayNavigationButtonsTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.title == "Rutinas")
     }
 
@@ -779,7 +781,7 @@ struct TodayNavigationButtonsTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.completedRows.isEmpty)
     }
 
@@ -788,7 +790,7 @@ struct TodayNavigationButtonsTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.routineRows.count == 3)
         today.model.select("DIA2")
         #expect(today.model.stage == .preview("DIA2"))
@@ -799,7 +801,7 @@ struct TodayNavigationButtonsTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        today.model.backFromCompleted()
+        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         today.model.reselect()
         #expect(today.model.stage == .selector)
         #expect(today.model.completedRows.isEmpty)

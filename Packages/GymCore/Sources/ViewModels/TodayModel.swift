@@ -318,11 +318,6 @@ public final class TodayModel {
         return session.logs.map { SummaryRow(title: data.catalog.name(of: $0.exerciseID), subtitle: LogText.summary($0), isSkipped: $0.skipped) }
     }
 
-    /// "Hecho", en la barra del entreno terminado.
-    public func backFromCompleted() {
-        backToSelector()
-    }
-
     // MARK: - Añadir y cambiar ejercicios
 
     public var picker: Picker? {

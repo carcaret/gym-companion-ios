@@ -86,6 +86,7 @@ struct TodayScreen: View {
         ScrollView {
             VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
+                    .accessibilityIdentifier("workout-completed")
                     .scaledFont(14, .medium)
                     .foregroundStyle(Theme.text)
                     .symbolRenderingMode(.multicolor)
@@ -100,17 +101,8 @@ struct TodayScreen: View {
             }
             .padding(16)
         }
-        // «Hecho» arriba, como al terminar algo en iOS (decisión del usuario, 2026-10-25), con el
-        // botón de confirmar de iOS 26: la marca, sin texto (decisión del usuario, 2026-10-26).
-        // Separado de la nube: si no, iOS los junta en una sola cápsula.
-        .toolbar {
-            ToolbarSpacer(.fixed, placement: .confirmationAction)
-            ToolbarItem(placement: .confirmationAction) {
-                Button(role: .confirm) { model.backFromCompleted() }
-                    .accessibilityLabel(TodayText.done)
-                    .accessibilityIdentifier("back-to-routines")
-            }
-        }
+        // Sin botón para salir: arriba solo va la nube, que ya dice si se ha subido (decisión del
+        // usuario, 2026-10-26). Se vuelve a las rutinas tocando otra vez la pestaña (`reselect`).
     }
 }
 

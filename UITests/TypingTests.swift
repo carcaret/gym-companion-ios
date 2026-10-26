@@ -30,7 +30,7 @@ final class TypingTests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.exists, "El teclado tiene que seguir abierto")
 
         app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.buttons["back-to-routines"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.waitForExistence(timeout: 10))
         let typed = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '61 kg'")).firstMatch
         XCTAssertTrue(typed.waitForExistence(timeout: 5), "El entreno terminado no tiene el peso tecleado")
     }

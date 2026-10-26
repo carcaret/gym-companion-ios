@@ -46,7 +46,7 @@ final class ScreenshotTests: XCTestCase {
         capture(app, "13-hoy-tarjeta")
 
         app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.buttons["back-to-routines"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.waitForExistence(timeout: 10))
         capture(app, "14-hoy-terminado")
 
         app.tabBars.buttons["Historial"].tap()
