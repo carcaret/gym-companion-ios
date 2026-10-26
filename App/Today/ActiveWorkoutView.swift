@@ -103,7 +103,8 @@ struct ActiveWorkoutView: View {
     }
 }
 
-/// Elegir un ejercicio para añadir o cambiar, con búsqueda, el chip "Solo esta sesión" y crear uno
+/// Elegir un ejercicio para añadir o cambiar: una hoja con búsqueda y, al cambiar, una sección para
+/// el grupo del ejercicio y otra para el resto. Al añadir, además, "Solo esta sesión" y crear uno
 /// nuevo.
 struct ExercisePickerSheet: View {
     @Bindable var model: TodayModel
@@ -116,15 +117,22 @@ struct ExercisePickerSheet: View {
                         Toggle(TodayText.oneOffToggle, isOn: Binding(get: { picker.isOneOff }, set: { _ in model.toggleOneOff() }))
                             .accessibilityIdentifier("one-off-toggle")
                     }
-                    ForEach(picker.exercises, id: \.id) { exercise in
-                        Button { Task { await model.choose(exercise.id) } } label: {
-                            HStack {
-                                Text(exercise.name)
-                                Spacer()
-                                Image(systemName: "plus.circle").foregroundStyle(.tint)
+                    ForEach(picker.sections, id: \.title) { section in
+                        Section {
+                            ForEach(section.rows) { row in
+                                Button { Task { await model.choose(row.id) } } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(row.exercise.name)
+                                        if let detail = row.detail {
+                                            Text(detail).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                                        }
+                                    }
+                                }
+                                .foregroundStyle(.primary)
                             }
+                        } header: {
+                            if let title = section.title { Text(title) }
                         }
-                        .foregroundStyle(.primary)
                     }
                     if picker.canCreate {
                         Button(TodayText.createExercise) {
@@ -138,6 +146,7 @@ struct ExercisePickerSheet: View {
             .searchable(text: $model.pickerQuery, prompt: TodayText.searchPlaceholder)
             .screenBackground()
             .navigationTitle(model.picker?.title ?? "")
+            .navigationSubtitle(model.picker?.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(TodayText.close) { model.closePicker() } }

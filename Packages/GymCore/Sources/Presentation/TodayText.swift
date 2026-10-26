@@ -42,6 +42,16 @@ public enum TodayText {
 
     // Selectores de ejercicio
     public static let swapTitle = "Cambiar ejercicio"
+    /// Debajo del título: el ejercicio que se va a cambiar.
+    public static func swapSubtitle(_ exercise: String) -> String { "En lugar de \(exercise)" }
+    /// La sección de los candidatos de otro grupo (la del mismo grupo lleva el nombre del grupo).
+    public static let otherGroupsSection = "Otros grupos"
+    /// La segunda línea de cada ejercicio del selector: "Pecho · En Día 2, Día 3"; `nil` si no hay
+    /// nada que decir.
+    public static func pickerDetail(group: String?, routines: [String]) -> String? {
+        let parts = [group, routines.isEmpty ? nil : "En " + routines.joined(separator: ", ")].compactMap(\.self)
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
     public static func addTitle(_ routine: String) -> String { "Añadir a \(routine)" }
     public static let searchPlaceholder = "Buscar ejercicio..."
     public static let oneOffToggle = "Solo esta sesión"

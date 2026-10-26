@@ -901,6 +901,27 @@ struct FindReciprocalSwapTargetTests {
     }
 }
 
+@Suite("Rutinas que llevan un ejercicio")
+struct RoutinesContainingTests {
+    private let routines = [
+        Routine(id: "DIA1", name: "1", exerciseIDs: ["press_banca", "curl_biceps"]),
+        Routine(id: "DIA2", name: "2", exerciseIDs: ["sentadilla"]),
+        Routine(id: "DIA3", name: "3", exerciseIDs: ["press_banca", "sentadilla"]),
+    ]
+
+    @Test("las demás que lo llevan, en su orden, sin contar la propia")
+    func others() {
+        #expect(routines.others(than: "DIA1", containing: "sentadilla").map(\.id) == ["DIA2", "DIA3"])
+        #expect(routines.others(than: "DIA1", containing: "press_banca").map(\.id) == ["DIA3"])
+        #expect(routines.others(than: "DIA1", containing: "curl_biceps").isEmpty)
+    }
+
+    @Test("sin rutina propia, todas las que lo llevan")
+    func withoutOwn() {
+        #expect(routines.others(than: nil, containing: "press_banca").map(\.id) == ["DIA1", "DIA3"])
+    }
+}
+
 @Suite("buildPendingSwap")
 struct BuildPendingSwapTests {
     @Test("1 — caso normal → construye el objeto pendiente")

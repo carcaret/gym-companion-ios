@@ -27,3 +27,23 @@ extension Catalog {
         }
     }
 }
+
+/// Los candidatos de `sortedForSwap`, partidos en los del grupo del ejercicio que se cambia y el
+/// resto, cada parte en su orden.
+public struct SwapCandidates: Hashable, Sendable {
+    /// El grupo del ejercicio que se cambia; sin grupo, todo va en `others`.
+    public let group: MuscleGroup?
+    public let sameGroup: [Exercise]
+    public let others: [Exercise]
+}
+
+extension Catalog {
+    public func swapCandidates(
+        _ candidates: [Exercise], replacing exercise: ExerciseID, routines: [Routine], currentRoutine: RoutineID
+    ) -> SwapCandidates {
+        let group = self[exercise]?.group
+        let sorted = sortedForSwap(candidates, replacing: exercise, routines: routines, currentRoutine: currentRoutine)
+        let isSameGroup = { (candidate: Exercise) in group != nil && candidate.group == group }
+        return SwapCandidates(group: group, sameGroup: sorted.filter(isSameGroup), others: sorted.filter { !isSameGroup($0) })
+    }
+}

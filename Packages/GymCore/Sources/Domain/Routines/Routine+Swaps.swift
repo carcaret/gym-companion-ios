@@ -1,8 +1,13 @@
 extension Collection where Element == Routine {
+    /// Las rutinas distintas de `routine` que llevan `exercise`, en su orden.
+    public func others(than routine: RoutineID?, containing exercise: ExerciseID) -> [Routine] {
+        filter { $0.id != routine && $0.exerciseIDs.contains(exercise) }
+    }
+
     /// La otra rutina que debe hacer el cambio inverso al meter `exercise` en `routine`: solo si
     /// el ejercicio está en exactamente una rutina distinta (en ninguna, o en varias, no aplica).
     public func reciprocalSwapTarget(from routine: RoutineID, for exercise: ExerciseID) -> RoutineID? {
-        let matches = filter { $0.id != routine && $0.exerciseIDs.contains(exercise) }
+        let matches = others(than: routine, containing: exercise)
         return matches.count == 1 ? matches.first?.id : nil
     }
 }
