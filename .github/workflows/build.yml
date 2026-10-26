@@ -107,11 +107,15 @@ jobs:
         with:
           fetch-depth: 0   # para restore-mtimes.sh
       # El servicio de los simuladores tarda de segundos a más de 2 minutos en arrancar la primera
-      # vez: se arranca ya, en segundo plano, mientras se preparan la compilación y el proyecto.
+      # vez, y xcodebuild hasta 85 s: los dos se arrancan ya, en segundo plano, mientras se preparan
+      # la compilación y el proyecto.
       - name: Inicio
         run: |
           scripts/ci-timeline.sh mark "checkout"
           nohup xcrun simctl list devices > /dev/null 2>&1 &
+          # xcodebuild tarda de 40 a 85 s en escribir su primera línea en una máquina recién creada
+          # (lee Xcode de un disco frío): que lo lea ya, mientras se restauran las cachés.
+          nohup xcodebuild -version > /dev/null 2>&1 &
           nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
       # Compilación incremental: la carpeta de compilación de Xcode de la última ejecución, con
@@ -130,7 +134,9 @@ jobs:
       - name: Generar proyecto
         run: |
           scripts/ci-xcodegen.sh
-          xcodebuild -version
+          # Lo mismo para cargar el proyecto y el paquete (Resolve Package Graph): mientras se elige
+          # y se arranca el simulador.
+          nohup xcodebuild -list -project GymCompanion.xcodeproj > /dev/null 2>&1 &
           swift --version
           scripts/ci-timeline.sh mark "proyecto generado"
 
@@ -254,6 +260,9 @@ jobs:
         run: |
           scripts/ci-timeline.sh mark "checkout"
           nohup xcrun simctl list devices > /dev/null 2>&1 &
+          # xcodebuild tarda de 40 a 85 s en escribir su primera línea en una máquina recién creada
+          # (lee Xcode de un disco frío): que lo lea ya, mientras se restauran las cachés.
+          nohup xcodebuild -version > /dev/null 2>&1 &
           nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
       - name: Fechas de los ficheros   # ver el job app
