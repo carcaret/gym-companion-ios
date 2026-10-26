@@ -31,7 +31,7 @@ struct HistoryScreen: View {
         } else {
             List(model.rows) { row in
                 Button { model.open(row.date) } label: { HistoryRowView(row: row) }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.card)
                     .cardRow()
                     .swipeActions {
                         // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al

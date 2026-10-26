@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// Lo que se abre y se cierra (tarjetas de ejercicio, filas de Progreso): se toca toda la cabecera,
-/// la flecha de iOS gira hacia abajo al abrir y VoiceOver dice si está desplegado (antes decía
-/// «seleccionado»). No es `DisclosureGroup`: dentro de una fila de `List` (el entreno en curso) la
-/// cabecera y el contenido se pintaban uno encima de otro (captura del CI, 2026-10-26).
+/// la flecha de iOS gira hacia abajo al abrir, el contenido entra deslizándose y VoiceOver dice si
+/// está desplegado (antes decía «seleccionado»). No es `DisclosureGroup`: dentro de una fila de
+/// `List` (el entreno en curso) la cabecera y el contenido se pintaban uno encima de otro (captura
+/// del CI, 2026-10-26).
 struct CardDisclosure<Label: View, Content: View>: View {
     let isExpanded: Bool
     var chevronSize: CGFloat = 13
@@ -18,7 +19,9 @@ struct CardDisclosure<Label: View, Content: View>: View {
             DisclosureHeader(isExpanded: isExpanded, chevronSize: chevronSize, identifier: identifier, toggle: toggle) {
                 label
             }
-            if isExpanded { content }
+            if isExpanded {
+                content.transition(.opacity.combined(with: .offset(y: -8)))
+            }
         }
     }
 }
@@ -31,9 +34,12 @@ struct DisclosureHeader<Label: View>: View {
     var identifier: String?
     let toggle: () -> Void
     @ViewBuilder let label: Label
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let button = Button(action: toggle) {
+        // Con animación, la tarjeta (o la fila de la lista) crece con el muelle de iOS y la flecha
+        // gira a la vez.
+        let button = Button { withAnimation(reduceMotion ? nil : .snappy) { toggle() } } label: {
             HStack(spacing: 10) {
                 label
                 Spacer(minLength: 0)

@@ -55,7 +55,7 @@ struct TodayScreen: View {
                     .card(padding: 20, stripe: Theme.color(row.tint))
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.card)
                 .accessibilityIdentifier("routine-\(row.id.rawValue)")
                 .cardRow()
             }

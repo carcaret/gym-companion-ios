@@ -90,6 +90,70 @@ extension ButtonStyle where Self == PillButtonStyle {
     static func pill(_ kind: PillButtonStyle.Kind = .primary) -> PillButtonStyle { PillButtonStyle(kind: kind) }
 }
 
+/// Una tarjeta que se toca entera (rutinas de Hoy, sesiones del Historial): al apoyar el dedo se
+/// rellena de blanco de izquierda a derecha y se encoge un pelín; al soltar, el velo se desvanece.
+/// El label ya lleva su `.card()`.
+struct CardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PressableCard(label: configuration.label, isPressed: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == CardButtonStyle {
+    static var card: CardButtonStyle { CardButtonStyle() }
+}
+
+private struct PressableCard: View {
+    let label: ButtonStyleConfiguration.Label
+    let isPressed: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Lo barrido (0…1) y lo que queda del velo (0…1).
+    @State private var sweep: CGFloat = 0
+    @State private var veil: Double = 0
+    @State private var pressedAt = Date.distantPast
+    /// Cuenta las pulsaciones, para que el final de un desvanecido no borre el barrido de la siguiente.
+    @State private var presses = 0
+
+    /// 120 ms: rápido, pero se llega a ver (decisión del usuario, 2026-10-26).
+    private static let sweepDuration = 0.12
+    private static let fadeDuration = 0.26
+
+    var body: some View {
+        label
+            .overlay {
+                Rectangle()
+                    .fill(Color.white.opacity(0.07 * veil))
+                    .scaleEffect(x: sweep, y: 1, anchor: .leading)
+                    .allowsHitTesting(false)
+            }
+            .clipShape(.rect(cornerRadius: Theme.radius))
+            .scaleEffect(isPressed && !reduceMotion ? 0.985 : 1)
+            .animation(.easeOut(duration: Self.sweepDuration), value: isPressed)
+            .onChange(of: isPressed) { _, pressed in
+                if pressed { press() } else { release() }
+            }
+    }
+
+    private func press() {
+        presses += 1
+        pressedAt = .now
+        veil = 1
+        sweep = 0
+        withAnimation(reduceMotion ? nil : .easeOut(duration: Self.sweepDuration)) { sweep = 1 }
+    }
+
+    /// Un toque rápido suelta antes de que acabe el barrido: el velo espera a que llegue al final.
+    private func release() {
+        let press = presses
+        let pending = max(0, Self.sweepDuration - Date.now.timeIntervalSince(pressedAt))
+        withAnimation(.easeOut(duration: Self.fadeDuration).delay(pending)) {
+            veil = 0
+        } completion: {
+            if press == presses { sweep = 0 }
+        }
+    }
+}
+
 extension View {
     /// La letra del sistema al tamaño de la PWA, que crece y mengua con la letra del iPhone
     /// (Dynamic Type). Con el tamaño normal mide lo mismo que `.font(.system(size:))`, que no
