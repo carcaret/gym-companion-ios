@@ -4,6 +4,7 @@ import Application
 import Domain
 import Foundation
 import ViewModels
+import WatchAdapters
 
 /// Raíz de composición: el único sitio de la app que conoce los adaptadores concretos y los
 /// conecta con los casos de uso. Las vistas y los ViewModels reciben lo que necesitan desde aquí.
@@ -35,7 +36,8 @@ struct CompositionRoot {
             clock: SystemClock(),
             background: UIKitBackgroundActivity()
         )
-        model = AppModel(repository: repository)
+        // Con `-demo` el reloj no recibe nada: los datos de ejemplo no son los del usuario.
+        model = AppModel(repository: repository, watch: demo ? nil : WatchRelay(publisher: WatchConnectivityPublisher(), clock: SystemClock()))
         sync = SyncModel(repository: repository, app: model)
         let navigation = NavigationModel()
         self.navigation = navigation

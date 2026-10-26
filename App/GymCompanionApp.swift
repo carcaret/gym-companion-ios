@@ -23,8 +23,9 @@ struct GymCompanionApp: App {
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             // Al volver a la app, lo que haría la PWA al recargar: subir lo pendiente o bajar
-            // lo que se haya cambiado en GitHub.
+            // lo que se haya cambiado en GitHub. Y poner el reloj al día (puede ser otro día).
             case .active where root.model.data != nil:
+                root.model.refreshWatch()
                 Task { await root.sync.synchronize() }
             // Al irse a segundo plano, lo pendiente de subir sale ya (`beforeunload` en la PWA).
             case .background:

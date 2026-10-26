@@ -54,3 +54,39 @@ private struct FailingStore: TrainingDataStore {
     func load() async throws -> TrainingData? { throw Failure() }
     func save(_ data: TrainingData) async throws {}
 }
+
+@MainActor
+@Suite("Estado de la app y el reloj")
+struct AppModelWatchTests {
+    @Test("al arrancar, el reloj recibe el entreno en curso")
+    func startSends() async {
+        let publisher = RecordingWatchPublisher()
+        let harness = SyncHarness(local: SyncFixtures.activeWorkout(), configured: false)
+        let model = AppModel(repository: harness.repository(), watch: WatchRelay(publisher: publisher, clock: FixedClock(SyncFixtures.today)))
+        await model.start()
+        #expect(publisher.published == [SyncFixtures.activeWorkout().watchSnapshot(today: SyncFixtures.today)])
+    }
+
+    @Test("cada cambio del entreno llega al reloj")
+    func changesSend() async {
+        let publisher = RecordingWatchPublisher()
+        let harness = SyncHarness(local: SyncFixtures.activeWorkout(), configured: false)
+        let model = AppModel(repository: harness.repository(), watch: WatchRelay(publisher: publisher, clock: FixedClock(SyncFixtures.today)))
+        await model.start()
+        await model.update(SyncFixtures.activeWorkout(weight: 62.5))
+        _ = await model.finishWorkout(SyncFixtures.finishedWorkout())
+        #expect(publisher.published.map { $0.workout?.exercises.first?.weight } == [60, 62.5, nil])
+    }
+
+    @Test("al volver a la app, el reloj se pone al día (otro día, otro entreno)")
+    func refresh() async {
+        let publisher = RecordingWatchPublisher()
+        let clock = SettableClock(SyncFixtures.today)
+        let harness = SyncHarness(local: SyncFixtures.activeWorkout(), configured: false)
+        let model = AppModel(repository: harness.repository(), watch: WatchRelay(publisher: publisher, clock: clock))
+        await model.start()
+        clock.day = SyncFixtures.today.adding(days: 1)
+        model.refreshWatch()
+        #expect(publisher.published.map { $0.workout == nil } == [false, true])
+    }
+}
