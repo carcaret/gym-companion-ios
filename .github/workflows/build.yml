@@ -109,9 +109,11 @@ jobs:
         half: [1, 2]
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
-      # Medido el 2026-10-26: unos 350 s de tests en cada mitad. SettingsTests va en la 2, detrás de
-      # KeyboardTests: es el primer test que teclea y, con el teclado sin estrenar, tarda más de 5 s en salir.
-      HALF_1: ScreenshotTests HistoryTests SyncMenuTests DynamicTypeTests DisclosureTests WorkoutTests
+      # Medido el 2026-10-26: unos 300 s de tests en cada mitad. Cada mitad corre sus clases por orden
+      # alfabético. SettingsTests va detrás de KeyboardTests: es el primer test que teclea y, con el
+      # teclado sin estrenar, tarda más de 5 s en salir. NavigationTests, sin KeyboardTests delante: con
+      # ellos, el gesto de volver de testDeslizarAMediasNoCierraElDetalleDelHistorial falló 3 de 4 veces.
+      HALF_1: DisclosureTests DynamicTypeTests HistoryTests KeyboardTests ScreenshotTests SettingsTests SyncMenuTests
     steps:
       - uses: actions/checkout@v4
         with:
