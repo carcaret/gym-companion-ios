@@ -48,6 +48,8 @@ struct SyncIndicator: View {
 /// Los avisos y diálogos de la sincronización, para ponerlos una vez en la raíz.
 struct SyncPresentation: ViewModifier {
     @Bindable var sync: SyncModel
+    /// Lo que dura el aviso de abajo (`CompositionRoot.noticeDuration`).
+    let noticeDuration: Duration
 
     func body(content: Content) -> some View {
         content
@@ -57,7 +59,7 @@ struct SyncPresentation: ViewModifier {
                         .padding(.bottom, 96)  // por encima de la barra de pestañas
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: notice) {
-                            try? await Task.sleep(for: .seconds(2.5))
+                            try? await Task.sleep(for: noticeDuration)
                             if sync.notice == notice { sync.notice = nil }
                         }
                 }
@@ -81,8 +83,8 @@ struct SyncPresentation: ViewModifier {
 }
 
 extension View {
-    func syncPresentation(_ sync: SyncModel) -> some View {
-        modifier(SyncPresentation(sync: sync))
+    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration) -> some View {
+        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration))
     }
 }
 

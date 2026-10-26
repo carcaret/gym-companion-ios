@@ -22,7 +22,7 @@ struct RootView: View {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
             Tab("Historial", systemImage: "clock", value: AppTab.history) {
-                stack(.history) { HistoryScreen(model: root.history) }
+                stack(.history) { HistoryScreen(model: root.history, sync: root.sync) }
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
@@ -51,7 +51,7 @@ struct RootView: View {
             case .charts, .settings: break
             }
         }
-        .syncPresentation(root.sync)
+        .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
