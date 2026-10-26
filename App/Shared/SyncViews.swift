@@ -102,6 +102,11 @@ struct NoticeView: View {
             .background(Theme.surface2, in: .rect(cornerRadius: Theme.radiusSmall))
             .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
             .shadow(color: .black.opacity(0.45), radius: 15, y: 8)
+            // Un solo elemento con su texto: si no, no aparecía en el árbol de accesibilidad
+            // (ni VoiceOver lo podía leer al tocarlo ni los tests lo encontraban).
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(notice.text)
+            .accessibilityAddTraits(.isStaticText)
             .accessibilityIdentifier("notice")
             .onAppear { AccessibilityNotification.Announcement(notice.text).post() }
     }
