@@ -124,6 +124,7 @@ jobs:
         run: |
           scripts/ci-timeline.sh mark "checkout"
           nohup xcrun simctl list devices > /dev/null 2>&1 &
+          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
       # Compilación incremental: la carpeta de compilación de Xcode de la última ejecución, con
       # cada fichero en la fecha de su commit para que solo se recompile lo que cambia. Las
@@ -190,7 +191,6 @@ jobs:
             if [ "$half" = 1 ]; then selection+=("-only-testing:GymCompanionUITests/$class")
             else selection+=("-skip-testing:GymCompanionUITests/$class"); fi
           done
-          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
           scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
@@ -263,6 +263,7 @@ jobs:
         run: |
           scripts/ci-timeline.sh mark "checkout"
           nohup xcrun simctl list devices > /dev/null 2>&1 &
+          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
       - name: Fechas de los ficheros   # ver el job app
         run: |
