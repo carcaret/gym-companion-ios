@@ -163,7 +163,6 @@ private struct ParameterRow: View {
                         RoundedRectangle(cornerRadius: 7).strokeBorder(hasError ? Theme.red : focused ? Theme.accent : Theme.border)
                     }
                     .focused($focused)
-                    .releasesFocusOnTapOutside($focused)
                     .onAppear { text = value }
                     .onChange(of: value) { _, new in text = new }
                     // Un botón no quita el foco: el modelo se queda con lo tecleado y lo aplica
