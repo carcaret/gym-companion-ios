@@ -182,6 +182,7 @@ jobs:
             if [ "${{ matrix.half }}" = 1 ]; then selection+=("-only-testing:GymCompanionUITests/$class")
             else selection+=("-skip-testing:GymCompanionUITests/$class"); fi
           done
+          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
           scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
