@@ -3,8 +3,9 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// Una tarjeta de ejercicio. En la vista previa es de solo lectura; en el entreno, `actions` trae
-/// lo que se puede hacer con ella.
+/// Una tarjeta de ejercicio. En la vista previa es de solo lectura; en el entreno y el historial,
+/// `actions` trae lo que se puede editar en ella (cambiarla, saltarla y quitarla son gestos de la
+/// lista del entreno).
 struct ExerciseCardView: View {
     let card: ExerciseCard
     let toggle: () -> Void
@@ -19,10 +20,6 @@ struct ExerciseCardView: View {
         let commit: () -> Void
         let focusSeries: (Int) -> Void
         let chooseRep: (Int, Int) -> Void
-        /// Solo en el entreno (en el historial no se cambia, salta ni quita).
-        let swap: (() -> Void)?
-        let toggleSkip: (() -> Void)?
-        let remove: (() -> Void)?
     }
 
     var body: some View {
@@ -116,32 +113,11 @@ struct ExerciseCardView: View {
 
     @ViewBuilder
     private var footer: some View {
-        if card.isEditable, let actions, let swap = actions.swap, let toggleSkip = actions.toggleSkip, let remove = actions.remove {
-            HStack {
-                footerButton(TodayText.swapLabel, action: swap)
-                Spacer()
-                footerButton(card.skipLabel, action: toggleSkip)
-                    .foregroundStyle(card.isSkipped ? Theme.redSoft : Theme.textMuted)
-                footerButton(card.removeLabel, role: .destructive, action: remove)
-                    .padding(.leading, 12)
-            }
-            .scaledFont(12)
-            .foregroundStyle(Theme.textMuted)
-            .buttonStyle(.plain)
-            .padding(.top, 4)
-        }
         if card.isDirty, let save {
             Button(action: save) { Text(HistoryText.save).frame(maxWidth: .infinity) }
                 .buttonStyle(.pill())
                 .accessibilityIdentifier("history-save")
                 .padding(.top, 14)
-        }
-    }
-
-    /// Texto pequeño como en la PWA, pero con la zona de toque de 44 pt que pide iOS.
-    private func footerButton(_ title: String, role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
-        Button(role: role, action: action) {
-            Text(title).frame(minHeight: 44).contentShape(.rect)
         }
     }
 

@@ -35,7 +35,7 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
     public let title: String
     public let subtitle: String
     public let isOpen: Bool
-    /// Sin edición (vista previa) todo es de solo lectura: sin −/+, sin campos y sin botones abajo.
+    /// Sin edición (vista previa) todo es de solo lectura: sin −/+, sin campos y sin chips.
     public let isEditable: Bool
     public let weight: Double
     public let series: Int

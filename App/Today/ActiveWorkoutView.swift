@@ -4,7 +4,8 @@ import SwiftUI
 import ViewModels
 
 /// El entreno en curso: una tarjeta por ejercicio (acordeón), arrastrables para cambiar el orden,
-/// y abajo terminar o añadir.
+/// deslizables para quitarlas (izquierda) o cambiarlas y saltarlas (derecha), y abajo terminar o
+/// añadir.
 struct ActiveWorkoutView: View {
     @Bindable var model: TodayModel
 
@@ -25,11 +26,16 @@ struct ActiveWorkoutView: View {
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
-                    // Lo mismo que los botones del pie de la tarjeta. Sin `role: .destructive`: con
-                    // ese rol la lista quita la fila antes de que se confirme.
-                    .swipeActions {
+                    // A la izquierda, quitar, como borrar en el historial. Sin `role: .destructive`:
+                    // con ese rol la lista quita la fila antes de que se confirme.
+                    .swipeActions(edge: .trailing) {
                         Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
                             .tint(Theme.red)
+                    }
+                    // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna.
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
+                            .tint(Theme.accent)
                         Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
                             Task { await model.toggleSkip(at: index) }
                         }
@@ -92,15 +98,13 @@ struct ActiveWorkoutView: View {
             type: { parameter, text in model.type(parameter, text: text, at: index) },
             commit: { Task { await model.commitTyping() } },
             focusSeries: { series in model.focusSeries(series, at: index) },
-            chooseRep: { value, series in Task { await model.chooseRep(value, series: series, at: index) } },
-            swap: { model.openSwapPicker(at: index) },
-            toggleSkip: { Task { await model.toggleSkip(at: index) } },
-            remove: { Task { await model.requestRemoval(at: index) } }
+            chooseRep: { value, series in Task { await model.chooseRep(value, series: series, at: index) } }
         )
     }
 }
 
-/// Elegir un ejercicio para añadir o cambiar, con búsqueda, el chip "Solo esta sesión" y crear uno
+/// Elegir un ejercicio para añadir o cambiar: una hoja con búsqueda y, al cambiar, una sección para
+/// el grupo del ejercicio y otra para el resto. Al añadir, además, "Solo esta sesión" y crear uno
 /// nuevo.
 struct ExercisePickerSheet: View {
     @Bindable var model: TodayModel
@@ -113,15 +117,22 @@ struct ExercisePickerSheet: View {
                         Toggle(TodayText.oneOffToggle, isOn: Binding(get: { picker.isOneOff }, set: { _ in model.toggleOneOff() }))
                             .accessibilityIdentifier("one-off-toggle")
                     }
-                    ForEach(picker.exercises, id: \.id) { exercise in
-                        Button { Task { await model.choose(exercise.id) } } label: {
-                            HStack {
-                                Text(exercise.name)
-                                Spacer()
-                                Image(systemName: "plus.circle").foregroundStyle(.tint)
+                    ForEach(picker.sections, id: \.title) { section in
+                        Section {
+                            ForEach(section.rows) { row in
+                                Button { Task { await model.choose(row.id) } } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(row.exercise.name)
+                                        if let detail = row.detail {
+                                            Text(detail).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                                        }
+                                    }
+                                }
+                                .foregroundStyle(.primary)
                             }
+                        } header: {
+                            if let title = section.title { Text(title) }
                         }
-                        .foregroundStyle(.primary)
                     }
                     if picker.canCreate {
                         Button(TodayText.createExercise) {
@@ -135,6 +146,7 @@ struct ExercisePickerSheet: View {
             .searchable(text: $model.pickerQuery, prompt: TodayText.searchPlaceholder)
             .screenBackground()
             .navigationTitle(model.picker?.title ?? "")
+            .navigationSubtitle(model.picker?.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(TodayText.close) { model.closePicker() } }

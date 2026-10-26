@@ -526,6 +526,31 @@ struct SwapImmutabilityTests {
     }
 }
 
+// Lo que enseña el selector de "Cambiar por otro": en secciones, con el orden de los tiers dentro.
+@Suite("Candidatos para cambiar, por grupo")
+struct SwapCandidatesTests {
+    private func candidates(replacing exercise: ExerciseID) -> SwapCandidates {
+        swapCatalog.swapCandidates(availableForDIA1Swap, replacing: exercise, routines: swapRoutines, currentRoutine: "DIA1")
+    }
+
+    @Test("los del mismo grupo aparte, con los de otra rutina primero; el resto en el orden de los tiers")
+    func split() {
+        let split = candidates(replacing: "press_banca")
+        #expect(split.group == .pecho)
+        #expect(split.sameGroup.map(\.id) == ["apertura", "press_inclinado"])
+        #expect(split.others.map(\.id) == ["sentadilla", "plancha"])
+    }
+
+    @Test("sin grupo en el ejercicio que se cambia, todo va al resto")
+    func noGroup() {
+        let catalog = Catalog(swapCatalog.all + [exercise("misterio", "Misterio")])
+        let split = catalog.swapCandidates(availableForDIA1Swap, replacing: "misterio", routines: swapRoutines, currentRoutine: "DIA1")
+        #expect(split.group == nil)
+        #expect(split.sameGroup.isEmpty)
+        #expect(split.others.map(\.id) == ["apertura", "sentadilla", "plancha", "press_inclinado"])
+    }
+}
+
 @Suite("sortExercisesForSwap — edge cases")
 struct SwapEdgeCaseTests {
     @Test("array vacío devuelve array vacío sin errores")

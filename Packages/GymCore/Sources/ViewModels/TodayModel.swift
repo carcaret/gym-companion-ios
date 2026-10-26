@@ -48,13 +48,31 @@ public final class TodayModel {
     public struct Picker: Hashable, Sendable {
         public let purpose: PickerPurpose
         public let title: String
-        /// Ya ordenados y filtrados por la búsqueda.
-        public let exercises: [Exercise]
+        /// Al cambiar, el ejercicio que se sustituye.
+        public let subtitle: String?
+        /// Ya ordenadas y filtradas por la búsqueda, sin secciones vacías.
+        public let sections: [PickerSection]
+        /// Todos los de las secciones, en orden.
+        public var exercises: [Exercise] { sections.flatMap { $0.rows.map(\.exercise) } }
         /// El chip "Solo esta sesión" (solo al añadir con entreno en curso).
         public let offersOneOff: Bool
         public let isOneOff: Bool
         /// "Crear nuevo ejercicio" (al añadir, y no si es puntual: lo nuevo entra en la rutina).
         public let canCreate: Bool
+    }
+
+    /// Una sección del selector; sin título cuando es la única.
+    public struct PickerSection: Hashable, Sendable {
+        public let title: String?
+        public let rows: [PickerRow]
+    }
+
+    public struct PickerRow: Hashable, Sendable, Identifiable {
+        public let exercise: Exercise
+        /// Segunda línea: grupo (si no lo dice la sección) y rutinas donde está.
+        public let detail: String?
+
+        public var id: ExerciseID { exercise.id }
     }
 
     public struct RemovalPrompt: Hashable, Sendable {
@@ -315,21 +333,34 @@ public final class TodayModel {
         guard let purpose = pickerPurpose, let session = activeSession else { return nil }
         let present = Set(session.logs.map(\.exerciseID))
         let needle = pickerQuery.trimmingWhitespace().searchFolded
-        func matching(_ exercises: [Exercise]) -> [Exercise] {
-            needle.isEmpty ? exercises : exercises.filter { $0.name.searchFolded.contains(needle) }
+        func section(_ title: String?, _ exercises: [Exercise], showsGroup: Bool) -> PickerSection? {
+            let matching = needle.isEmpty ? exercises : exercises.filter { $0.name.searchFolded.contains(needle) }
+            let rows = matching.map { exercise in
+                let routines = data.routines.others(than: session.routineID, containing: exercise.id).map(\.name)
+                return PickerRow(exercise: exercise, detail: TodayText.pickerDetail(group: showsGroup ? GroupText.name(exercise.group) : nil,
+                                                                                    routines: routines))
+            }
+            return rows.isEmpty ? nil : PickerSection(title: title, rows: rows)
         }
         switch purpose {
         case .add:
             let routine = Set(data.routines.first { $0.id == session.routineID }?.exerciseIDs ?? [])
             let candidates = data.catalog.all.filter { !routine.contains($0.id) && !present.contains($0.id) }
                 .sorted { SpanishCollation.precedes($0.name, $1.name) }
-            return Picker(purpose: purpose, title: TodayText.addTitle(name(of: session.routineID)), exercises: matching(candidates),
+            return Picker(purpose: purpose, title: TodayText.addTitle(name(of: session.routineID)), subtitle: nil,
+                          sections: [section(nil, candidates, showsGroup: true)].compactMap(\.self),
                           offersOneOff: true, isOneOff: pickerOneOff, canCreate: !pickerOneOff)
         case .swap(let index):
-            let candidates = data.catalog.all.filter { !present.contains($0.id) }
-            let sorted = data.catalog.sortedForSwap(candidates, replacing: session.logs[index].exerciseID, routines: data.routines,
-                                                    currentRoutine: session.routineID)
-            return Picker(purpose: purpose, title: TodayText.swapTitle, exercises: matching(sorted), offersOneOff: false, isOneOff: false, canCreate: false)
+            let replaced = session.logs[index].exerciseID
+            let candidates = data.catalog.swapCandidates(data.catalog.all.filter { !present.contains($0.id) }, replacing: replaced,
+                                                         routines: data.routines, currentRoutine: session.routineID)
+            // Sin grupo propio no hay "mismo grupo": una sola sección, sin título.
+            let sections = candidates.group.map { group in
+                [section(GroupText.name(group), candidates.sameGroup, showsGroup: false),
+                 section(TodayText.otherGroupsSection, candidates.others, showsGroup: true)]
+            } ?? [section(nil, candidates.others, showsGroup: true)]
+            return Picker(purpose: purpose, title: TodayText.swapTitle, subtitle: TodayText.swapSubtitle(data.catalog.name(of: replaced)),
+                          sections: sections.compactMap(\.self), offersOneOff: false, isOneOff: false, canCreate: false)
         }
     }
 

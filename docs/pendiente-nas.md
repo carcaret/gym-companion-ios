@@ -64,6 +64,8 @@ Falta lo que necesita el iPhone o el NAS:
   - que los campos de peso, series y objetivo aceptan lo tecleado al tocar fuera;
   - que arrastrar para reordenar funciona en la lista (mantener pulsada la tarjeta);
   - que el aviso "Entreno guardado localmente" sale si no hay red al terminar.
+- [ ] Deslizar una tarjeta del entreno a la derecha enseña "Cambiar por otro" y "Saltar" sin hacer
+      nada aunque se deslice del todo; a la izquierda, quitarla pide confirmación.
 - [ ] Ver que la PWA lee bien el entreno que sube la app (lo mismo que en #7, ahora con datos de un
       entreno de verdad).
 

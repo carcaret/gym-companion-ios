@@ -178,6 +178,67 @@ struct WorkoutAccordionTests {
     }
 }
 
+@MainActor
+@Suite("Selector de ejercicios: secciones y segunda línea")
+struct PickerSectionsTests {
+    /// Los datos de los e2e con otro ejercicio de bíceps, para que haya "mismo grupo" al cambiar el curl.
+    private func harness() async -> TodayHarness {
+        var data = PWATestDB.data
+        data.catalog = Catalog(data.catalog.all + [Exercise(id: "curl_martillo", name: "Curl Martillo", group: .biceps)])
+        let today = await TodayHarness.make(data)
+        await today.start()
+        return today
+    }
+
+    @Test("cambiar: el grupo del ejercicio primero y luego los demás, con el que se sustituye de subtítulo")
+    func swapSections() async throws {
+        let today = await harness()
+        today.model.openSwapPicker(at: 1)
+        let picker = try #require(today.model.picker)
+        #expect(picker.subtitle == "En lugar de Curl Bíceps")
+        #expect(picker.sections.map(\.title) == ["Bíceps", "Otros grupos"])
+        #expect(picker.sections.map { $0.rows.map(\.id) } == [["curl_martillo"], ["sentadilla"]])
+    }
+
+    @Test("la segunda línea da las rutinas donde está y, fuera de su sección, el grupo")
+    func details() async throws {
+        let today = await harness()
+        today.model.openSwapPicker(at: 1)
+        let rows = try #require(today.model.picker?.sections.flatMap { $0.rows })
+        #expect(rows.map(\.detail) == [nil, "Piernas · En Full Body - Día 2, Full Body - Día 3"])
+    }
+
+    @Test("buscar quita las secciones que se quedan vacías")
+    func searchDropsEmptySections() async throws {
+        let today = await harness()
+        today.model.openSwapPicker(at: 1)
+        today.model.pickerQuery = "sent"
+        #expect(today.model.picker?.sections.map(\.title) == ["Otros grupos"])
+    }
+
+    @Test("cambiar un ejercicio sin grupo: una sola sección, sin título")
+    func swapWithoutGroup() async throws {
+        var data = PWATestDB.data
+        data.catalog = Catalog(data.catalog.all.map { $0.id == "curl_biceps" ? Exercise(id: $0.id, name: $0.name) : $0 })
+        let today = await TodayHarness.make(data)
+        await today.start()
+        today.model.openSwapPicker(at: 1)
+        let picker = try #require(today.model.picker)
+        #expect(picker.sections.map(\.title) == [nil])
+        #expect(picker.exercises.map(\.id) == ["sentadilla"])
+    }
+
+    @Test("añadir: una sola sección, sin título ni subtítulo, con el grupo en cada fila")
+    func addSection() async throws {
+        let today = await harness()
+        today.model.openAddPicker()
+        let picker = try #require(today.model.picker)
+        #expect(picker.subtitle == nil)
+        #expect(picker.sections.map(\.title) == [nil])
+        #expect(picker.sections.flatMap { $0.rows }.map(\.detail) == ["Bíceps", "Piernas · En Full Body - Día 2, Full Body - Día 3"])
+    }
+}
+
 // tests/e2e/workout-open-state.spec.js
 @MainActor
 @Suite("Estado abierto de card tras swap / quitar / añadir")
