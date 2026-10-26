@@ -1,8 +1,9 @@
 import SwiftUI
 import ViewModels
 
-/// La raíz: las cinco pestañas de la PWA, cada una con su pila de navegación y el indicador de
-/// sincronización en la barra.
+/// La raíz: las pestañas de la PWA, cada una con su pila de navegación y el indicador de
+/// sincronización en la barra. Ajustes no es una pestaña: es una hoja que abre el indicador
+/// (decisión del usuario, 2026-10-26).
 struct RootView: View {
     let root: CompositionRoot
     @Bindable var navigation: NavigationModel
@@ -33,9 +34,6 @@ struct RootView: View {
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
                 stack(.charts) { ChartsScreen(model: root.charts) }
             }
-            Tab("Ajustes", systemImage: "gearshape", value: AppTab.settings) {
-                stack(.settings) { SettingsScreen(model: root.settings) }
-            }
         }
         // Como en iOS: cambiar de pestaña conserva su pantalla, y tocar otra vez la pestaña activa
         // vuelve a la de entrada (decisión del usuario, 2026-10-25). Nunca en el `onAppear` de la
@@ -48,10 +46,14 @@ struct RootView: View {
             case .routines: root.today.reselect()
             case .history: root.history.reselect()
             case .progress: root.progress.reselect()
-            case .charts, .settings: break
+            case .charts: break
             }
         }
-        .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
+        .syncPresentation(root.sync, noticeDuration: root.noticeDuration, isActive: !root.sync.isSettingsPresented)
+        .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
+            NavigationStack { SettingsScreen(model: root.settings) }
+                .syncPresentation(root.sync, noticeDuration: root.noticeDuration, bottomInset: 16)
+        }
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
@@ -67,7 +69,7 @@ struct RootView: View {
                 .screenBackground()
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        SyncIndicator(sync: root.sync, configure: { navigation.select(.settings) })
+                        SyncIndicator(sync: root.sync)
                     }
                 }
         }

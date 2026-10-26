@@ -14,7 +14,7 @@ final class ScreenshotTests: XCTestCase {
         app.launch()
         // Pestaña, título de su pantalla y nombre de la captura.
         let tabs = [("Rutinas", "Rutinas", "01-rutinas"), ("Historial", "Historial", "02-historial"),
-                    ("Progreso", "Estadísticas", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas"), ("Ajustes", "Ajustes", "05-ajustes")]
+                    ("Progreso", "Estadísticas", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas")]
         for (tab, title, name) in tabs {
             app.tabBars.buttons[tab].tap()
             XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "No se abrió \(tab)")
@@ -90,7 +90,7 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Ejercicios"].waitForExistence(timeout: 10))
         capture(app, "50-catalogo")
 
-        app.tabBars.buttons["Ajustes"].tap()
+        app.openSyncSettings()
         XCTAssertTrue(app.staticTexts["settings-version"].waitForExistence(timeout: 10))
         capture(app, "60-ajustes")
     }

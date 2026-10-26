@@ -3,7 +3,7 @@ import Observation
 
 /// Las pestañas de la app, en el orden de la barra.
 public enum AppTab: Hashable, Sendable, CaseIterable {
-    case routines, history, progress, charts, settings
+    case routines, history, progress, charts
 }
 
 /// La pestaña visible (`navigateToTab` de la PWA). Lo que pasa dentro de cada pestaña (detalle de

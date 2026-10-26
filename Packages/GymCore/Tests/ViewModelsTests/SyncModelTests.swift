@@ -185,6 +185,21 @@ struct SyncModelTests {
         #expect(sync.menuAction == .configure)
     }
 
+    @Test("con GitHub, el menú del indicador ofrece además los ajustes; sin él, solo configurarlo")
+    func settingsInMenu() async {
+        #expect(await models(SyncHarness()).1.offersSettings)
+        #expect(await models(SyncHarness(pending: true)).1.offersSettings)
+        #expect(!(await models(SyncHarness(configured: false)).1.offersSettings))
+    }
+
+    @Test("configurar GitHub o los ajustes desde el menú abren la hoja de los ajustes")
+    func showSettings() async {
+        let (_, sync) = await models(SyncHarness(configured: false))
+        #expect(!sync.isSettingsPresented)
+        sync.showSettings()
+        #expect(sync.isSettingsPresented)
+    }
+
     @Test("con un conflicto, el menú del indicador lo dice")
     func conflictMenu() async {
         let harness = SyncHarness()

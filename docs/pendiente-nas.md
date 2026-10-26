@@ -38,12 +38,12 @@ Para que no se pierda nada al repartir tests entre issues:
 Hecho y probado en Docker (600 tests, con la ida y vuelta del `db.json` real idéntica) y en el CI.
 Falta lo que necesita el iPhone o el NAS:
 
-- [ ] El Llavero en el iPhone firmado con la cuenta gratuita: guardar el token desde Ajustes (#14)
+- [ ] El Llavero en el iPhone firmado con la cuenta gratuita: guardar el token desde los ajustes (#14)
       y comprobar que sigue tras cerrar la app y tras una reinstalación de ios-signer. Si
       `SecItemAdd` falla en el iPhone (`KeychainError`), mirar si plumesign pone
       `keychain-access-groups` en los entitlements; la salida sería firmar ad hoc con un
       `.entitlements` como en #3.
-- [ ] Sincronización real contra `carcaret/gym-companion`: configurar en Ajustes (#14) con un PAT
+- [ ] Sincronización real contra `carcaret/gym-companion`: configurar en los ajustes (#14) con un PAT
       con permiso de escritura en ese repo. Con la app vacía, configurar **baja** los datos (no
       sube nada). Comprobar después que un cambio en la app crea un commit "Gym Companion update
       AAAA-MM-DD" y que el diff solo muestra lo cambiado (el primer commit reordena las claves de
@@ -54,8 +54,9 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #8 Navegación
 
-- [ ] Ver en el iPhone las cinco pestañas (Rutinas, Historial, Progreso, Gráficas, Ajustes) con
-      el indicador de sincronización arriba a la derecha; en Ajustes, la versión y la compilación.
+- [ ] Ver en el iPhone las cuatro pestañas (Rutinas, Historial, Progreso, Gráficas) con el
+      indicador de sincronización arriba a la derecha; en sus ajustes (menú del indicador), la
+      versión y la compilación.
 
 ### #9 Hoy
 
@@ -94,7 +95,7 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #14 Ajustes
 
-- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en Ajustes, repositorio
+- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en los ajustes (menú del indicador → «Configurar GitHub»), repositorio
       `carcaret/gym-companion`, rama `master`, ruta `db.json` y un PAT con permiso de escritura
       en ese repo. Con la app vacía, "Guardar" baja los datos; comprobar que salen las 297+
       sesiones en Historial.

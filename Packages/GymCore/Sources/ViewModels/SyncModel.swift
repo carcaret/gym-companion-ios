@@ -4,7 +4,7 @@ import Observation
 import Presentation
 
 /// La sincronización vista desde la interfaz: el menú del indicador, los avisos, el diálogo de
-/// conflicto y los botones de GitHub de Ajustes (`app.js` y `views/settings.js` de la PWA).
+/// conflicto y los botones de GitHub de los ajustes (`app.js` y `views/settings.js` de la PWA).
 @MainActor
 @Observable
 public final class SyncModel {
@@ -18,12 +18,14 @@ public final class SyncModel {
     public var isConflictPresented = false
     /// Aviso de que el entreno terminado se quedó en el iPhone sin subir.
     public var isSavedLocallyPresented = false
+    /// La hoja de los ajustes de sincronización (`SettingsModel`), que se abre desde el indicador.
+    public var isSettingsPresented = false
 
     /// Lo que ofrece el menú del indicador, según el estado.
     public enum MenuAction: Hashable, Sendable {
         case syncNow
         case resolveConflict
-        /// Sin GitHub: ir a Ajustes.
+        /// Sin GitHub: abrir los ajustes de sincronización.
         case configure
     }
 
@@ -82,7 +84,7 @@ public final class SyncModel {
         }
     }
 
-    /// El estado, en el menú del indicador y en Ajustes.
+    /// El estado, en el menú del indicador y en los ajustes.
     public var statusText: String {
         status.conflict ? SyncText.conflictTitle : statusNotice.text
     }
@@ -93,6 +95,15 @@ public final class SyncModel {
         case .pending where status.conflict: .resolveConflict
         case .ok, .pending: .syncNow
         }
+    }
+
+    /// Con GitHub configurado, el menú ofrece además los ajustes; sin él, ya es su acción principal
+    /// («Configurar GitHub»).
+    public var offersSettings: Bool { menuAction != .configure }
+
+    /// «Configurar GitHub» o «Ajustes de sincronización» en el menú del indicador.
+    public func showSettings() {
+        isSettingsPresented = true
     }
 
     /// «Resolver conflicto» en el menú del indicador.

@@ -1,9 +1,9 @@
 import Domain
 
-/// Los textos de Ajustes (`views/settings.js` e `index.html` de la PWA).
+/// Los textos de los ajustes de sincronización (`views/settings.js` e `index.html` de la PWA).
 public enum SettingsText {
-    public static let title = "Ajustes"
-    public static let githubSection = "Sincronización con GitHub"
+    public static let title = "Sincronización"
+    public static let githubSection = "GitHub"
     public static let repository = "Repositorio"
     public static let repositoryPlaceholder = "usuario/repo"
     public static let branch = "Rama"

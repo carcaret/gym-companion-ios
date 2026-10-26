@@ -4,11 +4,9 @@ import SwiftUI
 import ViewModels
 
 /// El estado de la sincronización en la barra: un menú que lo dice y ofrece lo que toca
-/// (sincronizar ahora, resolver el conflicto o configurar GitHub).
+/// (sincronizar ahora, resolver el conflicto o configurar GitHub) y los ajustes.
 struct SyncIndicator: View {
     let sync: SyncModel
-    /// Ir a Ajustes.
-    let configure: () -> Void
 
     var body: some View {
         Menu {
@@ -19,8 +17,11 @@ struct SyncIndicator: View {
                 case .resolveConflict:
                     Button(SyncText.resolveConflictLabel, systemImage: "exclamationmark.triangle") { sync.resolveConflict() }
                 case .configure:
-                    Button(SyncText.configureLabel, systemImage: "gearshape") { configure() }
+                    Button(SyncText.configureLabel, systemImage: "gearshape") { sync.showSettings() }
                 }
+            }
+            if sync.offersSettings {
+                Button(SyncText.settingsLabel, systemImage: "gearshape") { sync.showSettings() }
             }
         } label: {
             Image(systemName: symbol)
@@ -50,18 +51,23 @@ struct SyncIndicator: View {
 
 }
 
-/// Los avisos y diálogos de la sincronización, para ponerlos una vez en la raíz.
+/// Los avisos y diálogos de la sincronización, en la raíz y en la hoja de los ajustes (sus botones
+/// también avisan y pueden abrir el conflicto, y lo que cuelga de la raíz queda debajo de la hoja).
 struct SyncPresentation: ViewModifier {
     @Bindable var sync: SyncModel
     /// Lo que dura el aviso de abajo (`CompositionRoot.noticeDuration`).
     let noticeDuration: Duration
+    /// Hueco bajo el aviso: en la raíz, por encima de la barra de pestañas.
+    let bottomInset: CGFloat
+    /// El de la raíz se apaga mientras la hoja de los ajustes está abierta: lo pinta la hoja.
+    let isActive: Bool
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottom) {
-                if let notice = sync.notice {
+                if isActive, let notice = sync.notice {
                     NoticeView(notice: notice)
-                        .padding(.bottom, 96)  // por encima de la barra de pestañas
+                        .padding(.bottom, bottomInset)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: notice) {
                             try? await Task.sleep(for: noticeDuration)
@@ -72,24 +78,28 @@ struct SyncPresentation: ViewModifier {
             .animation(.default, value: sync.notice)
             // Alerta y no confirmationDialog: se abre desde el menú del indicador, que ya se ha
             // cerrado, o al tirar de la lista (en iOS 26 el diálogo sería un globo sin de qué salir).
-            .alert(SyncText.conflictTitle, isPresented: $sync.isConflictPresented) {
+            .alert(SyncText.conflictTitle, isPresented: whileActive($sync.isConflictPresented)) {
                 Button(SyncText.keepLocalLabel) { Task { await sync.keepLocal() } }
                 Button(SyncText.keepRemoteLabel) { Task { await sync.keepRemote() } }
                 Button(SyncText.cancelLabel, role: .cancel) { sync.cancelConflict() }
             } message: {
                 Text(SyncText.conflictMessage)
             }
-            .alert(SyncText.savedLocallyTitle, isPresented: $sync.isSavedLocallyPresented) {
+            .alert(SyncText.savedLocallyTitle, isPresented: whileActive($sync.isSavedLocallyPresented)) {
                 Button(SyncText.understood) {}
             } message: {
                 Text(SyncText.savedLocallyMessage)
             }
     }
+
+    private func whileActive(_ isPresented: Binding<Bool>) -> Binding<Bool> {
+        Binding(get: { isActive && isPresented.wrappedValue }, set: { isPresented.wrappedValue = $0 })
+    }
 }
 
 extension View {
-    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration) -> some View {
-        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration))
+    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration, bottomInset: CGFloat = 96, isActive: Bool = true) -> some View {
+        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration, bottomInset: bottomInset, isActive: isActive))
     }
 }
 

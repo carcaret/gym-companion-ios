@@ -26,6 +26,7 @@ public enum SyncText {
     public static let syncNowLabel = "Sincronizar ahora"
     public static let resolveConflictLabel = "Resolver conflicto"
     public static let configureLabel = "Configurar GitHub"
+    public static let settingsLabel = "Ajustes de sincronización"
     public static let pendingChanges = Notice("Hay cambios pendientes de subir a GitHub")
     public static let synced = Notice("Sincronizado con GitHub", .success)
     public static let notConfigured = Notice("GitHub no configurado")

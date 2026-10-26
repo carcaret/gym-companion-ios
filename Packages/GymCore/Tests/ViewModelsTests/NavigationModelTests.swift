@@ -11,9 +11,11 @@ struct NavigationModelTests {
         #expect(NavigationModel().selectedTab == .routines)
     }
 
-    @Test("las pestañas son Rutinas, Historial, Progreso, Gráficas y Ajustes, en ese orden")
+    // Sin pestaña Ajustes: la configuración de GitHub se abre desde el indicador de la
+    // sincronización (decisión del usuario, 2026-10-26).
+    @Test("las pestañas son Rutinas, Historial, Progreso y Gráficas, en ese orden")
     func tabs() {
-        #expect(AppTab.allCases == [.routines, .history, .progress, .charts, .settings])
+        #expect(AppTab.allCases == [.routines, .history, .progress, .charts])
     }
 
     @Test("tocar una pestaña la selecciona")

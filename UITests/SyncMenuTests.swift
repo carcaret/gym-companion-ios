@@ -8,19 +8,21 @@ final class SyncMenuTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Los ajustes no son una pestaña: son una hoja que abre el indicador y se cierra con su botón
+    /// (decisión del usuario, 2026-10-26).
     @MainActor
-    func testElMenuDelIndicadorLlevaAAjustes() {
+    func testElMenuDelIndicadorAbreLosAjustes() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
-        let indicator = app.buttons["sync-indicator"].firstMatch
-        XCTAssertTrue(indicator.waitForExistence(timeout: 20))
-        XCTAssertEqual(indicator.label, "GitHub no configurado")
-        indicator.tap()
-        let configure = app.buttons["Configurar GitHub"].firstMatch
-        XCTAssertTrue(configure.waitForExistence(timeout: 10))
-        configure.tap()
-        XCTAssertTrue(app.navigationBars["Ajustes"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.tabBars.buttons["Ajustes"].isSelected)
+        XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 20))
+        XCTAssertFalse(app.tabBars.buttons["Ajustes"].exists, "Ajustes ya no es una pestaña")
+        XCTAssertEqual(app.buttons["sync-indicator"].firstMatch.label, "GitHub no configurado")
+
+        app.openSyncSettings()
+        XCTAssertTrue(app.textFields["settings-repository"].exists)
+        app.buttons["settings-close"].tap()
+        XCTAssertTrue(app.navigationBars["Sincronización"].waitForNonExistence(timeout: 5), "La hoja sigue abierta")
+        XCTAssertTrue(app.navigationBars["Rutinas"].exists, "Al cerrar se vuelve a donde se estaba")
     }
 }

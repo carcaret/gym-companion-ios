@@ -3,8 +3,9 @@ import Domain
 import Observation
 import Presentation
 
-/// La pestaña Ajustes (`views/settings.js` de la PWA): dónde está el `db.json` de GitHub y el
-/// token, y los botones de probar, subir y descargar. La sincronización la hace `SyncModel`.
+/// Los ajustes de sincronización (`views/settings.js` de la PWA), en la hoja que abre el indicador:
+/// dónde está el `db.json` de GitHub y el token, y los botones de probar, subir y descargar. La
+/// sincronización la hace `SyncModel`.
 @MainActor
 @Observable
 public final class SettingsModel {
@@ -19,6 +20,8 @@ public final class SettingsModel {
     private let sync: SyncModel
     private let repositoryActor: TrainingRepository
     private var savedLocation: SyncLocation?
+    /// Lo que tenían los campos al abrir, para saber si hay algo escrito sin guardar.
+    private var loadedFields: [String] = ["", "", "", ""]
 
     public init(sync: SyncModel, repository: TrainingRepository, version: AppVersion) {
         self.sync = sync
@@ -42,7 +45,14 @@ public final class SettingsModel {
             path = location.path
         }
         token = configuration.token ?? ""
+        loadedFields = fields
     }
+
+    /// Algo escrito y sin guardar: deslizar la hoja hacia abajo no la cierra, para no perderlo
+    /// (cerrarla con su botón sí lo descarta, y al volver a abrirla salen los campos guardados).
+    public var hasUnsavedChanges: Bool { fields != loadedFields }
+
+    private var fields: [String] { [repository, branch, path, token] }
 
     /// "Guardar": rama y ruta vacías toman las de siempre.
     public func save() async {

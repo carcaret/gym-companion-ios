@@ -1,6 +1,6 @@
 import XCTest
 
-/// Ajustes como un formulario de iOS: la tecla de retorno pasa al campo siguiente y, en el último,
+/// Los ajustes de sincronización como un formulario de iOS: la tecla de retorno pasa al campo siguiente y, en el último,
 /// cierra el teclado.
 final class SettingsTests: XCTestCase {
     override func setUp() {
@@ -12,7 +12,7 @@ final class SettingsTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
-        app.tabBars.buttons["Ajustes"].tap()
+        app.openSyncSettings()
         let repository = app.textFields["settings-repository"]
         XCTAssertTrue(repository.waitForExistence(timeout: 10))
 

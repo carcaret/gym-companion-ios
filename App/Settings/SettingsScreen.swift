@@ -2,13 +2,14 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Ajustes, un formulario de iOS: sincronización con GitHub y versión de la app. Solo
-/// pinta `SettingsModel`.
+/// Los ajustes de sincronización, un formulario de iOS en la hoja que abre el indicador: GitHub y
+/// versión de la app. Solo pinta `SettingsModel`.
 struct SettingsScreen: View {
     @Bindable var model: SettingsModel
     /// La tecla de retorno pasa al campo siguiente, como en un formulario de iOS; en el último
     /// cierra el teclado.
     @FocusState private var focused: Field?
+    @Environment(\.dismiss) private var dismiss
 
     private enum Field: CaseIterable {
         case repository, branch, path, token
@@ -62,6 +63,14 @@ struct SettingsScreen: View {
             .listRowBackground(Theme.surface)
         }
         .navigationTitle(SettingsText.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .close) { dismiss() }
+                    .accessibilityIdentifier("settings-close")
+            }
+        }
+        .interactiveDismissDisabled(model.hasUnsavedChanges)
         .screenBackground()
         .keyboardDismissal()
         .task { await model.load() }

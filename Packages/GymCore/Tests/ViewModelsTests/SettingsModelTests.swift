@@ -189,3 +189,45 @@ struct SettingsModelTests {
         #expect(await settings.harness.remote.data == PWATestDB.data)
     }
 }
+
+// Propio de la app: los ajustes van en una hoja, y deslizarla hacia abajo no se lleva lo escrito.
+@MainActor
+@Suite("Ajustes — cambios sin guardar")
+struct SettingsUnsavedTests {
+    @Test("al abrir, con o sin GitHub, no hay nada sin guardar")
+    func cleanOnOpen() async {
+        #expect(!(await SettingsHarness.make().model.hasUnsavedChanges))
+        #expect(!(await SettingsHarness.make(configured: true).model.hasUnsavedChanges))
+    }
+
+    @Test("cambiar cualquier campo deja cambios sin guardar, y deshacerlo los quita")
+    func editing() async {
+        let settings = await SettingsHarness.make(configured: true)
+        for field in [\SettingsModel.repository, \.branch, \.path, \.token] {
+            let saved = settings.model[keyPath: field]
+            settings.model[keyPath: field] = saved + "x"
+            #expect(settings.model.hasUnsavedChanges)
+            settings.model[keyPath: field] = saved
+            #expect(!settings.model.hasUnsavedChanges)
+        }
+    }
+
+    @Test("guardar deja la hoja sin cambios pendientes")
+    func saveClears() async {
+        let settings = await SettingsHarness.make()
+        settings.model.repository = "user/repo"
+        settings.model.token = "ghp_x"
+        #expect(settings.model.hasUnsavedChanges)
+        await settings.model.save()
+        #expect(!settings.model.hasUnsavedChanges)
+    }
+
+    @Test("volver a abrir la hoja descarta lo escrito sin guardar")
+    func reopenDiscards() async {
+        let settings = await SettingsHarness.make(configured: true)
+        settings.model.repository = "otro/repo"
+        await settings.model.load()
+        #expect(settings.model.repository == "u/r")
+        #expect(!settings.model.hasUnsavedChanges)
+    }
+}
