@@ -66,7 +66,9 @@ struct RootView: View {
             content()
                 .screenBackground()
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) { SyncIndicator(sync: root.sync) }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        SyncIndicator(sync: root.sync, configure: { navigation.select(.settings) })
+                    }
                 }
         }
     }

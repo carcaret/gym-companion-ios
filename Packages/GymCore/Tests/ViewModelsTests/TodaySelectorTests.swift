@@ -50,7 +50,10 @@ struct DaySelectorTests {
         let today = await TodayHarness.make()
         await today.start("DIA2")
         #expect(today.model.stage == .active)
-        #expect(today.model.activeStatus == "Entreno en curso — Full Body - Día 2")
+        // El recuadro «Entreno en curso — …» de la PWA es ahora el título y el subtítulo de la
+        // barra (cambiado con la aprobación del usuario, 2026-10-26).
+        #expect(today.model.title == "Entreno Full Body - Día 2")
+        #expect(TodayText.inProgress == "En curso")
         #expect(await today.savedToday?.routineID == "DIA2")
     }
 

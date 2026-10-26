@@ -105,7 +105,6 @@ public final class HistoryModel {
         data.history.removeAll { $0.date == prompt.date }
         if selectedDate == prompt.date { back() }
         await app.update(data)
-        app.notice = HistoryText.deleted
     }
 
     public func cancelDelete() {

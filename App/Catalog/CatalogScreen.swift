@@ -45,14 +45,6 @@ struct CatalogScreen: View {
 
     var body: some View {
         List {
-            if model.sections.isEmpty {
-                Text(CatalogText.noMatches)
-                    .scaledFont(14)
-                    .foregroundStyle(Theme.textMuted)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .catalogRow()
-            }
             ForEach(model.sections) { section in
                 Section {
                     ForEach(section.rows) { row in
@@ -92,6 +84,15 @@ struct CatalogScreen: View {
             }
         }
         .listStyle(.plain)
+        .overlay {
+            if model.sections.isEmpty {
+                if model.query.isEmpty {
+                    ContentUnavailableView(CatalogText.empty, systemImage: "dumbbell")
+                } else {
+                    ContentUnavailableView.search(text: model.query)
+                }
+            }
+        }
         .contentMargins(.bottom, 16, for: .scrollContent)
         .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
         .navigationTitle(CatalogText.title)

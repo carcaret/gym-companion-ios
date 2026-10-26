@@ -162,20 +162,29 @@ struct CatalogEditorTests {
         #expect(model.editor?.secondaries == [.biceps])
     }
 
-    @Test("guardar avisa de que se ha actualizado")
+    // Antes avisaba «Ejercicio actualizado», como la PWA (quitado con la aprobación del usuario,
+    // 2026-10-26).
+    @Test("guardar no avisa: la hoja se cierra y la fila ya se ve cambiada")
     func notice() async {
         let catalog = await CatalogHarness.make()
         catalog.model.edit("jalon")
         await catalog.model.save()
-        #expect(catalog.app.notice == CatalogText.updated)
+        #expect(catalog.app.notice == nil)
         #expect(catalog.model.editor == nil)
     }
 
-    @Test("sin coincidencias no hay secciones (y la vista lo dice)")
+    @Test("sin coincidencias no hay secciones (y la vista lo dice con la búsqueda de iOS)")
     func noMatches() async {
         let catalog = await CatalogHarness.make()
         catalog.model.query = "zzz"
         #expect(catalog.model.sections.isEmpty)
-        #expect(CatalogText.noMatches == "Ningún ejercicio coincide con la búsqueda.")
+    }
+
+    @Test("sin ejercicios no hay secciones, y la vista dice que aún no hay")
+    func empty() async {
+        let app = AppModel(repository: SyncHarness(local: TrainingData(), configured: false).repository())
+        await app.start()
+        #expect(CatalogModel(app: app).sections.isEmpty)
+        #expect(CatalogText.empty == "Aún no hay ejercicios")
     }
 }

@@ -376,6 +376,9 @@ struct RemoveExerciseTests {
         await today.model.confirmRemoval(prompt)
         #expect(today.model.activeCards.count == 2)
         #expect(await today.saved?.routines[0].exerciseIDs.contains("press_banca") == false)
+        // Sin aviso: la tarjeta ya no está, y el diálogo ya dijo que sale de la rutina (quitado
+        // con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
     }
 
     @Test("cancelar mantiene el ejercicio en el entreno y en DB.routines")
@@ -482,7 +485,8 @@ struct OneOffExerciseTests {
         today.model.toggleOneOff()
         #expect(today.model.picker?.isOneOff == true)
         await today.model.choose("sentadilla")
-        #expect(today.app.notice?.text.contains("solo para hoy") == true)
+        // Sin aviso: la tarjeta nueva ya se ve, y «Solo esta sesión» lo eligió el usuario (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
         #expect(today.model.activeCards.count == 4)
         #expect(await today.saved?.routines[0].exerciseIDs == ["press_banca", "curl_biceps", "ejercicio_sin_historial"])
         let logs = try #require(await today.savedToday?.logs)
@@ -521,7 +525,8 @@ struct OneOffExerciseTests {
         today.model.toggleOneOff()
         await today.model.choose("sentadilla")
         await today.model.reorder(from: 0, to: 1)
-        #expect(today.app.notice?.text.contains("Orden actualizado") == true)
+        // Sin aviso: la tarjeta ya se ve en su sitio (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
         #expect(await today.saved?.routines[0].exerciseIDs == ["curl_biceps", "press_banca", "ejercicio_sin_historial"])
         #expect(await today.savedToday?.logs.map(\.exerciseID) == ["curl_biceps", "press_banca", "ejercicio_sin_historial", "sentadilla"])
     }
@@ -656,14 +661,15 @@ struct CompletedViewTests {
     func startNotice() async {
         let today = await TodayHarness.make()
         await today.start()
-        #expect(today.app.notice?.text == "¡Entreno iniciado!")
+        // Sin aviso: la pantalla ya pasa al entreno en curso (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
     }
 
     @Test("toast de fin no tiene emoji")
     func finishNotice() async {
         let today = await completed()
-        #expect(today.app.notice?.text.contains("¡Entreno completado!") == true)
-        #expect(today.app.notice?.text.contains("🎉") == false)
+        // Sin aviso: la pantalla ya dice «Entreno completado» (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
     }
 
     @Test("la vista completada coincide en estructura con el detalle del historial")

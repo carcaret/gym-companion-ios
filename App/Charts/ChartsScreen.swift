@@ -4,8 +4,8 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Gráficas, y las gráficas de un ejercicio empujadas desde Progreso: rango de fechas,
-/// el ejercicio elegido (se elige en su propia pantalla, como los selectores de Ajustes de iOS) y
+/// La pestaña Gráficas, y las gráficas de un ejercicio empujadas desde Progreso: el rango (atajos
+/// de meses, como en la app Salud, y debajo las fechas a mano), el ejercicio elegido (se elige en su propia pantalla, como los selectores de Ajustes de iOS) y
 /// las gráficas de 1RM estimado y de peso. Solo pinta `ChartsModel`.
 struct ChartsScreen: View {
     @Bindable var model: ChartsModel
@@ -13,6 +13,15 @@ struct ChartsScreen: View {
     var body: some View {
         List {
             Section {
+                // Sin atajo (fechas a mano), ninguno marcado.
+                Picker(ChartsText.range, selection: Binding(get: { model.preset }, set: { if let preset = $0 { model.choose(preset: preset) } })) {
+                    ForEach(ChartsModel.RangePreset.allCases, id: \.self) { preset in
+                        Text(ChartsText.presetLabel(months: preset.months))
+                            .accessibilityLabel(ChartsText.presetAccessibilityLabel(months: preset.months))
+                            .tag(Optional(preset))
+                    }
+                }
+                .pickerStyle(.segmented)
                 DatePicker(ChartsText.from, selection: Binding(
                     get: { model.from.date }, set: { model.setRange(from: LocalDate($0), to: model.to) }
                 ), displayedComponents: .date)

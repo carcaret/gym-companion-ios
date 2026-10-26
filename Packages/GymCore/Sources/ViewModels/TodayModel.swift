@@ -137,7 +137,6 @@ public final class TodayModel {
     }
 
     /// "Entreno en curso — Full Body - Día 1".
-    public var activeStatus: String { TodayText.activeStatus(name(of: activeSession?.routineID)) }
 
     // MARK: - Selector
 
@@ -207,7 +206,6 @@ public final class TodayModel {
         focusedSeries = nil
         validationErrors = [:]
         await app.update(data)
-        app.notice = TodayText.started
     }
 
     // MARK: - Entreno en curso
@@ -287,7 +285,6 @@ public final class TodayModel {
         replaceSession(session, in: &data)
         focusedSeries = nil
         await app.update(data)
-        app.notice = TodayText.reordered
     }
 
     /// Terminar: si falta algo, se marca y se abre la primera tarjeta con errores; si no, se
@@ -310,7 +307,6 @@ public final class TodayModel {
         replaceSession(session, in: &data)
         storedStage = .completed
         openExercise = nil
-        app.notice = TodayText.finished
         let result = await app.finishWorkout(data)
         sync.workoutFinished(result)
     }
@@ -407,7 +403,6 @@ public final class TodayModel {
     private func add(_ exercise: ExerciseID, oneOff: Bool) async {
         guard let data = adding(exercise, oneOff: oneOff, to: data) else { return }
         await app.update(data)
-        app.notice = TodayText.added(data.catalog.name(of: exercise), oneOff: oneOff)
     }
 
     /// El ejercicio entra en el entreno y, si no es puntual, al final de la rutina.
@@ -445,7 +440,6 @@ public final class TodayModel {
         withExercise.catalog = Catalog(withExercise.catalog.all + [Exercise(id: id, name: name)])
         guard let updated = adding(id, oneOff: false, to: withExercise) else { return }
         await app.update(updated)
-        app.notice = TodayText.created(name)
     }
 
     private func swap(at index: Int, to exercise: ExerciseID) async {
@@ -465,7 +459,6 @@ public final class TodayModel {
         openExercise = exercise
         focusedSeries = nil
         await app.update(data)
-        app.notice = TodayText.swapped(to: data.catalog.name(of: exercise))
         if swapped.swappedFrom != nil { offerReciprocal(from: session.routineID, new: exercise, outgoing: outgoing) }
     }
 
@@ -507,7 +500,6 @@ public final class TodayModel {
         let log = session.logs[index]
         if log.oneOff {
             await removeFromWorkout(log.exerciseID)
-            app.notice = TodayText.removedOneOff
             return
         }
         removalPrompt = RemovalPrompt(exerciseID: log.exerciseID, title: TodayText.removeTitle,
@@ -524,7 +516,6 @@ public final class TodayModel {
             data.routines[routine].exerciseIDs.removeAll { $0 == prompt.exerciseID }
         }
         await removeFromWorkout(prompt.exerciseID, in: data)
-        app.notice = TodayText.removed(from: name(of: session.routineID))
     }
 
     public func cancelRemoval() {

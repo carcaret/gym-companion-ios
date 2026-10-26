@@ -24,7 +24,7 @@ public struct SyncStatus: Hashable, Sendable {
 /// Lo que pasa sin que nadie lo pida y la interfaz tiene que saber.
 public enum SyncEvent: Hashable, Sendable {
     case status(SyncStatus)
-    /// Terminó bien una subida diferida (el toast "Guardado" de la PWA).
+    /// Terminó bien una subida diferida (en la PWA, el toast "Guardado"; la app no avisa).
     case autoSaved
 }
 

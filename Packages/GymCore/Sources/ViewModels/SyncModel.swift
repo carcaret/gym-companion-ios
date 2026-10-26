@@ -3,8 +3,8 @@ import Domain
 import Observation
 import Presentation
 
-/// La sincronización vista desde la interfaz: el indicador, sus avisos, el diálogo de conflicto y
-/// los botones de GitHub de Ajustes (`app.js` y `views/settings.js` de la PWA).
+/// La sincronización vista desde la interfaz: el menú del indicador, los avisos, el diálogo de
+/// conflicto y los botones de GitHub de Ajustes (`app.js` y `views/settings.js` de la PWA).
 @MainActor
 @Observable
 public final class SyncModel {
@@ -18,6 +18,14 @@ public final class SyncModel {
     public var isConflictPresented = false
     /// Aviso de que el entreno terminado se quedó en el iPhone sin subir.
     public var isSavedLocallyPresented = false
+
+    /// Lo que ofrece el menú del indicador, según el estado.
+    public enum MenuAction: Hashable, Sendable {
+        case syncNow
+        case resolveConflict
+        /// Sin GitHub: ir a Ajustes.
+        case configure
+    }
 
     private let repository: TrainingRepository
     private let app: AppModel
@@ -33,7 +41,8 @@ public final class SyncModel {
         for await event in repository.events {
             switch event {
             case .status(let new): status = new
-            case .autoSaved: notice = SyncText.autoSaved
+            // Sin aviso: el indicador ya dice que está subido (en la PWA, el toast «Guardado»).
+            case .autoSaved: break
             }
         }
     }
@@ -56,8 +65,8 @@ public final class SyncModel {
         await refresh()
     }
 
-    /// Tirar hacia abajo en Historial: sincroniza al momento y, como lo ha pedido el usuario, dice
-    /// siempre cómo ha quedado (lo de tocar el indicador).
+    /// Tirar hacia abajo en Historial o «Sincronizar ahora» en el menú del indicador: sincroniza al
+    /// momento y, como lo ha pedido el usuario, dice siempre cómo ha quedado.
     public func pullToRefresh() async {
         if case .remoteApplied(let remote) = await repository.synchronize() {
             app.replace(with: remote)
@@ -66,15 +75,36 @@ public final class SyncModel {
             return
         }
         await refresh()
-        tapIndicator()
+        if status.conflict {
+            isConflictPresented = true
+        } else {
+            notice = statusNotice
+        }
     }
 
-    public func tapIndicator() {
+    /// El estado, en el menú del indicador y en Ajustes.
+    public var statusText: String {
+        status.conflict ? SyncText.conflictTitle : statusNotice.text
+    }
+
+    public var menuAction: MenuAction {
         switch status.state {
-        case .pending where status.conflict: isConflictPresented = true
-        case .pending: notice = SyncText.pendingChanges
-        case .ok: notice = SyncText.synced
-        case .disabled: notice = SyncText.notConfigured
+        case .disabled: .configure
+        case .pending where status.conflict: .resolveConflict
+        case .ok, .pending: .syncNow
+        }
+    }
+
+    /// «Resolver conflicto» en el menú del indicador.
+    public func resolveConflict() {
+        isConflictPresented = true
+    }
+
+    private var statusNotice: Notice {
+        switch status.state {
+        case .pending: SyncText.pendingChanges
+        case .ok: SyncText.synced
+        case .disabled: SyncText.notConfigured
         }
     }
 

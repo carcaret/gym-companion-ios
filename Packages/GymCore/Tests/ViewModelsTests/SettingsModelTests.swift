@@ -137,11 +137,13 @@ struct DirectStartTests {
     }
 
     // Que el botón está en la barra lo comprueba `ScreenshotTests` (identificador "sync-indicator").
+    // Cambiado con la aprobación del usuario (2026-10-26): el indicador es un menú que dice el
+    // estado, no un aviso.
     @Test("el indicador de sync es visible en el header")
     func indicator() async {
         let settings = await SettingsHarness.make()
-        settings.sync.tapIndicator()
-        #expect(settings.app.notice != nil)
+        #expect(settings.sync.statusText == SyncText.notConfigured.text)
+        #expect(settings.model.statusText == settings.sync.statusText)
     }
 
     @Test("sin GitHub configurado → indicador en estado disabled")

@@ -11,18 +11,6 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         List {
-            Section {
-                HStack(spacing: 10) {
-                    Image(systemName: "circle.fill").scaledFont(10).foregroundStyle(Theme.green).symbolEffect(.pulse)
-                    Text(model.activeStatus).scaledFont(14, .medium).foregroundStyle(Theme.text)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Theme.accentTint, in: .rect(cornerRadius: Theme.radiusSmall))
-                .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.accent.opacity(0.22)) }
-                .cardRow()
-            }
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
@@ -62,6 +50,9 @@ struct ActiveWorkoutView: View {
         .listStyle(.plain)
         .screenBackground()
         .keyboardDismissal()
+        // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un
+        // recuadro encima de las tarjetas).
+        .navigationSubtitle(TodayText.inProgress)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(Theme.gold).accessibilityLabel("Récord") }

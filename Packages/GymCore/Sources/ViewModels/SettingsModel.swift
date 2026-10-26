@@ -30,6 +30,7 @@ public final class SettingsModel {
     public var versionLabel: String { "Versión \(version.label)" }
 
     public var status: SyncStatus { sync.status }
+    public var statusText: String { sync.statusText }
 
     /// Al abrir: los campos con lo guardado.
     public func load() async {

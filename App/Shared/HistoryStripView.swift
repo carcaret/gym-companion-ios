@@ -3,10 +3,13 @@ import Presentation
 import SwiftUI
 
 /// La tira "Últimas sesiones" de un ejercicio: seis columnas, la de hoy la última, en una gráfica
-/// de barras de Swift Charts. Tocar una barra enseña su detalle (el tooltip de la PWA).
+/// de barras de Swift Charts. Tocar una barra o pasar el dedo por encima enseña su detalle (el
+/// tooltip de la PWA), que se queda al soltar.
 struct HistoryStripView: View {
     let strip: HistoryStripContent
     @State private var selected: Int?
+    /// La columna bajo el dedo mientras toca (`chartXSelection`); al soltar, `nil`.
+    @State private var touched: String?
 
     /// El alto de las barras, en puntos: los 44 de la tira de la PWA menos la fecha. Las vacías,
     /// las saltadas y las muy bajas tienen 3.
@@ -66,17 +69,15 @@ struct HistoryStripView: View {
         }
         .chartLegend(.hidden)
         .chartPlotStyle { $0.frame(height: Self.plotHeight) }
+        .chartXSelection(value: $touched)
+        .onChange(of: touched) { previous, key in touch(key, continuing: previous != nil) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 if let anchor = proxy.plotFrame {
-                    let plot = geometry[anchor]
-                    currentOutline(proxy, plot)
-                    Rectangle().fill(.clear).contentShape(.rect)
-                        .frame(width: plot.width, height: plot.height)
-                        .position(x: plot.midX, y: plot.midY)
-                        .onTapGesture { location in tap(atX: location.x, proxy) }
+                    currentOutline(proxy, geometry[anchor])
                 }
             }
+            .allowsHitTesting(false)
         }
     }
 
@@ -89,15 +90,14 @@ struct HistoryStripView: View {
                 .stroke(Theme.text.opacity(0.6), lineWidth: 1)
                 .frame(width: plot.width / CGFloat(strip.bars.count) - 4, height: plot.height - top)
                 .position(x: plot.minX + x, y: plot.minY + (top + plot.height) / 2)
-                .allowsHitTesting(false)
         }
     }
 
-    /// Solo las sesiones tienen detalle; tocar la misma otra vez lo cierra.
-    private func tap(atX x: CGFloat, _ proxy: ChartProxy) {
-        guard let key = proxy.value(atX: x, as: String.self), let index = Int(key),
-              case .session = strip.bars[index].kind else { return }
-        selected = selected == index ? nil : index
+    /// Solo las sesiones tienen detalle. Al arrastrar, el de la que hay debajo; un toque nuevo en
+    /// la que ya se ve lo cierra.
+    private func touch(_ key: String?, continuing: Bool) {
+        guard let key, let index = Int(key), case .session = strip.bars[index].kind else { return }
+        selected = !continuing && selected == index ? nil : index
     }
 
     private static func key(_ index: Int) -> String { "\(index)" }

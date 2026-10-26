@@ -40,11 +40,13 @@ struct SyncUITests {
         #expect(sync.status.state == .ok)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-26): el indicador es un menú de iOS que
+    // dice el estado, no un botón que lo dice en un aviso.
     @Test("clic en indicador muestra toast con estado")
     func tapIndicator() async {
         let (_, sync) = await models(SyncHarness(configured: false))
-        sync.tapIndicator()
-        #expect(sync.notice == SyncText.notConfigured)
+        #expect(sync.statusText == SyncText.notConfigured.text)
+        #expect(sync.notice == nil)
     }
 
     @Test("PAT guardado en claro es legible directamente")
@@ -128,7 +130,9 @@ struct SyncModelTests {
         await sync.refresh()
         #expect(sync.status.state == .pending)
 
-        sync.tapIndicator()
+        // El menú del indicador ofrece resolverlo (antes se abría al tocar el indicador).
+        #expect(sync.menuAction == .resolveConflict)
+        sync.resolveConflict()
         #expect(sync.isConflictPresented)
         // Cancelar no hace nada.
         sync.cancelConflict()
@@ -161,18 +165,35 @@ struct SyncModelTests {
         #expect(sync.notice == nil)
     }
 
-    @Test("con algo pendiente, el indicador avisa de que falta subir")
-    func pendingNotice() async {
+    @Test("con algo pendiente, el menú del indicador dice que falta subir y ofrece sincronizar")
+    func pendingMenu() async {
         let (_, sync) = await models(SyncHarness(pending: true))
-        sync.tapIndicator()
-        #expect(sync.notice == SyncText.pendingChanges)
+        #expect(sync.statusText == SyncText.pendingChanges.text)
+        #expect(sync.menuAction == .syncNow)
     }
 
-    @Test("todo subido, el indicador dice que está sincronizado")
-    func syncedNotice() async {
+    @Test("todo subido, el menú del indicador dice que está sincronizado y ofrece sincronizar")
+    func syncedMenu() async {
         let (_, sync) = await models(SyncHarness())
-        sync.tapIndicator()
-        #expect(sync.notice == SyncText.synced)
+        #expect(sync.statusText == SyncText.synced.text)
+        #expect(sync.menuAction == .syncNow)
+    }
+
+    @Test("sin GitHub, el menú del indicador ofrece configurarlo")
+    func disabledMenu() async {
+        let (_, sync) = await models(SyncHarness(configured: false))
+        #expect(sync.menuAction == .configure)
+    }
+
+    @Test("con un conflicto, el menú del indicador lo dice")
+    func conflictMenu() async {
+        let harness = SyncHarness()
+        await harness.remote.fail(push: .conflict)
+        let (app, sync) = await models(harness)
+        _ = await app.finishWorkout(F.finishedWorkout())
+        await sync.refresh()
+        #expect(sync.statusText == SyncText.conflictTitle)
+        #expect(sync.menuAction == .resolveConflict)
     }
 
     @Test("al volver la red, lo pendiente se sube y se avisa")
@@ -192,7 +213,7 @@ struct SyncModelTests {
         _ = await app.finishWorkout(F.finishedWorkout())
         await harness.remote.fail()
         await sync.refresh()
-        sync.tapIndicator()
+        sync.resolveConflict()
         await sync.keepLocal()
         #expect(sync.notice == SyncText.keptLocal)
         #expect(!sync.isConflictPresented)
@@ -207,7 +228,7 @@ struct SyncModelTests {
         _ = await app.finishWorkout(F.finishedWorkout())
         await harness.remote.fail(fetch: .unreachable, push: .unreachable)
         await sync.refresh()
-        sync.tapIndicator()
+        sync.resolveConflict()
         await sync.keepLocal()
         #expect(sync.notice == SyncText.cannotConnect)
         #expect(sync.isConflictPresented)
@@ -220,7 +241,7 @@ struct SyncModelTests {
         let (app, sync) = await models(harness)
         _ = await app.finishWorkout(F.finishedWorkout())
         await sync.refresh()
-        sync.tapIndicator()
+        sync.resolveConflict()
         #expect(sync.isConflictPresented)
         await sync.keepRemote()
         #expect(sync.notice == SyncText.keptRemote)
@@ -228,15 +249,20 @@ struct SyncModelTests {
         #expect(!sync.isConflictPresented)
     }
 
-    @Test("una subida diferida que sale bien avisa con «Guardado»")
+    // Antes avisaba con «Guardado» tras cada cambio, como la PWA (quitado con la aprobación del
+    // usuario, 2026-10-26).
+    @Test("una subida diferida que sale bien no avisa: lo dice el indicador")
     func autoSaved() async {
         let harness = SyncHarness()
         let repository = harness.repository()
         let (app, sync) = await models(harness, repository: repository)
         let observing = Task { await sync.observe() }
         await app.update(F.finishedWorkout())
-        while sync.notice != SyncText.autoSaved { await Task.yield() }
+        while await harness.remote.pushes.isEmpty { await Task.yield() }
+        // Lo que llegue tras la subida (el estado y el fin de la subida) ya se ha atendido.
+        for _ in 0..<100 { await Task.yield() }
         #expect(sync.status.state == .ok)
+        #expect(sync.notice == nil)
         observing.cancel()
     }
 

@@ -29,27 +29,19 @@ struct ProgressScreen: View {
         }
     }
 
+    /// Plegada enseña solo los estancados (`visibleRows`); desplegada, todos.
     private var exercises: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Button { model.toggleExpanded() } label: {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(StatsText.exercisesTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
-                            Spacer()
-                            Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
-                        }
-                        Text(model.exercisesSubtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
+            DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises", toggle: { withAnimation(.snappy) { model.toggleExpanded() } }) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(StatsText.exercisesTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
+                        Spacer()
+                        Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
                     }
-                    Image(systemName: "chevron.down")
-                        .scaledFont(13, .semibold)
-                        .rotationEffect(.degrees(model.isExpanded ? 180 : 0))
-                        .foregroundStyle(Theme.textMuted)
+                    Text(model.exercisesSubtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
                 }
-                .contentShape(.rect)
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("stats-exercises")
             VStack(spacing: 2) {
                 ForEach(model.visibleRows) { row in
                     ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
@@ -102,42 +94,32 @@ private struct ExerciseProgressRow: View {
     let openCharts: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button(action: toggle) {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(row.name).scaledFont(14, .semibold).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
-                            Spacer()
-                            if let weight = row.weight {
-                                Text(weight).scaledFont(13, .semibold).foregroundStyle(Theme.accentLight)
-                            }
-                        }
-                        Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
-                    }
-                    Image(systemName: "chevron.down")
-                        .scaledFont(12, .semibold)
-                        .rotationEffect(.degrees(row.isOpen ? 180 : 0))
-                        .foregroundStyle(Theme.textMuted)
+        DisclosureGroup(isExpanded: Binding(isOpen: row.isOpen, toggle: toggle)) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(StatsText.recentSessions).sectionLabelStyle()
+                Text(row.recentReps.joined(separator: "  ·  "))
+                    .scaledFont(13).monospacedDigit()
+                    .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                if row.canOpenCharts {
+                    Button(StatsText.openCharts, action: openCharts).buttonStyle(.pill(.subtle)).padding(.top, 6)
                 }
-                .padding(.vertical, 12)
-                .contentShape(.rect)
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("stats-row-\(row.exerciseID.rawValue)")
-            if row.isOpen {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(StatsText.recentSessions).sectionLabelStyle()
-                    Text(row.recentReps.joined(separator: "  ·  "))
-                        .scaledFont(13).monospacedDigit()
-                        .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
-                    if row.canOpenCharts {
-                        Button(StatsText.openCharts, action: openCharts).buttonStyle(.pill(.subtle)).padding(.top, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 14)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(row.name).scaledFont(14, .semibold).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                    Spacer()
+                    if let weight = row.weight {
+                        Text(weight).scaledFont(13, .semibold).foregroundStyle(Theme.accentLight)
                     }
                 }
-                .padding(.bottom, 14)
+                Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
             }
+            .padding(.vertical, 12)
         }
+        .disclosureGroupStyle(.card(chevronSize: 12, identifier: "stats-row-\(row.exerciseID.rawValue)"))
         .padding(.leading, 10)
         .overlay(alignment: .leading) { Rectangle().fill(stripe).frame(width: 3) }
     }
@@ -165,35 +147,31 @@ private struct GroupBarRow: View {
     @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 26
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button(action: toggle) {
-                HStack(spacing: 10) {
-                    Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)
-                    GroupBar(group: group, scale: scale, band: band)
-                        .frame(height: 14)
-                    Text("\(group.total)").scaledFont(13, .semibold).monospacedDigit().foregroundStyle(Theme.text)
-                        .frame(width: totalWidth, alignment: .trailing)
+        DisclosureGroup(isExpanded: Binding(isOpen: group.isOpen, toggle: toggle)) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) { Spacer(); Text(StatsText.setsHeader); Text(StatsText.sessionsHeader) }.sectionLabelStyle()
+                ForEach(Array(group.exercises.enumerated()), id: \.offset) { _, exercise in
+                    detailRow(exercise.name, exercise.value)
                 }
-                .contentShape(.rect)
+                if !group.indirect.isEmpty {
+                    Text(StatsText.indirect).sectionLabelStyle().padding(.top, 8)
+                    ForEach(Array(group.indirect.enumerated()), id: \.offset) { _, exercise in
+                        detailRow(exercise.name, exercise.value).opacity(0.75)
+                    }
+                }
             }
-            .buttonStyle(.plain)
-            if group.isOpen {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) { Spacer(); Text(StatsText.setsHeader); Text(StatsText.sessionsHeader) }.sectionLabelStyle()
-                    ForEach(Array(group.exercises.enumerated()), id: \.offset) { _, exercise in
-                        detailRow(exercise.name, exercise.value)
-                    }
-                    if !group.indirect.isEmpty {
-                        Text(StatsText.indirect).sectionLabelStyle().padding(.top, 8)
-                        ForEach(Array(group.indirect.enumerated()), id: \.offset) { _, exercise in
-                            detailRow(exercise.name, exercise.value).opacity(0.75)
-                        }
-                    }
-                }
-                .padding(.leading, 72)
-                .padding(.top, 8)
+            .padding(.leading, 72)
+            .padding(.top, 12)
+        } label: {
+            HStack(spacing: 10) {
+                Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)
+                GroupBar(group: group, scale: scale, band: band)
+                    .frame(height: 14)
+                Text("\(group.total)").scaledFont(13, .semibold).monospacedDigit().foregroundStyle(Theme.text)
+                    .frame(width: totalWidth, alignment: .trailing)
             }
         }
+        .disclosureGroupStyle(.card(chevronSize: 11))
     }
 
     private func detailRow(_ name: String, _ value: String) -> some View {

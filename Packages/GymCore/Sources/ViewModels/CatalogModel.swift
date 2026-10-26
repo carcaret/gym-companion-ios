@@ -117,7 +117,6 @@ public final class CatalogModel {
         }
         self.editor = nil
         await app.update(data)
-        app.notice = CatalogText.updated
     }
 
     public func cancelEditing() {

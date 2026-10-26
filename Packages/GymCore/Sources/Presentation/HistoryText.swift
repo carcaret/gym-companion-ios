@@ -26,6 +26,5 @@ public enum HistoryText {
     public static let deleteConfirm = "Borrar"
     public static let cancel = "Cancelar"
 
-    public static let deleted = Notice("Entreno eliminado")
     public static let fixBeforeSaving = Notice("Corrige los campos marcados antes de guardar", .warning)
 }

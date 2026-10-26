@@ -3,7 +3,8 @@ import Domain
 import Observation
 import Presentation
 
-/// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas, el ejercicio elegido
+/// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas (con atajos de meses, como
+/// la app Salud, o a mano), el ejercicio elegido
 /// (en su propia pantalla, con buscador y los de alguna rutina primero) y sus gráficas de 1RM
 /// estimado y de peso. Sin ejercicio elegido no se pinta nada.
 @MainActor
@@ -39,8 +40,26 @@ public final class ChartsModel {
         }
     }
 
+    /// Los atajos del rango: hasta hoy, desde esos meses antes o desde la primera sesión.
+    public enum RangePreset: CaseIterable, Hashable, Sendable {
+        case oneMonth, threeMonths, sixMonths, oneYear, all
+
+        /// `nil`: desde la primera sesión.
+        public var months: Int? {
+            switch self {
+            case .oneMonth: 1
+            case .threeMonths: 3
+            case .sixMonths: 6
+            case .oneYear: 12
+            case .all: nil
+            }
+        }
+    }
+
     public private(set) var from: LocalDate
     public private(set) var to: LocalDate
+    /// El atajo del rango, o `nil` si las fechas se han cambiado a mano.
+    public private(set) var preset: RangePreset? = .sixMonths
     /// Lo buscado en la pantalla de elegir ejercicio. Solo filtra: la PWA dejaba en el campo el
     /// nombre del elegido porque hacía de desplegable; aquí el elegido se ve en `selectedName`.
     public var query = ""
@@ -66,8 +85,17 @@ public final class ChartsModel {
         }
     }
 
-    /// Cambiar el rango olvida el ejercicio elegido si no se hizo en él.
+    /// Un atajo: hasta hoy.
+    public func choose(preset: RangePreset) {
+        let today = clock.today()
+        let start = preset.months.map { Self.monthsBefore(today, $0) } ?? data.history.sortedChronologically().first?.date ?? today
+        setRange(from: start, to: today)
+        self.preset = preset
+    }
+
+    /// Cambiar el rango a mano lo deja sin atajo y olvida el ejercicio elegido si no se hizo en él.
     public func setRange(from newFrom: LocalDate, to newTo: LocalDate) {
+        preset = nil
         from = newFrom
         to = newTo
         if let selected, !data.exercisesTrained(from: from, to: to).contains(selected) {

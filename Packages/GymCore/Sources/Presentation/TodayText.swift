@@ -7,7 +7,8 @@ public enum TodayText {
     public static let selectorPrompt = "Selecciona una rutina para entrenar"
     public static func previewTitle(_ routine: String) -> String { "Rutina de \(routine)" }
     public static func activeTitle(_ routine: String) -> String { "Entreno \(routine)" }
-    public static func activeStatus(_ routine: String) -> String { "Entreno en curso — \(routine)" }
+    /// El subtítulo de la barra en el entreno en curso (el `.workout-status` de la PWA).
+    public static let inProgress = "En curso"
     public static let completedStatus = "Entreno completado"
 
     /// "3 ejercicios · Press Banca, Curl Bíceps, Remo..." (los tres primeros).
@@ -79,19 +80,9 @@ public enum TodayText {
     public static let no = "No"
 
     // Avisos
-    public static let started = Notice("¡Entreno iniciado!", .success)
-    public static let finished = Notice("¡Entreno completado! Guardando...", .success)
     public static let incomplete = Notice("Completa todos los campos antes de finalizar", .warning)
-    public static func added(_ exercise: String, oneOff: Bool) -> Notice {
-        Notice(oneOff ? "\(exercise) añadido solo para hoy" : "\(exercise) añadido", .success)
-    }
-    public static func created(_ exercise: String) -> Notice { Notice("\(exercise) creado y añadido", .success) }
     public static let alreadyExists = Notice("Ya existe ese ejercicio", .warning)
     public static let duplicateInWorkout = Notice("Ese ejercicio ya está en el entreno", .warning)
-    public static func swapped(to exercise: String) -> Notice { Notice("Cambiado a \(exercise)", .success) }
     public static let noMoreExercises = Notice("No hay más ejercicios disponibles", .warning)
     public static func reciprocalScheduled(_ routine: String) -> Notice { Notice("Se aplicará en \(routine) la próxima vez", .success) }
-    public static let reordered = Notice("Orden actualizado")
-    public static let removedOneOff = Notice("Ejercicio quitado")
-    public static func removed(from routine: String) -> Notice { Notice("Ejercicio eliminado de \(routine)") }
 }
