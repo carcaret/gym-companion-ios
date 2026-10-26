@@ -6,11 +6,11 @@ extension XCUIApplication {
     @MainActor
     func openSyncSettings() {
         let indicator = buttons["sync-indicator"].firstMatch
-        XCTAssertTrue(indicator.waitForExistence(timeout: 20))
+        XCTAssertTrue(indicator.appears(timeout: 20))
         indicator.tap()
         let configure = buttons["Configurar GitHub"].firstMatch
-        XCTAssertTrue(configure.waitForExistence(timeout: 10))
+        XCTAssertTrue(configure.appears(timeout: 10))
         configure.tap()
-        XCTAssertTrue(navigationBars["Sincronización"].waitForExistence(timeout: 10), "No se abrió la hoja de los ajustes")
+        XCTAssertTrue(navigationBars["Sincronización"].appears(timeout: 10), "No se abrió la hoja de los ajustes")
     }
 }

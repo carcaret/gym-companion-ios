@@ -15,7 +15,7 @@ final class SyncMenuTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
-        XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.navigationBars["Rutinas"].appears(timeout: 20))
         XCTAssertFalse(app.tabBars.buttons["Ajustes"].exists, "Ajustes ya no es una pestaña")
         XCTAssertEqual(app.buttons["sync-indicator"].firstMatch.label, "GitHub no configurado")
 

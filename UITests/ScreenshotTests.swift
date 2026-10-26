@@ -17,7 +17,7 @@ final class ScreenshotTests: XCTestCase {
                     ("Progreso", "Estadísticas", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas")]
         for (tab, title, name) in tabs {
             app.tabBars.buttons[tab].tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 10), "No se abrió \(tab)")
+            XCTAssertTrue(app.navigationBars[title].appears(timeout: 10), "No se abrió \(tab)")
             capture(app, name)
         }
         XCTAssertTrue(app.buttons["sync-indicator"].exists)
@@ -31,55 +31,55 @@ final class ScreenshotTests: XCTestCase {
         app.launchArguments = ["-demo"]
         app.launch()
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
         capture(app, "10-hoy-selector")
 
         app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
         capture(app, "11-hoy-vista-previa")
 
         app.buttons["start-workout"].tap()
-        XCTAssertTrue(app.buttons["finish-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
         capture(app, "12-hoy-entreno")
 
         app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "13-hoy-tarjeta")
 
         app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
         capture(app, "14-hoy-terminado")
 
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(first.appears(timeout: 10))
         capture(app, "20-historial-lista")
 
         first.tap()
-        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "21-historial-detalle")
 
         app.tabBars.buttons["Gráficas"].tap()
         let exercise = app.buttons["chart-exercise"]
-        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        XCTAssertTrue(exercise.appears(timeout: 10))
         exercise.tap()
-        XCTAssertTrue(app.buttons["Press Banca"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Press Banca"].firstMatch.appears(timeout: 10))
         capture(app, "30-graficas-elegir")
         app.buttons["Press Banca"].firstMatch.tap()
-        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        XCTAssertTrue(exercise.appears(timeout: 10))
         capture(app, "31-graficas")
 
         app.tabBars.buttons["Progreso"].tap()
-        XCTAssertTrue(app.buttons["stats-exercises"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["stats-exercises"].appears(timeout: 10))
         app.buttons["stats-exercises"].tap()
         capture(app, "40-progreso")
 
         app.buttons["stats-row-press_banca"].tap()
         app.buttons["Ver en Gráficas"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Gráficas"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Gráficas"].appears(timeout: 10))
         capture(app, "41-progreso-graficas")
         app.tabBars.buttons["Progreso"].tap()  // tocar otra vez la pestaña vuelve a Estadísticas
-        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10))
 
         // La tarjeta del catálogo está al final de la lista: la List no la crea hasta que se ve.
         let catalog = app.buttons["catalog-card"].firstMatch
@@ -87,14 +87,14 @@ final class ScreenshotTests: XCTestCase {
             app.swipeUp()
         }
         catalog.tap()
-        XCTAssertTrue(app.navigationBars["Ejercicios"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         capture(app, "50-catalogo")
 
         // El indicador (y con él los ajustes) está en la pantalla de entrada de cada pestaña, no en
         // las empujadas como el catálogo.
         app.tabBars.buttons["Rutinas"].tap()
         app.openSyncSettings()
-        XCTAssertTrue(app.staticTexts["settings-version"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["settings-version"].appears(timeout: 10))
         capture(app, "60-ajustes")
     }
 

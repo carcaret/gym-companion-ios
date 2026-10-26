@@ -14,7 +14,7 @@ final class SettingsTests: XCTestCase {
         app.launch()
         app.openSyncSettings()
         let repository = app.textFields["settings-repository"]
-        XCTAssertTrue(repository.waitForExistence(timeout: 10))
+        XCTAssertTrue(repository.appears(timeout: 10))
 
         repository.tap()
         repository.typeText("usuario/repo\n")

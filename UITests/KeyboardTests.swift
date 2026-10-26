@@ -25,9 +25,9 @@ final class KeyboardTests: XCTestCase {
         app.buttons["settings-close"].tap()
         XCTAssertTrue(app.navigationBars["Sincronización"].waitForNonExistence(timeout: 5), "La hoja sigue abierta")
         app.tabBars.buttons["Historial"].tap()
-        XCTAssertTrue(app.navigationBars["Historial"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Historial"].appears(timeout: 5))
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.navigationBars["Rutinas"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Rutinas"].appears(timeout: 5))
     }
 
     /// También en una pantalla que es una lista (elegir ejercicio en Gráficas): tocar fuera del
@@ -39,12 +39,12 @@ final class KeyboardTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Gráficas"].tap()
         let exercise = app.buttons["chart-exercise"]
-        XCTAssertTrue(exercise.waitForExistence(timeout: 10))
+        XCTAssertTrue(exercise.appears(timeout: 10))
         exercise.tap()
         let search = app.searchFields.firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        XCTAssertTrue(search.appears(timeout: 10))
         search.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "No se abrió el teclado")
+        XCTAssertTrue(app.keyboards.firstMatch.appears(timeout: 5), "No se abrió el teclado")
         // La cabecera de la sección, la escriba iOS en mayúsculas o no.
         app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "En rutinas")).firstMatch.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
@@ -57,9 +57,9 @@ final class KeyboardTests: XCTestCase {
         app.launch()
         app.openSyncSettings()
         let repository = app.textFields["settings-repository"]
-        XCTAssertTrue(repository.waitForExistence(timeout: 10))
+        XCTAssertTrue(repository.appears(timeout: 10))
         repository.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "No se abrió el teclado")
+        XCTAssertTrue(app.keyboards.firstMatch.appears(timeout: 5), "No se abrió el teclado")
         return app
     }
 }

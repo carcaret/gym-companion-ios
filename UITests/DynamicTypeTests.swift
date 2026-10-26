@@ -17,14 +17,14 @@ final class DynamicTypeTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Rutinas"].tap()
         let card = app.buttons["routine-DIA1"]
-        XCTAssertTrue(card.waitForExistence(timeout: 20))
+        XCTAssertTrue(card.appears(timeout: 20))
         XCTAssertGreaterThan(card.frame.height, 100, "Con letra grande la tarjeta de la rutina tiene que crecer")
         screenshot(app, "70-letra-grande-rutinas")
 
         card.tap()
         app.buttons["start-workout"].tap()
         let exercise = app.buttons["card-press_banca"].firstMatch
-        XCTAssertTrue(exercise.waitForExistence(timeout: 20))
+        XCTAssertTrue(exercise.appears(timeout: 20))
         exercise.tap()
         screenshot(app, "70-letra-grande-entreno")
     }
