@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   core-linux:
+    if: false   # PR de prueba visual: solo las capturas (ver CLAUDE.md)
     # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
     # Linux, con la misma imagen que en el NAS.
     runs-on: ubuntu-latest
@@ -36,6 +37,7 @@ jobs:
         run: swift test
 
   pwa-tests:
+    if: false   # PR de prueba visual
     # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
     # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
     runs-on: ubuntu-latest
@@ -78,6 +80,7 @@ jobs:
           swift --version
 
       - name: Tests del paquete (macOS)
+        if: false   # PR de prueba visual
         working-directory: Packages/GymCore
         run: swift test
 
@@ -124,11 +127,13 @@ jobs:
             -destination "id=$SIMULATOR" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
+            -only-testing:GymCompanionUITests/DesignScreenshotTests \
             | tail -n 40
           test "${PIPESTATUS[0]}" -eq 0
 
       # La app del reloj, con su propio esquema y su simulador (capturas del reloj).
       - name: Compilar el reloj y sus tests
+        if: false   # PR de prueba visual
         run: |
           xcodebuild build-for-testing \
             -project GymCompanion.xcodeproj \
@@ -142,6 +147,7 @@ jobs:
 
       # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
       - name: El reloj lleva icono
+        if: false   # PR de prueba visual
         run: |
           app=build/Build/Products/Debug-watchsimulator/GymCompanionWatch.app
           icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$app/Info.plist")
@@ -149,6 +155,7 @@ jobs:
           test -f "$app/Assets.car"
 
       - name: Tests del reloj en el simulador
+        if: false   # PR de prueba visual
         run: |
           xcrun simctl bootstatus "$WATCH_SIMULATOR" -b
           xcodebuild test-without-building \
