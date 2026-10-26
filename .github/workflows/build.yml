@@ -2,7 +2,8 @@
 # publica como release "latest": la firma (Apple ID gratuito) y la instalación en el iPhone las
 # hace el NAS (ios-signer). Si los tests fallan, el iPhone se queda con la versión anterior.
 # Un PR con la etiqueta "solo-capturas" (pruebas visuales que no van a master) se salta los tests:
-# solo compila y saca las capturas de las clases `UITests/*ScreenshotTests.swift`. Ver CLAUDE.md.
+# solo compila y saca las capturas de la prueba (`UITests/*ScreenshotTests.swift` salvo la de
+# siempre, ScreenshotTests, que solo corre si no hay otra). Ver CLAUDE.md.
 # (El fichero se sigue llamando build.yml para que el número de ejecución, que es el número de
 # compilación de la app, siga creciendo.)
 name: build
@@ -125,12 +126,28 @@ jobs:
           test "$status" -eq 0
 
       - name: Tests de la app en el simulador
+        if: env.SOLO_CAPTURAS != 'true'
         run: |
+          xcrun simctl bootstatus "$SIMULATOR" -b
+          xcodebuild test-without-building \
+            -project GymCompanion.xcodeproj \
+            -scheme GymCompanion \
+            -destination "id=$SIMULATOR" \
+            -derivedDataPath build \
+            -resultBundlePath Tests.xcresult \
+            | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+
+      # solo-capturas: las capturas solo salen arrancando la app, así que corren las clases de la
+      # prueba y nada más.
+      - name: Capturas en el simulador
+        if: env.SOLO_CAPTURAS == 'true'
+        run: |
+          classes=$(ls UITests/*ScreenshotTests.swift | xargs -n1 basename | sed 's/\.swift$//' | grep -vx ScreenshotTests || true)
+          [ -n "$classes" ] || classes=ScreenshotTests
           only=()
-          if [ "$SOLO_CAPTURAS" = true ]; then
-            for f in UITests/*ScreenshotTests.swift; do only+=("-only-testing:GymCompanionUITests/$(basename "$f" .swift)"); done
-            echo "Solo capturas: ${only[*]}"
-          fi
+          for c in $classes; do only+=("-only-testing:GymCompanionUITests/$c"); done
+          echo "Capturas de: $classes"
           xcrun simctl bootstatus "$SIMULATOR" -b
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
