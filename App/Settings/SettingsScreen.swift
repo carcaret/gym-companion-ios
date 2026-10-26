@@ -1,4 +1,3 @@
-import Application
 import Domain
 import Presentation
 import SwiftUI
@@ -23,7 +22,7 @@ struct SettingsScreen: View {
                     HStack {
                         Text(SettingsText.status).foregroundStyle(Theme.textSecondary)
                         Spacer()
-                        Text(statusText).foregroundStyle(Theme.text)
+                        Text(model.statusText).foregroundStyle(Theme.text)
                     }
                     .scaledFont(14)
                     field(SettingsText.repository, .repository) {
@@ -96,14 +95,6 @@ struct SettingsScreen: View {
                 .padding(.vertical, 13)
                 .background(Theme.input, in: .rect(cornerRadius: Theme.radiusSmall))
                 .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
-        }
-    }
-
-    private var statusText: String {
-        switch model.status.state {
-        case .disabled: SyncText.notConfigured.text
-        case .ok: SyncText.synced.text
-        case .pending: model.status.conflict ? SyncText.conflictTitle : SyncText.pendingChanges.text
         }
     }
 }

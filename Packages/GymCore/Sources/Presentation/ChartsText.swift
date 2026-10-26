@@ -16,6 +16,20 @@ public enum ChartsText {
     public static let e1rmAxis = "e1RM (kg)"
     public static let weightAxis = "Peso (kg)"
     public static let empty = "Elige un ejercicio para ver su progreso"
+    public static let range = "Rango"
+
+    /// Un atajo del rango: "1M", "1A" o, con `nil`, "Todo".
+    public static func presetLabel(months: Int?) -> String {
+        guard let months else { return "Todo" }
+        return months % 12 == 0 ? "\(months / 12)A" : "\(months)M"
+    }
+
+    /// El mismo atajo, entero para VoiceOver: "1 mes", "3 meses", "1 año".
+    public static func presetAccessibilityLabel(months: Int?) -> String {
+        guard let months else { return "Todo" }
+        if months % 12 == 0 { return months == 12 ? "1 año" : "\(months / 12) años" }
+        return months == 1 ? "1 mes" : "\(months) meses"
+    }
 
     /// "e1RM: 84" o "e1RM: 84 · saltado (mantiene)" (el tooltip de la PWA).
     public static func pointLabel(_ series: String, value: Double, carriedForward: Bool) -> String {

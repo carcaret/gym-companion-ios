@@ -22,13 +22,15 @@ public struct Notice: Hashable, Sendable {
 /// Los textos de la sincronización, los mismos que la PWA (`app.js`, `views/settings.js`,
 /// `src/store.js`).
 public enum SyncText {
-    // Indicador
+    // Indicador y su menú
+    public static let syncNowLabel = "Sincronizar ahora"
+    public static let resolveConflictLabel = "Resolver conflicto"
+    public static let configureLabel = "Configurar GitHub"
     public static let pendingChanges = Notice("Hay cambios pendientes de subir a GitHub")
     public static let synced = Notice("Sincronizado con GitHub", .success)
     public static let notConfigured = Notice("GitHub no configurado")
 
     // Subidas y bajadas automáticas
-    public static let autoSaved = Notice("Guardado", .saved)
     public static let savedAfterReconnect = Notice("Guardado en GitHub (recuperado tras reconexión)", .saved)
     public static let remoteApplied = Notice("Datos actualizados desde GitHub", .success)
 

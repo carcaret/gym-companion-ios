@@ -10,7 +10,8 @@ public enum CatalogText {
     public static let title = "Ejercicios"
     public static let back = "Volver a Estadísticas"
     public static let searchPlaceholder = "Buscar ejercicio..."
-    public static let noMatches = "Ningún ejercicio coincide con la búsqueda."
+    /// Sin ejercicios en el catálogo (sin coincidencias con lo buscado lo dice la búsqueda de iOS).
+    public static let empty = "Aún no hay ejercicios"
 
     public static let editorTitle = "Editar ejercicio"
     public static let nameLabel = "Nombre"
@@ -21,5 +22,4 @@ public enum CatalogText {
     public static let cancel = "Cancelar"
     public static let save = "Guardar"
 
-    public static let updated = Notice("Ejercicio actualizado", .success)
 }

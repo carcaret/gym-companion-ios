@@ -394,7 +394,8 @@ struct WorkoutReorderTests {
     func routine() async {
         let today = await started()
         await today.model.reorder(from: 0, to: 1)
-        #expect(today.app.notice?.text.contains("Orden actualizado") == true)
+        // Sin aviso: la tarjeta ya se ve en su sitio (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
         #expect(await today.saved?.routines[0].exerciseIDs.prefix(2) == ["curl_biceps", "press_banca"])
     }
 
@@ -488,7 +489,8 @@ struct WorkoutReorderTests {
         await today.model.reorder(from: 0, to: 2)
         today.model.openSwapPicker(at: 0)
         await today.model.choose("sentadilla")
-        #expect(today.app.notice?.text.contains("Cambiado a") == true)
+        // Sin aviso: la tarjeta ya se ve cambiada (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
         let logs = try #require(await today.savedToday?.logs)
         #expect(logs[0].exerciseID == "sentadilla")
         #expect(!logs.contains { $0.exerciseID == "curl_biceps" })
@@ -500,7 +502,8 @@ struct WorkoutReorderTests {
         let today = await started()
         today.model.openAddPicker()
         await today.model.choose("sentadilla")
-        #expect(today.app.notice?.text.contains("añadido") == true)
+        // Sin aviso: la tarjeta nueva ya se ve (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(today.app.notice == nil)
         let logs = try #require(await today.savedToday?.logs)
         #expect(logs.last?.exerciseID == "sentadilla")
         await today.model.reorder(from: logs.count - 1, to: 0)

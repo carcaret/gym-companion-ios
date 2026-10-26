@@ -125,6 +125,61 @@ struct ChartsModelTests {
         let model = await charts().0
         #expect(model.to == SyncFixtures.today)
         #expect(model.from == day("2026-04-25"))
+        #expect(model.preset == .sixMonths)
+    }
+
+    @Test("un atajo pone el rango desde esos meses antes hasta hoy")
+    func presets() async {
+        let model = await charts().0
+        model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
+        model.choose(preset: .oneMonth)
+        #expect(model.from == day("2026-09-25"))
+        #expect(model.to == SyncFixtures.today)
+        #expect(model.preset == .oneMonth)
+        model.choose(preset: .threeMonths)
+        #expect(model.from == day("2026-07-25"))
+        model.choose(preset: .oneYear)
+        #expect(model.from == day("2025-10-25"))
+    }
+
+    @Test("«Todo» empieza en la primera sesión")
+    func allPreset() async throws {
+        let model = await charts().0
+        model.choose(preset: .all)
+        let first = try #require(PWATestDB.data.history.sortedChronologically().first?.date)
+        #expect(model.from == first)
+        #expect(model.to == SyncFixtures.today)
+        #expect(model.preset == .all)
+    }
+
+    @Test("«Todo» sin sesiones es solo hoy")
+    func allPresetEmpty() async {
+        let model = await charts(TrainingData()).0
+        model.choose(preset: .all)
+        #expect(model.from == SyncFixtures.today)
+    }
+
+    @Test("cambiar las fechas a mano deja el rango sin atajo")
+    func customRange() async {
+        let model = await charts().0
+        model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
+        #expect(model.preset == nil)
+    }
+
+    @Test("un atajo olvida el ejercicio elegido si no se hizo en su rango")
+    func presetForgets() async {
+        let model = await charts().0
+        model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
+        model.select("sentadilla")
+        model.choose(preset: .oneMonth)
+        #expect(model.selected == nil)
+    }
+
+    @Test("los atajos, cortos en el botón y enteros para VoiceOver")
+    func presetTexts() {
+        #expect(ChartsModel.RangePreset.allCases.map { ChartsText.presetLabel(months: $0.months) } == ["1M", "3M", "6M", "1A", "Todo"])
+        #expect(ChartsModel.RangePreset.allCases.map { ChartsText.presetAccessibilityLabel(months: $0.months) }
+            == ["1 mes", "3 meses", "6 meses", "1 año", "Todo"])
     }
 
     @Test("seis meses antes de un 31 que no existe pasa al mes siguiente, como en JavaScript")

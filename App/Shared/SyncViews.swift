@@ -3,20 +3,32 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// Botón con el estado de la sincronización; al tocarlo dice el estado o abre el conflicto.
+/// El estado de la sincronización en la barra: un menú que lo dice y ofrece lo que toca
+/// (sincronizar ahora, resolver el conflicto o configurar GitHub).
 struct SyncIndicator: View {
     let sync: SyncModel
+    /// Ir a Ajustes.
+    let configure: () -> Void
 
     var body: some View {
-        Button {
-            sync.tapIndicator()
+        Menu {
+            Section(sync.statusText) {
+                switch sync.menuAction {
+                case .syncNow:
+                    Button(SyncText.syncNowLabel, systemImage: "arrow.triangle.2.circlepath") { Task { await sync.pullToRefresh() } }
+                case .resolveConflict:
+                    Button(SyncText.resolveConflictLabel, systemImage: "exclamationmark.triangle") { sync.resolveConflict() }
+                case .configure:
+                    Button(SyncText.configureLabel, systemImage: "gearshape") { configure() }
+                }
+            }
         } label: {
             Image(systemName: symbol)
                 .foregroundStyle(color)
                 .symbolEffect(.pulse, isActive: sync.status.state == .pending)
         }
         .accessibilityIdentifier("sync-indicator")
-        .accessibilityLabel(label)
+        .accessibilityLabel(sync.statusText)
     }
 
     private var symbol: String {
@@ -36,13 +48,6 @@ struct SyncIndicator: View {
         }
     }
 
-    private var label: String {
-        switch sync.status.state {
-        case .ok: String(localized: "Sincronizado con GitHub")
-        case .pending: sync.status.conflict ? String(localized: "Conflicto con GitHub") : String(localized: "Cambios pendientes de subir")
-        case .disabled: String(localized: "GitHub no configurado")
-        }
-    }
 }
 
 /// Los avisos y diálogos de la sincronización, para ponerlos una vez en la raíz.
@@ -65,8 +70,8 @@ struct SyncPresentation: ViewModifier {
                 }
             }
             .animation(.default, value: sync.notice)
-            // Alerta y no confirmationDialog: no sale de un botón concreto (en iOS 26 el diálogo
-            // sería un globo apuntando a la pantalla entera).
+            // Alerta y no confirmationDialog: se abre desde el menú del indicador, que ya se ha
+            // cerrado, o al tirar de la lista (en iOS 26 el diálogo sería un globo sin de qué salir).
             .alert(SyncText.conflictTitle, isPresented: $sync.isConflictPresented) {
                 Button(SyncText.keepLocalLabel) { Task { await sync.keepLocal() } }
                 Button(SyncText.keepRemoteLabel) { Task { await sync.keepRemote() } }

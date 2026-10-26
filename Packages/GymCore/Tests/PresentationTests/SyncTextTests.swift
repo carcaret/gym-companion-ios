@@ -13,7 +13,7 @@ struct SyncTextTests {
         #expect(SyncText.uploadFailed.kind == .error)
         #expect(SyncText.downloadFailed.kind == .error)
         #expect(SyncText.uploaded.kind == .success)
-        #expect(SyncText.autoSaved.kind == .saved)
+        #expect(SyncText.savedAfterReconnect.kind == .saved)
         #expect(SyncText.notConfiguredWarning.kind == .warning)
     }
 }

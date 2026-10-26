@@ -23,9 +23,10 @@ struct ExerciseCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        CardDisclosure(isExpanded: card.isOpen, toggle: toggle) {
             header
-            if card.isOpen {
+        } content: {
+            VStack(alignment: .leading, spacing: 0) {
                 content
                     .padding(.top, 14)
                     // Saltada: el contenido se apaga para no competir (`.card.is-skipped` de la PWA).
@@ -39,31 +40,19 @@ struct ExerciseCardView: View {
     }
 
     private var header: some View {
-        Button(action: toggle) {
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(card.title)
-                            .scaledFont(15, .semibold)
-                            .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.text)
-                        if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
-                        if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
-                    }
-                    Text(card.subtitle)
-                        .scaledFont(12)
-                        .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.textSecondary)
-                        .lineLimit(2)
-                }
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .scaledFont(13, .semibold)
-                    .rotationEffect(.degrees(card.isOpen ? 180 : 0))
-                    .foregroundStyle(Theme.textMuted)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text(card.title)
+                    .scaledFont(15, .semibold)
+                    .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.text)
+                if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
+                if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
             }
-            .contentShape(.rect)
+            Text(card.subtitle)
+                .scaledFont(12)
+                .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.textSecondary)
+                .lineLimit(2)
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(card.isOpen ? .isSelected : [])
     }
 
     @ViewBuilder

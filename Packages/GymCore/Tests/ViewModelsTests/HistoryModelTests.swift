@@ -144,6 +144,8 @@ struct HistoryFullTests {
         await history.model.confirmDelete(prompt)
         #expect(!history.model.rows.contains { $0.date == date })
         #expect(await history.saved?.history.count == initial - 1)
+        // Sin aviso: la fila ya no está (quitado con la aprobación del usuario, 2026-10-26).
+        #expect(history.app.notice == nil)
     }
 
     @Test("eliminar entry cancelar sigue en la lista")
