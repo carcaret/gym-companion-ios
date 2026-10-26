@@ -10,7 +10,7 @@ set -uo pipefail
 mkdir -p "$(dirname "$1")"
 while true; do
     ps -A -o %cpu=,comm= | sort -rn | awk -v t="$(date +%T)" '
-        { name = $2; sub(/.*\//, "", name) }
+        { name = $0; sub(/^ *[0-9.]+ +/, "", name); sub(/.*\//, "", name) }
         name == "GymCompanion" { app += $1 }
         name == "GymCompanionUITests-Runner" { runner += $1 }
         { total += $1 }
