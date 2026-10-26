@@ -11,17 +11,15 @@ enum DesignStyle: String, CaseIterable {
     /// Celdas de iOS sólidas: esquinas continuas más redondas, sin borde, el color del día en una
     /// píldora y botones rellenos como los de iOS.
     case nativo
-    /// El cristal sobre un fondo con un resplandor suave de los colores de los días, para que el
-    /// cristal tenga algo que refractar.
-    case ambiente
+    /// Cristal teñido en las tarjetas que se tocan enteras (rutinas, sesiones del historial, las que
+    /// llevan el color del día) y sólido como `nativo` en las de ejercicio; botones de cristal.
+    case mixto
 
     static var launchStyle: DesignStyle {
         let arguments = ProcessInfo.processInfo.arguments
         guard let index = arguments.firstIndex(of: "-estilo"), arguments.indices.contains(index + 1) else { return .pwa }
         return DesignStyle(rawValue: arguments[index + 1]) ?? .pwa
     }
-
-    var isGlass: Bool { self == .cristal || self == .ambiente }
 }
 
 extension EnvironmentValues {

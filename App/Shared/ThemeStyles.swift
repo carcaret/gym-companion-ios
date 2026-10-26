@@ -1,4 +1,3 @@
-import Presentation
 import SwiftUI
 
 // Los estilos de la PWA en el iPhone (tarjetas, filas, botones). Los colores están en Theme.swift,
@@ -22,7 +21,7 @@ extension View {
     /// El fondo de la PWA detrás de una pantalla (y de su `List` o `Form`).
     func screenBackground() -> some View {
         scrollContentBackground(.hidden)
-            .background { ScreenBackground() }
+            .background(Theme.background)
     }
 
     /// Etiqueta de sección de la PWA: mayúsculas pequeñas, en gris.
@@ -61,14 +60,24 @@ private struct CardStyle: ViewModifier {
                 .clipShape(.rect(cornerRadius: Theme.radius))
                 .overlay { RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(border) }
         case .nativo:
-            padded
-                .overlay(alignment: .leading) { stripePill }
-                .background(nativeFill, in: .rect(cornerRadius: Self.iosRadius, style: .continuous))
-        case .cristal, .ambiente:
-            padded
-                .overlay(alignment: .leading) { stripePill }
-                .glassEffect(.regular.tint(glassTint), in: .rect(cornerRadius: Self.iosRadius, style: .continuous))
+            solid(padded)
+        case .cristal:
+            glass(padded)
+        case .mixto:
+            if stripe == nil { solid(padded) } else { glass(padded) }
         }
+    }
+
+    private func solid(_ content: some View) -> some View {
+        content
+            .overlay(alignment: .leading) { stripePill }
+            .background(nativeFill, in: .rect(cornerRadius: Self.iosRadius, style: .continuous))
+    }
+
+    private func glass(_ content: some View) -> some View {
+        content
+            .overlay(alignment: .leading) { stripePill }
+            .glassEffect(.regular.tint(glassTint), in: .rect(cornerRadius: Self.iosRadius, style: .continuous))
     }
 
     /// El color del día como una píldora separada del borde, en vez del filete pegado.
@@ -92,22 +101,6 @@ private struct CardStyle: ViewModifier {
     }
 }
 
-/// El fondo de las pantallas: el de la PWA y, en `ambiente`, con los colores de los días difuminados.
-private struct ScreenBackground: View {
-    @Environment(\.designStyle) private var style
-
-    var body: some View {
-        ZStack {
-            Theme.background
-            if style == .ambiente {
-                RadialGradient(colors: [Theme.color(.day1)!.opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 420)
-                RadialGradient(colors: [Theme.color(.day2)!.opacity(0.14), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 460)
-                RadialGradient(colors: [Theme.color(.day3)!.opacity(0.08), .clear], center: .trailing, startRadius: 0, endRadius: 300)
-            }
-        }
-        .ignoresSafeArea()
-    }
-}
 
 /// Una tarjeta que se toca entera (rutina, sesión del historial): en la PWA se apaga al pulsar,
 /// como `.plain`; en los estilos de iOS se hunde un poco y se ilumina, como las celdas de iOS.
@@ -158,7 +151,7 @@ struct PillButtonStyle: ButtonStyle {
                 .background(nativeBackground, in: .capsule)
                 .scaleEffect(configuration.isPressed ? 0.97 : 1)
                 .brightness(configuration.isPressed ? 0.08 : 0)
-        case .cristal, .ambiente:
+        case .cristal, .mixto:
             // Como `.glassProminent` y `.glass`: cristal teñido que reacciona al dedo.
             label.glassEffect(.regular.tint(glassTint).interactive(), in: .capsule)
         }

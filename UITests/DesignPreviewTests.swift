@@ -10,7 +10,7 @@ final class DesignPreviewTests: XCTestCase {
     @MainActor func testPwa() { recorrer("pwa") }
     @MainActor func testCristal() { recorrer("cristal") }
     @MainActor func testNativo() { recorrer("nativo") }
-    @MainActor func testAmbiente() { recorrer("ambiente") }
+    @MainActor func testMixto() { recorrer("mixto") }
 
     @MainActor
     private func recorrer(_ style: String) {
