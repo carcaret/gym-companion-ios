@@ -26,6 +26,7 @@ mark() { "$here/ci-timeline.sh" mark "$1"; }
 case "$1" in
     pick)
         json=$(xcrun simctl list devices available -j)
+        mark "servicio de simuladores listo"
         case "$2" in
             iphone)
                 device=$(jq -c '[.devices | to_entries[] | select(.key | contains("iOS")) | .key as $rt
@@ -42,7 +43,9 @@ case "$1" in
         devtype=$(jq -r .deviceTypeIdentifier <<< "$device")
         runtime=$(jq -r .runtime <<< "$device")
         build=$(xcrun simctl list runtimes -j | jq -r --arg r "$runtime" '.runtimes[] | select(.identifier == $r) | .buildversion')
-        xcode=$(xcodebuild -version | awk '/Build version/ { print $3 }')
+        # La versión de Xcode, del fichero: `xcodebuild -version` tarda en arrancar la primera vez.
+        xcode=$(/usr/libexec/PlistBuddy -c 'Print :ProductBuildVersion' "$(xcode-select -p)/../version.plist" 2> /dev/null \
+                || xcodebuild -version | awk '/Build version/ { print $3 }')
         echo "Aparato: $(jq -r .name <<< "$device") · $runtime ($build) · Xcode $xcode"
         {
             echo "devtype=$devtype"
