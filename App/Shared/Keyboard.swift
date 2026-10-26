@@ -10,6 +10,19 @@ extension View {
 }
 
 extension View {
+    /// Una pantalla que lleva el foco en `@FocusState` lo suelta al tocar fuera de un campo. Si no,
+    /// en un `Form` (Ajustes) el campo volvía a tomar el foco y el teclado no se cerraba (CI,
+    /// 2026-10-26): cerrar el teclado desde UIKit no le quita el foco a SwiftUI.
+    func releasesFocusOnTapOutside<Value: Hashable>(_ focus: FocusState<Value?>.Binding) -> some View {
+        onReceive(NotificationCenter.default.publisher(for: Keyboard.tappedOutside)) { _ in focus.wrappedValue = nil }
+    }
+
+    func releasesFocusOnTapOutside(_ focus: FocusState<Bool>.Binding) -> some View {
+        onReceive(NotificationCenter.default.publisher(for: Keyboard.tappedOutside)) { _ in focus.wrappedValue = false }
+    }
+}
+
+extension View {
     /// Tocar fuera de un campo de texto cierra el teclado, en toda la ventana. Se pone una vez, en
     /// la raíz: la vista invisible del fondo instala el reconocedor cuando ya está en la ventana
     /// (en `onAppear` la ventana aún no existe).
@@ -34,6 +47,8 @@ private struct WindowHook: UIViewRepresentable {
 @MainActor
 enum Keyboard {
     private static let tapOutside = TapOutside()
+    /// Se ha tocado fuera de un campo (para `releasesFocusOnTapOutside`).
+    static let tappedOutside = Notification.Name("Keyboard.tappedOutside")
 
     /// Pone en la ventana un reconocedor de toques que cierra el teclado. No se queda con el toque
     /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto.
@@ -48,6 +63,7 @@ enum Keyboard {
     private final class TapOutside: NSObject, UIGestureRecognizerDelegate {
         @objc func tap(_ recognizer: UITapGestureRecognizer) {
             recognizer.view?.endEditing(true)
+            NotificationCenter.default.post(name: Keyboard.tappedOutside, object: nil)
         }
 
         func gestureRecognizer(_ recognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {

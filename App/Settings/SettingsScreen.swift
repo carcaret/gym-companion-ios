@@ -64,6 +64,7 @@ struct SettingsScreen: View {
         .navigationTitle(SettingsText.title)
         .screenBackground()
         .keyboardDismissal()
+        .releasesFocusOnTapOutside($focused)
         .task { await model.load() }
     }
 

@@ -23,7 +23,9 @@ struct ExerciseCardView: View {
     }
 
     var body: some View {
-        DisclosureGroup(isExpanded: Binding(isOpen: card.isOpen, toggle: toggle)) {
+        CardDisclosure(isExpanded: card.isOpen, toggle: toggle) {
+            header
+        } content: {
             VStack(alignment: .leading, spacing: 0) {
                 content
                     .padding(.top, 14)
@@ -32,10 +34,7 @@ struct ExerciseCardView: View {
                     .opacity(card.isSkipped ? 0.7 : 1)
                 footer
             }
-        } label: {
-            header
         }
-        .disclosureGroupStyle(.card())
         .card(background: card.isSkipped ? Theme.skipTint : Theme.surface)
         .accessibilityIdentifier("card-\(card.exerciseID.rawValue)")
     }
@@ -164,6 +163,7 @@ private struct ParameterRow: View {
                         RoundedRectangle(cornerRadius: 7).strokeBorder(hasError ? Theme.red : focused ? Theme.accent : Theme.border)
                     }
                     .focused($focused)
+                    .releasesFocusOnTapOutside($focused)
                     .onAppear { text = value }
                     .onChange(of: value) { _, new in text = new }
                     // Un botón no quita el foco: el modelo se queda con lo tecleado y lo aplica
