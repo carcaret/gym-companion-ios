@@ -4,7 +4,8 @@ import SwiftUI
 import ViewModels
 
 /// El entreno en curso: una tarjeta por ejercicio (acordeón), arrastrables para cambiar el orden,
-/// y abajo terminar o añadir.
+/// deslizables para quitarlas (izquierda) o cambiarlas y saltarlas (derecha), y abajo terminar o
+/// añadir.
 struct ActiveWorkoutView: View {
     @Bindable var model: TodayModel
 
@@ -25,11 +26,16 @@ struct ActiveWorkoutView: View {
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
-                    // Lo mismo que los botones del pie de la tarjeta. Sin `role: .destructive`: con
-                    // ese rol la lista quita la fila antes de que se confirme.
-                    .swipeActions {
+                    // A la izquierda, quitar, como borrar en el historial. Sin `role: .destructive`:
+                    // con ese rol la lista quita la fila antes de que se confirme.
+                    .swipeActions(edge: .trailing) {
                         Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
                             .tint(Theme.red)
+                    }
+                    // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna.
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
+                            .tint(Theme.accent)
                         Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
                             Task { await model.toggleSkip(at: index) }
                         }
@@ -92,10 +98,7 @@ struct ActiveWorkoutView: View {
             type: { parameter, text in model.type(parameter, text: text, at: index) },
             commit: { Task { await model.commitTyping() } },
             focusSeries: { series in model.focusSeries(series, at: index) },
-            chooseRep: { value, series in Task { await model.chooseRep(value, series: series, at: index) } },
-            swap: { model.openSwapPicker(at: index) },
-            toggleSkip: { Task { await model.toggleSkip(at: index) } },
-            remove: { Task { await model.requestRemoval(at: index) } }
+            chooseRep: { value, series in Task { await model.chooseRep(value, series: series, at: index) } }
         )
     }
 }

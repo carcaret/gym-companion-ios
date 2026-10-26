@@ -93,8 +93,7 @@ struct HistoryScreen: View {
             type: { parameter, text in model.type(parameter, text: text, at: index) },
             commit: { model.commitTyping() },
             focusSeries: { series in model.focusSeries(series, at: index) },
-            chooseRep: { value, series in model.chooseRep(value, series: series, at: index) },
-            swap: nil, toggleSkip: nil, remove: nil
+            chooseRep: { value, series in model.chooseRep(value, series: series, at: index) }
         )
     }
 }

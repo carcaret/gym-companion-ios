@@ -1,7 +1,7 @@
 import XCTest
 
-/// El entreno en curso con los gestos de iOS: deslizar una tarjeta a la izquierda ofrece Saltar y
-/// Quitar, lo mismo que los botones del pie de la tarjeta.
+/// El entreno en curso con los gestos de iOS: deslizar una tarjeta a la izquierda ofrece quitarla y a
+/// la derecha cambiarla o saltarla (sin hacer nada hasta que se elige).
 final class WorkoutTests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -12,13 +12,27 @@ final class WorkoutTests: XCTestCase {
         let app = startWorkout()
         let card = app.buttons["card-curl_biceps"].firstMatch
 
-        card.swipeLeft()
+        card.swipeRight()
         let skip = app.buttons["Saltar"].firstMatch
         XCTAssertTrue(skip.waitForExistence(timeout: 5))
         skip.tap()
 
-        card.swipeLeft()
+        card.swipeRight()
         XCTAssertTrue(app.buttons["Reactivar"].firstMatch.waitForExistence(timeout: 5), "Saltada, el gesto ofrece reactivarla")
+    }
+
+    @MainActor
+    func testDeslizarUnaTarjetaALaDerechaOfreceCambiarla() {
+        let app = startWorkout()
+        let card = app.buttons["card-curl_biceps"].firstMatch
+
+        card.swipeRight()
+        let swap = app.buttons["Cambiar por otro"].firstMatch
+        XCTAssertTrue(swap.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Cambiar ejercicio"].exists, "Deslizar solo enseña las opciones")
+        swap.tap()
+
+        XCTAssertTrue(app.navigationBars["Cambiar ejercicio"].waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -31,6 +45,7 @@ final class WorkoutTests: XCTestCase {
         card.swipeLeft()
         let remove = app.buttons["Quitar de rutina"].firstMatch
         XCTAssertTrue(remove.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Saltar"].exists, "A la izquierda solo se quita")
         remove.tap()
         // Mientras se confirma, la tarjeta sigue en su sitio.
         let confirm = app.buttons["Quitar"].firstMatch
