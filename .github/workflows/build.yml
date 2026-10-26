@@ -140,6 +140,14 @@ jobs:
           grep -E ': error:' build-watch.log | sort -u | head -n 30 || true
           test "$status" -eq 0
 
+      # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
+      - name: El reloj lleva icono
+        run: |
+          app=build/Build/Products/Debug-watchsimulator/GymCompanionWatch.app
+          icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$app/Info.plist")
+          test "$icon" = AppIcon
+          test -f "$app/Assets.car"
+
       - name: Tests del reloj en el simulador
         run: |
           xcrun simctl bootstatus "$WATCH_SIMULATOR" -b
