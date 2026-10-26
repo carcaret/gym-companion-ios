@@ -5,7 +5,7 @@
 # compilación de la app, siga creciendo.)
 #
 # Todo va en paralelo, cada cosa en su máquina (el plan gratuito deja 5 macOS a la vez): los tests
-# de UI del iPhone en dos mitades, el reloj, el paquete en macOS y la compilación de la release.
+# de UI del iPhone en tres partes, el reloj (con el paquete en macOS) y la compilación de la release.
 # Cada job con simulador deja en el resumen del run su cronología (también el arranque del
 # simulador, que va en segundo plano) y lo que tarda cada test, y sube los logs enteros y el
 # .xcresult (con el vídeo de los fallos) como artefacto diagnostico-<job>.
@@ -80,44 +80,28 @@ jobs:
       - name: Tests de la PWA portados
         run: python3 scripts/pwa_tests.py pwa
 
-  core-macos:
-    needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # para restore-mtimes.sh
-      - name: Fechas de los ficheros   # ver el job app
-        run: scripts/restore-mtimes.sh
-      - uses: actions/cache@v4
-        with:
-          path: Packages/GymCore/.build
-          key: core-macos-${{ github.sha }}
-          restore-keys: core-macos-
-      - name: Tests del paquete (macOS)
-        working-directory: Packages/GymCore
-        run: swift test
-
   app:
-    # Los tests de UI del iPhone, en dos mitades en paralelo. La 1 corre las clases de HALF_1 y
-    # la 2 todas las demás, para que una clase nueva nunca se quede sin correr. Si una mitad tarda
-    # mucho más que la otra, se mueve una clase (el resumen dice lo que tarda cada test).
-    name: app (${{ matrix.half }})
+    # Los tests de UI del iPhone, en tres partes en paralelo. La 1 corre las clases de PART_1, la 2
+    # las de PART_2 y la 3 todas las demás, para que una clase nueva nunca se quede sin correr. Si
+    # una parte tarda mucho más que las otras, se mueve una clase (el resumen dice lo que tarda
+    # cada test).
+    name: app (${{ matrix.part }})
     needs: gate
     if: ${{ !cancelled() }}
     runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
-        half: [1, 2]
+        part: [1, 2, 3]
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
-      # Medido el 2026-10-26: unos 300 s de tests en cada mitad. Cada mitad corre sus clases por orden
-      # alfabético. SettingsTests va detrás de KeyboardTests: es el primer test que teclea y, con el
-      # teclado sin estrenar, tarda más de 5 s en salir. NavigationTests, sin KeyboardTests delante: con
-      # ellos, el gesto de volver de testDeslizarAMediasNoCierraElDetalleDelHistorial falló 3 de 4 veces.
-      HALF_1: DisclosureTests DynamicTypeTests HistoryTests KeyboardTests ScreenshotTests SettingsTests SyncMenuTests
+      # Medido el 2026-10-26: unos 230-250 s de tests en cada parte. Cada parte corre sus clases por
+      # orden alfabético. SettingsTests va detrás de KeyboardTests: es el primer test que teclea y,
+      # con el teclado sin estrenar, tarda más de 5 s en salir. NavigationTests, sin KeyboardTests
+      # delante: con ellos, el gesto de volver de testDeslizarAMediasNoCierraElDetalleDelHistorial
+      # falló 3 de 4 veces. La 3: ScreenshotTests, HistoryTests, DynamicTypeTests y las nuevas.
+      PART_1: DisclosureTests KeyboardTests SettingsTests SyncMenuTests TypingTests
+      PART_2: NavigationTests WorkoutTests
     steps:
       - uses: actions/checkout@v4
         with:
@@ -190,11 +174,11 @@ jobs:
         if: env.TESTED != 'true'
         run: |
           selection=()
-          half=${{ matrix.half }}
-          for class in $HALF_1; do
-            if [ "$half" = 1 ]; then selection+=("-only-testing:GymCompanionUITests/$class")
-            else selection+=("-skip-testing:GymCompanionUITests/$class"); fi
-          done
+          case "${{ matrix.part }}" in
+            1) for class in $PART_1; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
+            2) for class in $PART_2; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
+            3) for class in $PART_1 $PART_2; do selection+=("-skip-testing:GymCompanionUITests/$class"); done ;;
+          esac
           scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
@@ -225,9 +209,9 @@ jobs:
         if: always()
         run: |
           scripts/ci-capturas.sh capturas Tests.xcresult || true
-          scripts/ci-test-times.sh Tests.xcresult "Tests de app (${{ matrix.half }})" diagnostico || true
+          scripts/ci-test-times.sh Tests.xcresult "Tests de app (${{ matrix.part }})" diagnostico || true
           scripts/ci-timeline.sh mark "fin"
-          scripts/ci-timeline.sh summary "Cronología de app (${{ matrix.half }}) · simulador de la caché: ${SIM_CACHED:-?}"
+          scripts/ci-timeline.sh summary "Cronología de app (${{ matrix.part }}) · simulador de la caché: ${SIM_CACHED:-?}"
           cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
           du -sh ~/sim-cache 2>/dev/null || true
       # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
@@ -240,13 +224,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: capturas-${{ matrix.half }}
+          name: capturas-${{ matrix.part }}
           path: capturas
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: diagnostico-app-${{ matrix.half }}
+          name: diagnostico-app-${{ matrix.part }}
           path: |
             diagnostico
             Tests.xcresult
@@ -254,7 +238,9 @@ jobs:
           if-no-files-found: ignore
 
   watch:
-    # La app del reloj, con su propio esquema y su simulador (capturas del reloj).
+    # La app del reloj, con su propio esquema y su simulador (capturas del reloj), y al final los
+    # tests del paquete en macOS: este job acaba mucho antes que los del iPhone, y así no hacen
+    # falta más de 5 máquinas a la vez.
     needs: gate
     if: ${{ !cancelled() }}
     runs-on: macos-26
@@ -279,6 +265,11 @@ jobs:
           path: build
           key: watch-debug-${{ github.sha }}
           restore-keys: watch-debug-
+      - uses: actions/cache@v4
+        with:
+          path: Packages/GymCore/.build
+          key: core-macos-${{ github.sha }}
+          restore-keys: core-macos-
 
       - name: Generar proyecto
         run: |
@@ -382,8 +373,13 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Tests del paquete (macOS)
+        if: env.TESTED != 'true'
+        working-directory: Packages/GymCore
+        run: swift test
+
   capturas:
-    # Las capturas de las dos mitades y del reloj, juntas en un solo artefacto "capturas".
+    # Las capturas de las tres partes y del reloj, juntas en un solo artefacto "capturas".
     needs: [app, watch]
     if: always()
     runs-on: ubuntu-latest
@@ -450,7 +446,7 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: [gate, core-linux, pwa-tests, core-macos, app, watch, release-build]
+    needs: [gate, core-linux, pwa-tests, app, watch, release-build]
     if: github.event_name == 'push' && needs.gate.outputs.tested != 'true'
     runs-on: ubuntu-latest
     steps:
