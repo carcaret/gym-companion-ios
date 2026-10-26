@@ -144,8 +144,12 @@ jobs:
       - name: El reloj lleva icono
         run: |
           app=build/Build/Products/Debug-watchsimulator/GymCompanionWatch.app
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$app/Info.plist")" = AppIcon
-          test -f "$app/Assets.car"
+          if [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$app/Info.plist")" != AppIcon ] \
+             || [ ! -f "$app/Assets.car" ]; then
+            ls "$app"; plutil -p "$app/Info.plist"
+            grep -iE 'appicon|actool|xcassets|CompileAssetCatalog' build-watch.log | head -n 40 || true
+            exit 1
+          fi
 
       - name: Tests del reloj en el simulador
         run: |
