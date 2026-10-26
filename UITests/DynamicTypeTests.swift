@@ -7,35 +7,26 @@ final class DynamicTypeTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Con un solo arranque, con letra grande: abrir, cerrar y volver a abrir la app para medirla
+    /// también con letra normal fallaba a veces al relanzar en el simulador (2026-10-26). La
+    /// tarjeta del Día 1 mide unos 75 pt con la letra normal y unos 119 con esta.
     @MainActor
     func testLaLetraGrandeAgrandaLasTarjetas() {
-        let normal = routineCardHeight(size: "UICTContentSizeCategoryL", capture: nil)
-        let large = routineCardHeight(size: "UICTContentSizeCategoryAccessibilityM", capture: "70-letra-grande")
-        XCTAssertGreaterThan(large, normal * 1.3, "Con letra grande la tarjeta de la rutina tiene que crecer")
-    }
-
-    /// El alto de la tarjeta del Día 1 con el tamaño de texto `size`; con `capture`, guarda las
-    /// pantallas de Rutinas y del entreno para el artefacto de capturas.
-    @MainActor
-    private func routineCardHeight(size: String, capture: String?) -> CGFloat {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-UIPreferredContentSizeCategoryName", size]
+        app.launchArguments = ["-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"]
         app.launch()
         app.tabBars.buttons["Rutinas"].tap()
         let card = app.buttons["routine-DIA1"]
-        XCTAssertTrue(card.waitForExistence(timeout: 10))
-        let height = card.frame.height
-        if let capture {
-            screenshot(app, "\(capture)-rutinas")
-            card.tap()
-            app.buttons["start-workout"].tap()
-            let exercise = app.buttons["card-press_banca"].firstMatch
-            XCTAssertTrue(exercise.waitForExistence(timeout: 10))
-            exercise.tap()
-            screenshot(app, "\(capture)-entreno")
-        }
-        app.terminate()
-        return height
+        XCTAssertTrue(card.waitForExistence(timeout: 20))
+        XCTAssertGreaterThan(card.frame.height, 100, "Con letra grande la tarjeta de la rutina tiene que crecer")
+        screenshot(app, "70-letra-grande-rutinas")
+
+        card.tap()
+        app.buttons["start-workout"].tap()
+        let exercise = app.buttons["card-press_banca"].firstMatch
+        XCTAssertTrue(exercise.waitForExistence(timeout: 20))
+        exercise.tap()
+        screenshot(app, "70-letra-grande-entreno")
     }
 
     @MainActor

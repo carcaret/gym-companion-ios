@@ -82,10 +82,15 @@ final class NavigationTests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 10), "Tocar otra vez Historial vuelve a la lista")
 
         app.tabBars.buttons["Rutinas"].tap()
+        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 20))
         app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 20))
+        let start = app.buttons["start-workout"]
+        XCTAssertTrue(start.waitForExistence(timeout: 20))
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10), "Tocar otra vez Rutinas vuelve al selector")
+        // Hasta que la vista previa acaba de cerrarse: un toque en la barra de pestañas durante la
+        // animación de volver se pierde, y el test seguía en Rutinas (2026-10-26).
+        XCTAssertTrue(start.waitForNonExistence(timeout: 10))
 
         app.tabBars.buttons["Progreso"].tap()
         openChartsFromProgress(app)
