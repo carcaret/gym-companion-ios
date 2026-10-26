@@ -12,6 +12,7 @@ struct GymCompanionApp: App {
                 .task {
                     await root.model.start()
                     await root.sync.synchronize()
+                    await DesignScreen.launchScreen?.open(in: root)
                 }
                 .task { await root.sync.observe() }
                 .task {

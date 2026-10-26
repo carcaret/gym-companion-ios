@@ -79,108 +79,37 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Tests del paquete (macOS)
-        if: false   # PR de prueba visual
-        working-directory: Packages/GymCore
-        run: swift test
-
-      # El simulador arranca mientras se compila la app (con los tests del paquete a la vez, los
-      # frena); los tests de la app esperan a que acabe.
-      - name: Arrancar el simulador
+      # PR de prueba visual (ver CLAUDE.md): nada de tests ni reloj. Se compila la app, se arranca
+      # el simulador del iPhone y cada captura sale abriendo la app en su pantalla con simctl.
+      - name: Compilar la app y arrancar el simulador
         run: |
           udid=$(xcrun simctl list devices available -j \
             | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
-          echo "Simulador: $udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
-          # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
-          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
           xcrun simctl boot "$udid"
-          # El reloj del usuario: Apple Watch Series 10 de 46 mm o, si no está, otro de 46 mm (el
-          # Series 11 de 46 mm, que tiene la misma pantalla).
-          xcrun simctl list devices available | grep -i watch || true
-          watch=$(xcrun simctl list devices available -j \
-            | jq -r '[.devices | to_entries[] | select(.key | contains("watchOS")) | .value[]]
-                     | (map(select(.name | contains("Series 10 (46mm)"))) + map(select(.name | contains("46mm"))))[0].udid')
-          echo "Simulador del reloj: $watch"
-          echo "WATCH_SIMULATOR=$watch" >> "$GITHUB_ENV"
-          xcrun simctl boot "$watch"
-
-      - name: Compilar la app y los tests
-        run: |
-          xcodebuild build-for-testing \
+          xcodebuild build \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
-            -destination "id=$SIMULATOR" \
+            -destination "id=$udid" \
             -derivedDataPath build \
-            -showBuildTimingSummary \
-            | tee build.log | tail -n 40
+            | tee build.log | tail -n 20
           status=${PIPESTATUS[0]}
           grep -E ': error:' build.log | sort -u | head -n 30 || true
           test "$status" -eq 0
 
-      - name: Tests de la app en el simulador
+      - name: Capturas
         run: |
           xcrun simctl bootstatus "$SIMULATOR" -b
-          xcodebuild test-without-building \
-            -project GymCompanion.xcodeproj \
-            -scheme GymCompanion \
-            -destination "id=$SIMULATOR" \
-            -derivedDataPath build \
-            -resultBundlePath Tests.xcresult \
-            -only-testing:GymCompanionUITests/DesignScreenshotTests \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
-
-      # La app del reloj, con su propio esquema y su simulador (capturas del reloj).
-      - name: Compilar el reloj y sus tests
-        if: false   # PR de prueba visual
-        run: |
-          xcodebuild build-for-testing \
-            -project GymCompanion.xcodeproj \
-            -scheme GymCompanionWatch \
-            -destination "id=$WATCH_SIMULATOR" \
-            -derivedDataPath build \
-            | tee build-watch.log | tail -n 40
-          status=${PIPESTATUS[0]}
-          grep -E ': error:' build-watch.log | sort -u | head -n 30 || true
-          test "$status" -eq 0
-
-      # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
-      - name: El reloj lleva icono
-        if: false   # PR de prueba visual
-        run: |
-          app=build/Build/Products/Debug-watchsimulator/GymCompanionWatch.app
-          icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$app/Info.plist")
-          test "$icon" = AppIcon
-          test -f "$app/Assets.car"
-
-      - name: Tests del reloj en el simulador
-        if: false   # PR de prueba visual
-        run: |
-          xcrun simctl bootstatus "$WATCH_SIMULATOR" -b
-          xcodebuild test-without-building \
-            -project GymCompanion.xcodeproj \
-            -scheme GymCompanionWatch \
-            -destination "id=$WATCH_SIMULATOR" \
-            -derivedDataPath build \
-            -resultBundlePath Watch.xcresult \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
-
-      - name: Extraer capturas
-        if: always()
-        run: |
+          xcrun simctl status_bar "$SIMULATOR" override --time 9:41 --batteryLevel 100 --batteryState charged
+          xcrun simctl install "$SIMULATOR" build/Build/Products/Debug-iphonesimulator/GymCompanion.app
           mkdir -p capturas
-          for result in Tests.xcresult Watch.xcresult; do
-            [ -d "$result" ] || continue
-            rm -rf attachments
-            xcrun xcresulttool export attachments --path "$result" --output-path attachments
-            jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
-              | while IFS=$'\t' read -r file name; do
-                  # upload-artifact no admite " : < > | * ? en los nombres (salen en las descripciones de un fallo).
-                  name=$(printf '%s' "${name%%_*}" | tr -d '":<>|*?')
-                  cp "attachments/$file" "capturas/$name.png"
-                done
+          for style in pwa cristal nativo mixto; do
+            for screen in 1-rutinas 2-historial 3-progreso 4-vista-previa 5-entreno 6-tarjeta; do
+              xcrun simctl launch --terminate-running-process "$SIMULATOR" com.carcaret.gymcompanion \
+                -demo -estilo "$style" -pantalla "${screen#*-}" > /dev/null
+              sleep 3
+              xcrun simctl io "$SIMULATOR" screenshot "capturas/80-$style-$screen.png"
+            done
           done
           ls capturas
 

@@ -25,3 +25,31 @@ enum DesignStyle: String, CaseIterable {
 extension EnvironmentValues {
     @Entry var designStyle: DesignStyle = .pwa
 }
+
+/// PRUEBA DE DISEÑO: la pantalla en la que arranca la app con `-pantalla <nombre>` (con `-demo`),
+/// para que el CI saque cada captura con `simctl` sin tests de interfaz.
+enum DesignScreen: String {
+    case rutinas, historial, progreso, vistaPrevia = "vista-previa", entreno, tarjeta
+
+    static var launchScreen: DesignScreen? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-pantalla"), arguments.indices.contains(index + 1) else { return nil }
+        return DesignScreen(rawValue: arguments[index + 1])
+    }
+
+    @MainActor
+    func open(in root: CompositionRoot) async {
+        switch self {
+        case .rutinas: break
+        case .historial: root.navigation.select(.history)
+        case .progreso:
+            root.navigation.select(.progress)
+            root.progress.toggleExpanded()
+        case .vistaPrevia: root.today.select("DIA1")
+        case .entreno, .tarjeta:
+            root.today.select("DIA1")
+            await root.today.start()
+            if self == .tarjeta { root.today.toggleCard("press_banca") }
+        }
+    }
+}
