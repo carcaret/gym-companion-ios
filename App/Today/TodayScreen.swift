@@ -55,7 +55,7 @@ struct TodayScreen: View {
                     .card(padding: 20, stripe: Theme.color(row.tint))
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.cardPress)
                 .accessibilityIdentifier("routine-\(row.id.rawValue)")
                 .cardRow()
             }
@@ -111,6 +111,7 @@ struct TodayScreen: View {
 struct BottomActions<Secondary: View, Primary: View>: View {
     @ViewBuilder let secondary: Secondary
     @ViewBuilder let primary: Primary
+    @Environment(\.designStyle) private var style
 
     var body: some View {
         HStack(spacing: 12) {
@@ -119,7 +120,8 @@ struct BottomActions<Secondary: View, Primary: View>: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Theme.background)
+        // En los estilos de iOS los botones flotan sobre el contenido, como en iOS 26.
+        .background(style == .pwa ? Theme.background : .clear)
     }
 }
 

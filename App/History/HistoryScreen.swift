@@ -31,7 +31,7 @@ struct HistoryScreen: View {
         } else {
             List(model.rows) { row in
                 Button { model.open(row.date) } label: { HistoryRowView(row: row) }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.cardPress)
                     .cardRow()
                     .swipeActions {
                         // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
@@ -140,6 +140,7 @@ private struct HistoryRowView: View {
 struct RoutineBadge: View {
     let text: String
     let color: Color
+    @Environment(\.designStyle) private var style
 
     var body: some View {
         Text(text)
@@ -148,9 +149,12 @@ struct RoutineBadge: View {
             .tracking(0.4)
             .lineLimit(1)
             .foregroundStyle(color)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.13), in: .rect(cornerRadius: Theme.radiusTag))
-            .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(color.opacity(0.27)) }
+            .padding(.horizontal, style == .pwa ? 7 : 9)
+            .padding(.vertical, style == .pwa ? 2 : 3)
+            .background(color.opacity(style == .pwa ? 0.13 : 0.18), in: style == .pwa ? AnyShape(.rect(cornerRadius: Theme.radiusTag)) : AnyShape(.capsule))
+            .overlay {
+                // En los estilos de iOS, una cápsula rellena sin borde.
+                if style == .pwa { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(color.opacity(0.27)) }
+            }
     }
 }

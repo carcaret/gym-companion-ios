@@ -54,6 +54,7 @@ struct RootView: View {
             NavigationStack { SettingsScreen(model: root.settings) }
                 .syncPresentation(root.sync, noticeDuration: root.noticeDuration, bottomInset: 16)
         }
+        .environment(\.designStyle, DesignStyle.launchStyle)
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
