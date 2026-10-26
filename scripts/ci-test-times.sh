@@ -26,4 +26,15 @@ xcrun xcresulttool get test-results tests --path "$result" > "$out/$name-tests.j
         | sort -t$'\t' -k1,1 -g -r \
         | awk -F'\t' '{ total += $1; printf "| %.1f s | %s | %s |\n", $1, $2, $3 } END { printf "| **%.0f s** | | **total** |\n", total }'
     echo
+    # Los que han fallado y se han repetido (-retry-tests-on-failure): pasan, pero hay que mirarlos.
+    retried=$(jq -r '.. | objects | select(.nodeType? == "Test Case")
+                     | select([.children[]? | select(.nodeType == "Repetition")] | length > 1)
+                     | "- \(.nodeIdentifier // .name): " + ([.children[] | select(.nodeType == "Repetition") | .result] | join(" → "))' \
+        "$out/$name-tests.json")
+    if [ -n "$retried" ]; then
+        echo "**Repetidos** (fallaron y se repitieron; el vídeo del fallo está en el .xcresult):"
+        echo
+        echo "$retried"
+        echo
+    fi
 } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"

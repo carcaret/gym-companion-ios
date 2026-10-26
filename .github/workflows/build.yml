@@ -10,6 +10,10 @@
 # simulador, que va en segundo plano) y lo que tarda cada test, y sube los logs enteros y el
 # .xcresult (con el vídeo de los fallos) como artefacto diagnostico-<job>.
 #
+# Un test de UI que falla se repite una vez en la misma máquina (decisión del usuario, 2026-10-27:
+# un fallo del entorno costaba otro run entero). El resumen del run lista los que han necesitado
+# repetirse, y el .xcresult guarda el vídeo del primer intento.
+#
 # En master no se repiten los tests de lo que ya pasó en su PR con el mismo árbol (job gate,
 # scripts/ci-gate.sh): se publica en cuanto compila la release. Los jobs del iPhone y del reloj
 # siguen corriendo, sin tests, para dejar en master las cachés que usan las PR.
@@ -198,6 +202,7 @@ jobs:
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
+            -retry-tests-on-failure -test-iterations 2 \
             "${selection[@]}" \
             2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
             | tee diagnostico/test.log | tail -n 60
@@ -328,6 +333,7 @@ jobs:
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Watch.xcresult \
+            -retry-tests-on-failure -test-iterations 2 \
             2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
             | tee diagnostico/test.log | tail -n 40
           status=${PIPESTATUS[0]}
