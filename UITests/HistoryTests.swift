@@ -58,4 +58,27 @@ final class HistoryTests: XCTestCase {
         wait(for: [closed], timeout: 5)
         XCTAssertEqual(rows.allElementsBoundByIndex.map(\.identifier), before)
     }
+
+    /// Tirar hacia abajo de la lista sincroniza con GitHub y dice cómo ha quedado; con `-demo` no
+    /// hay GitHub, y lo dice. Con `-avisos-largos`: XCUITest espera a que acaben las animaciones
+    /// del refresco antes de buscar, y con los 2,5 s de siempre el aviso ya se había ido (en la
+    /// grabación del CI se ve la lista bajar, la ruedita y el aviso; 2026-10-26).
+    @MainActor
+    func testTirarHaciaAbajoSincroniza() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-avisos-largos"]
+        app.launch()
+        app.tabBars.buttons["Historial"].tap()
+        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 20))
+
+        // Desde la parte vacía de la lista, debajo de las filas, hasta abajo, aguantando antes de
+        // soltar para pasar del umbral del refresco.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.62))
+            .press(forDuration: 0, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                   withVelocity: .default, thenHoldForDuration: 1)
+        let notice = app.staticTexts.matching(identifier: "notice").firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        XCTAssertEqual(notice.label, "GitHub no configurado")
+    }
 }

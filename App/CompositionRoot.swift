@@ -21,6 +21,10 @@ struct CompositionRoot {
     let progress: ProgressModel
     let catalog: CatalogModel
     let settings: SettingsModel
+    /// Lo que dura el aviso de abajo: 2,5 s, como el toast de la PWA. Con `-avisos-largos`, 10 s,
+    /// para los tests de interfaz que lo buscan tras una animación larga (tirar para sincronizar):
+    /// XCUITest espera a que la app se quede quieta y el aviso ya se había ido.
+    let noticeDuration: Duration
 
     init(bundle: Bundle = .main) {
         appVersion = AppVersion(
@@ -28,6 +32,7 @@ struct CompositionRoot {
             build: bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
         )
         let demo = ProcessInfo.processInfo.arguments.contains("-demo")
+        noticeDuration = ProcessInfo.processInfo.arguments.contains("-avisos-largos") ? .seconds(10) : .seconds(2.5)
         repository = TrainingRepository(
             store: demo ? Self.demoStore() : Self.store(),
             settings: demo ? Self.demoSettings() : Self.settings(),

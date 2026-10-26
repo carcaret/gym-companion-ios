@@ -6,6 +6,7 @@ import ViewModels
 /// La pestaña Historial: la lista de sesiones y el detalle de una. Solo pinta `HistoryModel`.
 struct HistoryScreen: View {
     @Bindable var model: HistoryModel
+    let sync: SyncModel
 
     var body: some View {
         list
@@ -42,6 +43,11 @@ struct HistoryScreen: View {
             }
             .listStyle(.plain)
             .screenBackground()
+            // Tirar hacia abajo sincroniza con GitHub al momento y dice cómo ha quedado. Que la lista
+            // se estire aunque quepa en la pantalla (con pocas sesiones); con esto se ha visto
+            // funcionar en el simulador, sin esto no se ha probado.
+            .scrollBounceBehavior(.always)
+            .refreshable { await sync.pullToRefresh() }
             // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
             // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
             // cierra la alerta (y la descarta) antes de ejecutarla.
