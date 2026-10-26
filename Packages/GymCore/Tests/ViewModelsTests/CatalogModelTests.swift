@@ -37,7 +37,7 @@ private struct CatalogHarness {
         let app = AppModel(repository: harness.repository())
         await app.start()
         return CatalogHarness(harness: harness, app: app, model: CatalogModel(app: app),
-                              progress: ProgressModel(app: app, navigation: NavigationModel(), clock: FixedClock(SyncFixtures.today)))
+                              progress: ProgressModel(app: app, clock: FixedClock(SyncFixtures.today)))
     }
 
     var rows: [CatalogModel.Row] { model.sections.flatMap(\.rows) }

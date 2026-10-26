@@ -42,7 +42,7 @@ private func progress(_ data: TrainingData = statsData()) async -> (ProgressMode
     await app.start()
     let navigation = NavigationModel()
     navigation.select(.progress)
-    return (ProgressModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today)), navigation, app)
+    return (ProgressModel(app: app, clock: FixedClock(SyncFixtures.today)), navigation, app)
 }
 
 // tests/e2e/estadisticas.spec.js
@@ -125,37 +125,47 @@ struct StatsTests {
         #expect(rows.first?.canOpenCharts == true)
     }
 
+    // En la PWA el botón saltaba a la pestaña Gráficas y ponía un «Volver» propio. En la app las
+    // gráficas del ejercicio entran empujadas dentro de Progreso y se vuelve con la flecha de iOS o
+    // deslizando (decisión del usuario, 2026-10-25): los tres tests comprueban eso.
     @Test("el botón de dentro abre Gráficas con el ejercicio ya seleccionado")
-    func openCharts() async {
-        let (model, navigation, app) = await progress()
+    func openCharts() async throws {
+        let (model, navigation, _) = await progress()
         let row = model.allRows[0]
         model.toggleRow(row.exerciseID)
         model.openCharts(row.exerciseID)
-        #expect(navigation.selectedTab == .charts)
-        let charts = ChartsModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today))
-        charts.appear()
+        let charts = try #require(model.charts)
         // La PWA lo comprobaba en el campo de búsqueda; en la app el elegido se ve en su fila
         // (`selectedName`) y el buscador solo filtra (aprobado por el usuario, 2026-10-25).
         #expect(charts.selected == row.exerciseID)
         #expect(charts.selectedName == row.name)
-        #expect(charts.canGoBack)
+        #expect(navigation.selectedTab == .progress)
     }
 
     @Test("volver devuelve a Estadísticas")
     func back() async {
         let (model, navigation, _) = await progress()
         model.openCharts(model.allRows[0].exerciseID)
-        navigation.goBack()
+        model.closeCharts()
+        #expect(model.charts == nil)
         #expect(navigation.selectedTab == .progress)
     }
 
     @Test("entrar a Gráficas desde la pestaña no muestra el botón de volver")
     func chartsFromTab() async {
-        let (_, navigation, app) = await progress()
-        navigation.select(.charts)
-        let charts = ChartsModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today))
-        charts.appear()
-        #expect(!charts.canGoBack)
+        let (model, _, app) = await progress()
+        let tab = ChartsModel(app: app, clock: FixedClock(SyncFixtures.today))
+        model.openCharts(model.allRows[0].exerciseID)
+        // La pestaña Gráficas es otra pantalla: no hereda el ejercicio que se abrió desde Progreso.
+        #expect(tab.selected == nil)
+    }
+
+    @Test("tocar otra vez la pestaña cierra las gráficas empujadas")
+    func reselectCloses() async {
+        let (model, _, _) = await progress()
+        model.openCharts(model.allRows[0].exerciseID)
+        model.reselect()
+        #expect(model.charts == nil)
     }
 
     @Test("cada grupo pinta la franja de referencia con sus dos límites")

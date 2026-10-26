@@ -12,8 +12,8 @@ struct ActiveWorkoutView: View {
         List {
             Section {
                 HStack(spacing: 10) {
-                    Image(systemName: "circle.fill").font(.system(size: 10)).foregroundStyle(Theme.green).symbolEffect(.pulse)
-                    Text(model.activeStatus).font(.system(size: 14, weight: .medium)).foregroundStyle(Theme.text)
+                    Image(systemName: "circle.fill").scaledFont(10).foregroundStyle(Theme.green).symbolEffect(.pulse)
+                    Text(model.activeStatus).scaledFont(14, .medium).foregroundStyle(Theme.text)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -25,6 +25,16 @@ struct ActiveWorkoutView: View {
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
                     .cardRow()
+                    // Lo mismo que los botones del pie de la tarjeta. Sin `role: .destructive`: con
+                    // ese rol la lista quita la fila antes de que se confirme.
+                    .swipeActions {
+                        Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
+                            .tint(Theme.red)
+                        Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
+                            Task { await model.toggleSkip(at: index) }
+                        }
+                        .tint(Theme.textMuted)
+                    }
                     // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes de ejecutarla.
                     .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(

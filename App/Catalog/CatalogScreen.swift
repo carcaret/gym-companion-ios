@@ -3,21 +3,22 @@ import Presentation
 import SwiftUI
 import ViewModels
 
+/// El catálogo, empujado con valor desde Progreso para que tocar otra vez la pestaña lo cierre.
+struct CatalogRoute: Hashable {}
+
 /// La entrada al catálogo al final de Progreso (`.catalog-card`): total y cuántos ejercicios no
 /// tienen grupo.
 struct CatalogCard: View {
     let model: CatalogModel
 
     var body: some View {
-        NavigationLink {
-            CatalogScreen(model: model)
-        } label: {
+        NavigationLink(value: CatalogRoute()) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(CatalogText.cardTitle).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text)
+                        Text(CatalogText.cardTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
                         Spacer()
-                        Text(CatalogText.total(model.total)).font(.system(size: 11)).foregroundStyle(Theme.textMuted)
+                        Text(CatalogText.total(model.total)).scaledFont(11).foregroundStyle(Theme.textMuted)
                     }
                     HStack(spacing: 4) {
                         Text(CatalogText.cardSubtitle).foregroundStyle(Theme.textSecondary)
@@ -25,9 +26,9 @@ struct CatalogCard: View {
                             Text(CatalogText.withoutGroup(model.withoutGroup)).fontWeight(.semibold).foregroundStyle(Theme.orange)
                         }
                     }
-                    .font(.system(size: 12))
+                    .scaledFont(12)
                 }
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textMuted)
+                Image(systemName: "chevron.right").scaledFont(13, .semibold).foregroundStyle(Theme.textMuted)
             }
             .card()
             .contentShape(.rect)
@@ -37,34 +38,27 @@ struct CatalogCard: View {
     }
 }
 
-/// La lista del catálogo por grupos, con buscador, y el editor de cada ejercicio.
+/// La lista del catálogo por grupos, con buscador, y el editor de cada ejercicio. Una `List` de
+/// iOS con secciones, con las filas y las cabeceras de la PWA.
 struct CatalogScreen: View {
     @Bindable var model: CatalogModel
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                if model.sections.isEmpty {
-                    Text(CatalogText.noMatches)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.textMuted)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                }
-                ForEach(model.sections) { section in
-                    HStack(spacing: 8) {
-                        Text(section.title).foregroundStyle(Theme.textSecondary)
-                        Text("\(section.rows.count)").fontWeight(.medium).foregroundStyle(Theme.textMuted)
-                    }
-                    .font(.system(size: 12, weight: .semibold))
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-                    .padding(.horizontal, 2)
-                    .padding(.bottom, 6)
+        List {
+            if model.sections.isEmpty {
+                Text(CatalogText.noMatches)
+                    .scaledFont(14)
+                    .foregroundStyle(Theme.textMuted)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+                    .catalogRow()
+            }
+            ForEach(model.sections) { section in
+                Section {
                     ForEach(section.rows) { row in
                         Button { model.edit(row.exerciseID) } label: {
                             HStack(spacing: 10) {
-                                Text(row.name).font(.system(size: 15)).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
+                                Text(row.name).scaledFont(15).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
                                 Spacer()
                                 ForEach(row.secondaries, id: \.self) { secondary in
                                     CatalogChip(text: secondary)
@@ -77,13 +71,28 @@ struct CatalogScreen: View {
                             .contentShape(.rect)
                         }
                         .buttonStyle(.plain)
-                        .padding(.bottom, 6)
+                        .catalogRow()
                     }
-                    Spacer().frame(height: 12)
+                } header: {
+                    HStack(spacing: 8) {
+                        Text(section.title).foregroundStyle(Theme.textSecondary)
+                        Text("\(section.rows.count)").fontWeight(.medium).foregroundStyle(Theme.textMuted)
+                    }
+                    .scaledFont(12, .semibold)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                    .padding(.horizontal, 2)
+                    .padding(.top, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 6, trailing: 16))
+                    // La cabecera se queda fija arriba al desplazar: con el fondo de la pantalla.
+                    .background(Theme.background)
                 }
+                .listSectionSeparator(.hidden)
             }
-            .padding(16)
         }
+        .listStyle(.plain)
+        .contentMargins(.bottom, 16, for: .scrollContent)
         .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
         .navigationTitle(CatalogText.title)
         .screenBackground()
@@ -95,13 +104,22 @@ struct CatalogScreen: View {
     }
 }
 
+private extension View {
+    /// Una fila del catálogo: sin fondo ni separador, con 6 px entre filas, como en la PWA.
+    func catalogRow() -> some View {
+        listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+    }
+}
+
 /// Un grupo secundario (`.catalog-chip-ind`): píldora azul suave.
 private struct CatalogChip: View {
     let text: String
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold))
+            .scaledFont(11, .semibold)
             .foregroundStyle(Theme.accentLight)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)

@@ -6,11 +6,10 @@ import Testing
 import ViewModels
 
 @MainActor
-private func charts(_ data: TrainingData = PWATestDB.data) async -> (ChartsModel, NavigationModel) {
+private func charts(_ data: TrainingData = PWATestDB.data) async -> (ChartsModel, AppModel) {
     let app = AppModel(repository: SyncHarness(local: data, configured: false).repository())
     await app.start()
-    let navigation = NavigationModel()
-    return (ChartsModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today)), navigation)
+    return (ChartsModel(app: app, clock: FixedClock(SyncFixtures.today)), app)
 }
 
 private func day(_ iso: String) -> LocalDate { LocalDate(iso: iso)! }
@@ -131,7 +130,7 @@ struct ChartsModelTests {
     @Test("seis meses antes de un 31 que no existe pasa al mes siguiente, como en JavaScript")
     func monthOverflow() async {
         let app = AppModel(repository: SyncHarness(local: PWATestDB.data, configured: false).repository())
-        let model31 = ChartsModel(app: app, navigation: NavigationModel(), clock: FixedClock(day("2026-08-31")))
+        let model31 = ChartsModel(app: app, clock: FixedClock(day("2026-08-31")))
         #expect(model31.from == day("2026-03-03"))
     }
 
@@ -150,19 +149,6 @@ struct ChartsModelTests {
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         #expect(model.options.inRoutine.map(\.name) == ["Curl Bíceps", "Press Banca", "Sentadilla"])
         #expect(model.options.others.map(\.name) == ["Remo"])
-    }
-
-    @Test("Progreso → Gráficas: el ejercicio llega elegido y hay botón de volver")
-    func fromProgress() async {
-        let (model, navigation) = await charts()
-        model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
-        navigation.openCharts(for: "sentadilla", from: .progress)
-        model.appear()
-        #expect(model.selected == "sentadilla")
-        #expect(model.selectedName == "Sentadilla")
-        #expect(model.canGoBack)
-        model.goBack()
-        #expect(navigation.selectedTab == .progress)
     }
 
     @Test("cambiar el rango fuera del ejercicio elegido lo olvida")

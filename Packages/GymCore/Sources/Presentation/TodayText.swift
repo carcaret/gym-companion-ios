@@ -37,7 +37,8 @@ public enum TodayText {
     public static let start = "Iniciar entreno"
     public static let finish = "Finalizar entreno"
     public static let addExercise = "Ejercicio"
-    public static let backToRoutines = "Volver a rutinas"
+    /// Cierra el entreno terminado y vuelve al selector.
+    public static let done = "Hecho"
 
     // Selectores de ejercicio
     public static let swapTitle = "Cambiar ejercicio"

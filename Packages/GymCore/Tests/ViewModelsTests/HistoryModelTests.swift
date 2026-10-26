@@ -264,11 +264,11 @@ struct HistoryListTests {
         #expect(history.model.detailTitle == "Full Body - Día 1 — lun, 8 ene 2024")
     }
 
-    @Test("volver a la pestaña enseña la lista")
+    @Test("tocar otra vez la pestaña enseña la lista")
     func appear() async {
         let history = await HistoryHarness.make()
         history.model.open(history.model.rows[0].date)
-        history.model.appear()
+        history.model.reselect()
         #expect(history.model.selectedDate == nil)
     }
 }
@@ -387,7 +387,7 @@ struct HistoryIncompleteTests {
         let history = await make()
         history.model.open(Self.incompleteDate)
         await history.model.completeWorkout()
-        history.model.appear()
+        history.model.reselect()
         #expect(history.model.rows.allSatisfy { !$0.isIncomplete })
     }
 

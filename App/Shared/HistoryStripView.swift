@@ -1,11 +1,17 @@
+import Charts
 import Presentation
 import SwiftUI
 
-/// La tira "Últimas sesiones" de un ejercicio: seis columnas, la de hoy la última. Tocar una barra
-/// enseña su detalle (el tooltip de la PWA).
+/// La tira "Últimas sesiones" de un ejercicio: seis columnas, la de hoy la última, en una gráfica
+/// de barras de Swift Charts. Tocar una barra enseña su detalle (el tooltip de la PWA).
 struct HistoryStripView: View {
     let strip: HistoryStripContent
     @State private var selected: Int?
+
+    /// El alto de las barras, en puntos: los 44 de la tira de la PWA menos la fecha. Las vacías,
+    /// las saltadas y las muy bajas tienen 3.
+    private static let plotHeight: CGFloat = 30
+    private static let minimumHeight = Double(3 / plotHeight * 100)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -14,19 +20,14 @@ struct HistoryStripView: View {
                 Spacer()
                 if let delta = strip.deltaText {
                     Text(delta)
-                        .font(.system(size: 11, weight: .medium))
+                        .scaledFont(11, .medium)
                         .foregroundStyle(strip.delta?.up == true ? Theme.greenSoft : Theme.redSoft)
                 }
             }
-            HStack(alignment: .bottom, spacing: 4) {
-                ForEach(Array(strip.bars.enumerated()), id: \.offset) { index, bar in
-                    column(bar, index: index)
-                }
-            }
-            .frame(height: 44)
+            chart
             if let selected, case .session(_, _, _, let tooltip) = strip.bars[selected].kind, !tooltip.isEmpty {
                 Text(tooltip.replacingOccurrences(of: "\n", with: " · "))
-                    .font(.system(size: 11, weight: .medium))
+                    .scaledFont(11, .medium)
                     .foregroundStyle(Theme.text)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -37,29 +38,85 @@ struct HistoryStripView: View {
         .accessibilityElement(children: .contain)
     }
 
-    @ViewBuilder
-    private func column(_ bar: StripBar, index: Int) -> some View {
-        VStack(spacing: 2) {
-            GeometryReader { proxy in
-                VStack {
-                    Spacer(minLength: 0)
-                    switch bar.kind {
-                    case .empty:
-                        UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2).fill(Theme.border.opacity(0.4)).frame(height: 3)
-                    case .skipped:
-                        UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2).fill(Theme.red.opacity(0.45)).frame(height: 3)
-                    case .session(let height, let color, let isCurrent, let tooltip):
-                        UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2)
-                            .fill(Color(red: Double(color.r) / 255, green: Double(color.g) / 255, blue: Double(color.b) / 255))
-                            .overlay { if isCurrent { UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2).stroke(Theme.text.opacity(0.6), lineWidth: 1) } }
-                            .frame(height: max(3, proxy.size.height * CGFloat(height) / 100))
-                            .onTapGesture { selected = selected == index ? nil : index }
-                            .accessibilityLabel(tooltip.replacingOccurrences(of: "\n", with: " · "))
+    private var keys: [String] { strip.bars.indices.map(Self.key) }
+
+    private var chart: some View {
+        Chart {
+            ForEach(Array(strip.bars.enumerated()), id: \.offset) { index, bar in
+                // 2 pt a cada lado: los 4 pt entre columnas de la PWA.
+                BarMark(x: .value("Sesión", Self.key(index)), yStart: .value("Altura", 0.0), yEnd: .value("Altura", height(bar)),
+                        width: .inset(2))
+                    .foregroundStyle(color(bar))
+                    .cornerRadius(2)
+                    .accessibilityLabel(tooltip(bar))
+            }
+        }
+        .chartXScale(domain: keys)
+        .chartYScale(domain: 0.0...100.0)
+        .chartYAxis(.hidden)
+        .chartXAxis {
+            AxisMarks(values: keys) { value in
+                AxisValueLabel {
+                    if let key = value.as(String.self), let index = Int(key) {
+                        Text(strip.bars[index].dateLabel).scaledFont(9).foregroundStyle(Theme.textSecondary)
+                            .fixedSize()  // con letra grande, entera aunque roce la de al lado
                     }
                 }
             }
-            Text(bar.dateLabel).font(.system(size: 9)).foregroundStyle(Theme.textSecondary).frame(height: 12)
         }
-        .frame(maxWidth: .infinity)
+        .chartLegend(.hidden)
+        .chartPlotStyle { $0.frame(height: Self.plotHeight) }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                if let anchor = proxy.plotFrame {
+                    let plot = geometry[anchor]
+                    currentOutline(proxy, plot)
+                    Rectangle().fill(.clear).contentShape(.rect)
+                        .frame(width: plot.width, height: plot.height)
+                        .position(x: plot.midX, y: plot.midY)
+                        .onTapGesture { location in tap(atX: location.x, proxy) }
+                }
+            }
+        }
+    }
+
+    /// La barra de hoy, con el borde claro de la PWA encima.
+    @ViewBuilder
+    private func currentOutline(_ proxy: ChartProxy, _ plot: CGRect) -> some View {
+        if let index = strip.bars.firstIndex(where: { if case .session(_, _, true, _) = $0.kind { true } else { false } }),
+           let x = proxy.position(forX: Self.key(index)), let top = proxy.position(forY: height(strip.bars[index])) {
+            UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2)
+                .stroke(Theme.text.opacity(0.6), lineWidth: 1)
+                .frame(width: plot.width / CGFloat(strip.bars.count) - 4, height: plot.height - top)
+                .position(x: plot.minX + x, y: plot.minY + (top + plot.height) / 2)
+                .allowsHitTesting(false)
+        }
+    }
+
+    /// Solo las sesiones tienen detalle; tocar la misma otra vez lo cierra.
+    private func tap(atX x: CGFloat, _ proxy: ChartProxy) {
+        guard let key = proxy.value(atX: x, as: String.self), let index = Int(key),
+              case .session = strip.bars[index].kind else { return }
+        selected = selected == index ? nil : index
+    }
+
+    private static func key(_ index: Int) -> String { "\(index)" }
+
+    private func height(_ bar: StripBar) -> Double {
+        if case .session(let height, _, _, _) = bar.kind { return max(Self.minimumHeight, Double(height)) }
+        return Self.minimumHeight
+    }
+
+    private func color(_ bar: StripBar) -> Color {
+        switch bar.kind {
+        case .empty: Theme.border.opacity(0.4)
+        case .skipped: Theme.red.opacity(0.45)
+        case .session(_, let color, _, _): Color(red: Double(color.r) / 255, green: Double(color.g) / 255, blue: Double(color.b) / 255)
+        }
+    }
+
+    private func tooltip(_ bar: StripBar) -> String {
+        if case .session(_, _, _, let tooltip) = bar.kind { return tooltip.replacingOccurrences(of: "\n", with: " · ") }
+        return bar.dateLabel
     }
 }

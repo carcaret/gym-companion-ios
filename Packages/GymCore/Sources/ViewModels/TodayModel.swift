@@ -135,8 +135,9 @@ public final class TodayModel {
         }
     }
 
-    /// Al volver a la pestaña: el selector, salvo con un entreno en curso (`renderHoy`).
-    public func appear() {
+    /// Tocar otra vez la pestaña: el selector, salvo con un entreno en curso (`renderHoy`). Cambiar
+    /// de pestaña no lo hace: en iOS cada pestaña conserva su pantalla.
+    public func reselect() {
         storedStage = .selector
         openPreviewCards = []
         if activeSession == nil { openExercise = nil }
@@ -303,7 +304,7 @@ public final class TodayModel {
         return session.logs.map { SummaryRow(title: data.catalog.name(of: $0.exerciseID), subtitle: LogText.summary($0), isSkipped: $0.skipped) }
     }
 
-    /// "← Volver a rutinas".
+    /// "Hecho", en la barra del entreno terminado.
     public func backFromCompleted() {
         backToSelector()
     }

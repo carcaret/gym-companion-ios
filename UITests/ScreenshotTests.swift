@@ -74,6 +74,13 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["stats-exercises"].tap()
         capture(app, "40-progreso")
 
+        app.buttons["stats-row-press_banca"].tap()
+        app.buttons["Ver en Gráficas"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Gráficas"].waitForExistence(timeout: 10))
+        capture(app, "41-progreso-graficas")
+        app.tabBars.buttons["Progreso"].tap()  // tocar otra vez la pestaña vuelve a Estadísticas
+        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 10))
+
         // La tarjeta del catálogo está al final de la lista: la List no la crea hasta que se ve.
         let catalog = app.buttons["catalog-card"].firstMatch
         for _ in 0..<6 where !catalog.isHittable {

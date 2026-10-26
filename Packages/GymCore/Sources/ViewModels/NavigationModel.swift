@@ -6,58 +6,35 @@ public enum AppTab: Hashable, Sendable, CaseIterable {
     case routines, history, progress, charts, settings
 }
 
-/// La pestaña visible y los saltos entre pantallas (`navigateToTab` de la PWA). Lo que pasa dentro
-/// de cada pestaña (detalle de una sesión, catálogo...) lo lleva su `NavigationStack`, que ya
-/// recuerda la posición al volver.
+/// La pestaña visible (`navigateToTab` de la PWA). Lo que pasa dentro de cada pestaña (detalle de
+/// una sesión, catálogo, gráficas de un ejercicio...) lo lleva su `NavigationStack`, que conserva
+/// la pantalla al cambiar de pestaña, como en iOS.
 @MainActor
 @Observable
 public final class NavigationModel {
-    public var selectedTab: AppTab = .routines {
-        didSet { if !isJumping { returnTab = nil } }
+    /// Tocar otra vez la pestaña activa: su pantalla vuelve a la de entrada. `count` distingue un
+    /// toque del siguiente.
+    public struct Reselection: Equatable, Sendable {
+        public let tab: AppTab
+        public let count: Int
     }
-    /// El ejercicio con el que se abrió Gráficas desde otra pantalla, hasta que Gráficas lo recoge.
-    public private(set) var chartsExercise: ExerciseID?
-    /// De dónde se saltó; tocar una pestaña a mano lo borra.
-    private var returnTab: AppTab?
-    private var isJumping = false
+
+    public private(set) var selectedTab: AppTab = .routines
+    public private(set) var reselection: Reselection?
 
     public init() {}
 
     /// Tocar una pestaña.
     public func select(_ tab: AppTab) {
-        selectedTab = tab
-    }
-
-    /// Progreso → Gráficas con un ejercicio, y con botón de volver.
-    public func openCharts(for exercise: ExerciseID, from origin: AppTab) {
-        chartsExercise = exercise
-        jump(to: .charts)
-        returnTab = origin
-    }
-
-    /// Recoge el ejercicio pedido (una sola vez).
-    public func takeChartsExercise() -> ExerciseID? {
-        defer { chartsExercise = nil }
-        return chartsExercise
-    }
-
-    public var canGoBack: Bool { returnTab != nil }
-
-    /// El botón de volver de Gráficas.
-    public func goBack() {
-        guard let target = returnTab else { return }
-        jump(to: target)
-        returnTab = nil
+        if tab == selectedTab {
+            reselection = Reselection(tab: tab, count: (reselection?.count ?? 0) + 1)
+        } else {
+            selectedTab = tab
+        }
     }
 
     /// Historial → Rutinas.
     public func showRoutines() {
         selectedTab = .routines
-    }
-
-    private func jump(to tab: AppTab) {
-        isJumping = true
-        selectedTab = tab
-        isJumping = false
     }
 }

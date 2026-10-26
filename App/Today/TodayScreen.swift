@@ -31,34 +31,37 @@ struct TodayScreen: View {
         if case .preview = model.stage { true } else { false }
     }
 
+    /// Una `List` de iOS con las tarjetas de la PWA como filas (`cardRow`).
     private var selector: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                Text(TodayText.selectorPrompt)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.textSecondary)
-                    .padding(.bottom, 8)
-                ForEach(model.routineRows, id: \.id) { row in
-                    Button { model.select(row.id) } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(row.title)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(Theme.color(row.tint) ?? Theme.text)
-                            Text(row.subtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
-                            if let note = row.pendingNote {
-                                Text(note).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.accent).padding(.top, 4)
-                            }
+        List {
+            Text(TodayText.selectorPrompt)
+                .scaledFont(16)
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
+                .padding(.bottom, 8)
+                .cardRow()
+            ForEach(model.routineRows, id: \.id) { row in
+                Button { model.select(row.id) } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(row.title)
+                            .scaledFont(15, .semibold)
+                            .foregroundStyle(Theme.color(row.tint) ?? Theme.text)
+                        Text(row.subtitle).scaledFont(12).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                        if let note = row.pendingNote {
+                            Text(note).scaledFont(12, .medium).foregroundStyle(Theme.accent).padding(.top, 4)
                         }
-                        .card(padding: 20, stripe: Theme.color(row.tint))
-                        .contentShape(.rect)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("routine-\(row.id.rawValue)")
+                    .card(padding: 20, stripe: Theme.color(row.tint))
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("routine-\(row.id.rawValue)")
+                .cardRow()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 20)
         }
+        .listStyle(.plain)
+        .screenBackground()
     }
 
     private var preview: some View {
@@ -83,7 +86,7 @@ struct TodayScreen: View {
         ScrollView {
             VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 14, weight: .medium))
+                    .scaledFont(14, .medium)
                     .foregroundStyle(Theme.text)
                     .symbolRenderingMode(.multicolor)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -94,14 +97,15 @@ struct TodayScreen: View {
                 ForEach(Array(model.completedRows.enumerated()), id: \.offset) { _, row in
                     SummaryRowView(title: row.title, subtitle: row.subtitle, isSkipped: row.isSkipped)
                 }
-                Button { model.backFromCompleted() } label: {
-                    Label(TodayText.backToRoutines, systemImage: "chevron.left").frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.pill(.secondary))
-                .accessibilityIdentifier("back-to-routines")
-                .padding(.top, 4)
             }
             .padding(16)
+        }
+        // «Hecho» arriba, como al terminar algo en iOS (decisión del usuario, 2026-10-25).
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(TodayText.done) { model.backFromCompleted() }
+                    .accessibilityIdentifier("back-to-routines")
+            }
         }
     }
 }
@@ -138,8 +142,8 @@ struct SummaryRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
-            Text(subtitle).font(.system(size: 12)).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
+            Text(title).scaledFont(15, .semibold).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
+            Text(subtitle).scaledFont(12).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
         }
         .card(background: isSkipped ? Theme.skipTint : Theme.surface)
     }

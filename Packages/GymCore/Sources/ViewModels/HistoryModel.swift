@@ -78,8 +78,8 @@ public final class HistoryModel {
         selectedDate = nil
     }
 
-    /// Al volver a la pestaña: la lista (`renderHistorial`).
-    public func appear() {
+    /// Tocar otra vez la pestaña: la lista (`renderHistorial`).
+    public func reselect() {
         back()
     }
 

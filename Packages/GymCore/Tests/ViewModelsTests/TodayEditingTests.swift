@@ -673,12 +673,15 @@ struct CompletedViewTests {
         #expect(today.model.completedRows.map(\.subtitle) == session.logs.map(LogText.summary))
     }
 
+    // En la PWA cambiar de pestaña ya volvía al selector. En la app, como en iOS, cambiar de
+    // pestaña conserva el resumen y lo que vuelve al selector es tocar otra vez la pestaña
+    // (`reselect`); estos dos tests lo comprueban así (decisión del usuario, 2026-10-25).
     @Test("navegar entre múltiples pestañas y volver muestra el selector (no el resumen)")
     func severalTabs() async {
         let today = await completed()
-        today.model.appear()
+        today.model.reselect()
         #expect(today.model.stage == .selector)
-        today.model.appear()
+        today.model.reselect()
         #expect(today.model.stage == .selector)
         #expect(today.model.completedRows.isEmpty)
     }
@@ -686,7 +689,7 @@ struct CompletedViewTests {
     @Test("navegar a otra pestaña y volver muestra el selector (no el resumen completado)")
     func otherTab() async {
         let today = await completed()
-        today.model.appear()
+        today.model.reselect()
         #expect(today.model.stage == .selector)
     }
 
@@ -695,9 +698,11 @@ struct CompletedViewTests {
         #expect(await completed().model.stage == .completed)
     }
 
+    // En la app es el «Hecho» de la barra de arriba, como al terminar algo en iOS, en vez de un
+    // botón al pie del resumen (decisión del usuario, 2026-10-25).
     @Test("vista completada: botón Volver tiene texto \"← Volver a rutinas\"")
     func backLabel() {
-        #expect(TodayText.backToRoutines == "Volver a rutinas")
+        #expect(TodayText.done == "Hecho")
     }
 
     @Test("durante el entreno activo NO existe el botón Volver a rutinas")
@@ -789,7 +794,7 @@ struct TodayNavigationButtonsTests {
         await today.start()
         await today.finish()
         today.model.backFromCompleted()
-        today.model.appear()
+        today.model.reselect()
         #expect(today.model.stage == .selector)
         #expect(today.model.completedRows.isEmpty)
     }

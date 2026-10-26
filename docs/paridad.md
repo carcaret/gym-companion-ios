@@ -709,7 +709,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › toast de inicio no tiene emoji | `TodayEditingTests.swift` |  |
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › toast de fin no tiene emoji | `TodayEditingTests.swift` |  |
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › la vista completada coincide en estructura con el detalle del historial | `TodayEditingTests.swift` |  |
-| `e2e/workout-completed-view.spec.js` › Vista de entreno completado › no hay botón Cerrar en la vista de completado | — | Regresión de un botón que la PWA quitó; en la app la vista solo tiene «Volver a rutinas» (`backFromCompleted`). |
+| `e2e/workout-completed-view.spec.js` › Vista de entreno completado › no hay botón Cerrar en la vista de completado | — | Regresión de un botón que la PWA quitó; en la app la vista solo tiene «Hecho» en la barra (`backFromCompleted`). |
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › navegar entre múltiples pestañas y volver muestra el selector (no el resumen) | `TodayEditingTests.swift` |  |
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › navegar a otra pestaña y volver muestra el selector (no el resumen completado) | `TodayEditingTests.swift` |  |
 | `e2e/workout-completed-view.spec.js` › Vista de entreno completado › vista completada: existe botón #back-to-selector-btn | `TodayEditingTests.swift` |  |

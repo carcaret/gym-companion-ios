@@ -47,12 +47,10 @@ public final class ChartsModel {
     public private(set) var selected: ExerciseID?
 
     private let app: AppModel
-    private let navigation: NavigationModel
     private let clock: any Clock
 
-    public init(app: AppModel, navigation: NavigationModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock) {
         self.app = app
-        self.navigation = navigation
         self.clock = clock
         let today = clock.today()
         to = today
@@ -61,18 +59,11 @@ public final class ChartsModel {
 
     private var data: TrainingData { app.data ?? TrainingData() }
 
-    /// Al entrar: si se viene de otra pantalla con un ejercicio, queda elegido.
-    public func appear() {
-        guard let exercise = navigation.takeChartsExercise() else { return }
+    /// Desde otra pantalla (Progreso): el ejercicio queda elegido si se hizo en el rango.
+    public func choose(_ exercise: ExerciseID) {
         if data.exercisesTrained(from: from, to: to).contains(exercise) {
             select(exercise)
         }
-    }
-
-    public var canGoBack: Bool { navigation.canGoBack }
-
-    public func goBack() {
-        navigation.goBack()
     }
 
     /// Cambiar el rango olvida el ejercicio elegido si no se hizo en él.

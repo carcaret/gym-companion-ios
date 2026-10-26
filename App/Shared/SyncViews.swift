@@ -96,7 +96,7 @@ struct NoticeView: View {
         } icon: {
             Image(systemName: symbol).foregroundStyle(color)
         }
-            .font(.system(size: 13, weight: .medium))
+            .scaledFont(13, .medium)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
             .background(Theme.surface2, in: .rect(cornerRadius: Theme.radiusSmall))

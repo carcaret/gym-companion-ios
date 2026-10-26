@@ -47,19 +47,19 @@ struct ExerciseCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Text(card.title)
-                            .font(.system(size: 15, weight: .semibold))
+                            .scaledFont(15, .semibold)
                             .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.text)
                         if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
                         if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
                     }
                     Text(card.subtitle)
-                        .font(.system(size: 12))
+                        .scaledFont(12)
                         .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.textSecondary)
                         .lineLimit(2)
                 }
                 Spacer()
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 13, weight: .semibold))
+                    .scaledFont(13, .semibold)
                     .rotationEffect(.degrees(card.isOpen ? 180 : 0))
                     .foregroundStyle(Theme.textMuted)
             }
@@ -125,7 +125,7 @@ struct ExerciseCardView: View {
                 footerButton(card.removeLabel, role: .destructive, action: remove)
                     .padding(.leading, 12)
             }
-            .font(.system(size: 12))
+            .scaledFont(12)
             .foregroundStyle(Theme.textMuted)
             .buttonStyle(.plain)
             .padding(.top, 4)
@@ -156,7 +156,7 @@ private struct RecordBadge: View {
 
     var body: some View {
         Label(text, systemImage: "trophy.fill")
-            .font(.system(size: 11, weight: .bold))
+            .scaledFont(11, .bold)
             .foregroundStyle(Theme.gold)
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
@@ -175,20 +175,24 @@ private struct ParameterRow: View {
     let type: ((String) -> Void)?
     let commit: (() -> Void)?
     @State private var text = ""
+    /// La caja del valor crece con la letra (Dynamic Type).
+    @ScaledMetric(relativeTo: .subheadline) private var boxWidth: CGFloat = 72
+    @ScaledMetric(relativeTo: .subheadline) private var boxHeight: CGFloat = 36
     @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(label).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textSecondary)
+            // Con letra grande pasa a dos líneas en vez de cortarse.
+            Text(label).scaledFont(12, .medium).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer()
             if let adjust, let type, let commit {
                 RoundIconButton(systemImage: "minus") { adjust(-1) }
                 TextField(label, text: $text)
                     .keyboardType(decimal ? .decimalPad : .numberPad)
                     .multilineTextAlignment(.center)
-                    .font(.system(size: 15, weight: .semibold))
+                    .scaledFont(15, .semibold)
                     .foregroundStyle(Theme.text)
-                    .frame(width: 72, height: 36)
+                    .frame(width: boxWidth, height: boxHeight)
                     .background(Theme.input, in: .rect(cornerRadius: 7))
                     .overlay {
                         RoundedRectangle(cornerRadius: 7).strokeBorder(hasError ? Theme.red : focused ? Theme.accent : Theme.border)
@@ -204,9 +208,9 @@ private struct ParameterRow: View {
                 RoundIconButton(systemImage: "plus") { adjust(1) }
             } else {
                 Text(value)
-                    .font(.system(size: 15, weight: .semibold))
+                    .scaledFont(15, .semibold)
                     .foregroundStyle(Theme.text)
-                    .frame(width: 72, height: 36)
+                    .frame(width: boxWidth, height: boxHeight)
                     .background(Theme.input, in: .rect(cornerRadius: 7))
                     .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
             }
@@ -218,13 +222,14 @@ private struct ParameterRow: View {
 private struct RoundIconButton: View {
     let systemImage: String
     let action: () -> Void
+    @ScaledMetric(relativeTo: .subheadline) private var side: CGFloat = 36
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
+                .scaledFont(14, .semibold)
                 .foregroundStyle(Theme.text)
-                .frame(width: 36, height: 36)
+                .frame(width: side, height: side)
                 .background(Theme.input, in: .circle)
                 .overlay { Circle().strokeBorder(Theme.border) }
         }
@@ -240,7 +245,7 @@ private struct SeriesCellView: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(cell.label).font(.system(size: 10)).foregroundStyle(Theme.textMuted)
+            Text(cell.label).scaledFont(10).foregroundStyle(Theme.textMuted)
             if let onTap {
                 Button(action: onTap) { valueText }
                     .buttonStyle(.plain)
@@ -253,7 +258,7 @@ private struct SeriesCellView: View {
 
     private var valueText: some View {
         Text(cell.text)
-            .font(.system(size: 13, weight: .semibold))
+            .scaledFont(13, .semibold)
             .foregroundStyle(colors.text)
             .frame(maxWidth: .infinity, minHeight: 34)
             .background(colors.background, in: .rect(cornerRadius: Theme.radiusTag))
@@ -278,7 +283,7 @@ private struct ChipButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 13, weight: .semibold))
+            .scaledFont(13, .semibold)
             .foregroundStyle(color)
             .frame(maxWidth: .infinity, minHeight: 32)
             .background(chip.isCurrent ? color.opacity(0.15) : .clear, in: .rect(cornerRadius: Theme.radiusTag))

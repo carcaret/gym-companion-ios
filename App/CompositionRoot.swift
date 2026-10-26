@@ -43,8 +43,8 @@ struct CompositionRoot {
         self.navigation = navigation
         today = TodayModel(app: model, sync: sync, clock: SystemClock())
         history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
-        charts = ChartsModel(app: model, navigation: navigation, clock: SystemClock())
-        progress = ProgressModel(app: model, navigation: navigation, clock: SystemClock())
+        charts = ChartsModel(app: model, clock: SystemClock())
+        progress = ProgressModel(app: model, clock: SystemClock())
         catalog = CatalogModel(app: model)
         settings = SettingsModel(sync: sync, repository: repository, version: appVersion)
     }

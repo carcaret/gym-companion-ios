@@ -25,7 +25,7 @@ e2e/workout-reorder.spec.js	drag-reorder workout exercises	existe el wrapper #wo
 e2e/workout-reorder.spec.js	drag-reorder workout exercises	los .card son hijos directos de #workout-cards-list	Ídem: detalle del DOM que necesitaba SortableJS.
 e2e/workout-completed-view.spec.js	Vista de entreno completado	el mensaje de completado usa color verde (#6a9955)	Color del CSS de la PWA. En la app el aviso de completado usa el verde del sistema (la vista), sin estilo propio que comprobar.
 e2e/workout-completed-view.spec.js	Vista de entreno completado	las cards NO usan meta-pills con emojis	Regresión de un HTML antiguo de la PWA (las «meta-pills»): en la app nunca existieron.
-e2e/workout-completed-view.spec.js	Vista de entreno completado	no hay botón Cerrar en la vista de completado	Regresión de un botón que la PWA quitó; en la app la vista solo tiene «Volver a rutinas» (`backFromCompleted`).
+e2e/workout-completed-view.spec.js	Vista de entreno completado	no hay botón Cerrar en la vista de completado	Regresión de un botón que la PWA quitó; en la app la vista solo tiene «Hecho» en la barra (`backFromCompleted`).
 e2e/workout-completed-view.spec.js	Vista de entreno completado	vista completada: botón Volver tiene clase btn-secondary	Clase CSS. En la app es un botón con estilo secundario de SwiftUI.
 e2e/workout-completed-view.spec.js	Vista de entreno completado	vista completada: botón Volver está dentro de view-nav-actions	Contenedor del DOM de la PWA.
 e2e/workout-completed-view.spec.js	Vista de entreno completado	vista completada: view-nav-actions solo tiene un botón (ocupa ancho completo)	Maquetación del DOM de la PWA; en la app lo decide la vista.
