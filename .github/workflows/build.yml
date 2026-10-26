@@ -107,19 +107,11 @@ jobs:
       fail-fast: false
       matrix:
         half: [1, 2]
-        # EXPERIMENTO (se quita antes de fusionar): NavigationTests con un simulador nuevo y con el
-        # de la caché, para ver si la caché rompe el gesto de volver desde el borde.
-        include:
-          - half: nav-nuevo
-            only: NavigationTests
-            fresh: true
-          - half: nav-cache
-            only: NavigationTests
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
       # Medido el 2026-10-26: unos 350 s de tests en cada mitad. SettingsTests va en la 2, detrás de
       # KeyboardTests: es el primer test que teclea y, con el teclado sin estrenar, tarda más de 5 s en salir.
-      HALF_1: ScreenshotTests HistoryTests SyncMenuTests DynamicTypeTests DisclosureTests
+      HALF_1: ScreenshotTests HistoryTests SyncMenuTests DynamicTypeTests DisclosureTests WorkoutTests
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,7 +150,6 @@ jobs:
         id: sim
         run: scripts/ci-simulator.sh pick iphone
       - uses: actions/cache/restore@v4
-        if: ${{ !matrix.fresh }}
         with:
           path: ~/sim-cache
           key: ${{ steps.sim.outputs.key }}
@@ -192,8 +183,7 @@ jobs:
         if: env.TESTED != 'true'
         run: |
           selection=()
-          if [ -n "${{ matrix.only }}" ]; then HALF_1="${{ matrix.only }}"; fi
-          half=${{ matrix.half }}; [ -n "${{ matrix.only }}" ] && half=1
+          half=${{ matrix.half }}
           for class in $HALF_1; do
             if [ "$half" = 1 ]; then selection+=("-only-testing:GymCompanionUITests/$class")
             else selection+=("-skip-testing:GymCompanionUITests/$class"); fi

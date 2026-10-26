@@ -15,3 +15,8 @@ if [ ! -x "$dir/xcodegen/bin/xcodegen" ]; then
     unzip -q "$dir/xcodegen.zip" -d "$dir"
 fi
 "$dir/xcodegen/bin/xcodegen" generate
+# Los Info.plist que genera, con la fecha de project.yml (de donde salen) y no la de ahora: así
+# Xcode no rehace lo que depende de ellos en cada run (ver restore-mtimes.sh).
+for plist in App/Info.plist Watch/Info.plist; do
+    if [ -f "$plist" ]; then touch -r project.yml "$plist"; fi
+done
