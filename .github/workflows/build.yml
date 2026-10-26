@@ -1,12 +1,15 @@
 # Tests en cada PR y en master. Solo en master, y solo si pasan, compila la app sin firmar y la
 # publica como release "latest": la firma (Apple ID gratuito) y la instalación en el iPhone las
 # hace el NAS (ios-signer). Si los tests fallan, el iPhone se queda con la versión anterior.
+# Un PR con la etiqueta "solo-capturas" (pruebas visuales que no van a master) se salta los tests:
+# solo compila y saca las capturas de las clases `UITests/*ScreenshotTests.swift`. Ver CLAUDE.md.
 # (El fichero se sigue llamando build.yml para que el número de ejecución, que es el número de
 # compilación de la app, siga creciendo.)
 name: build
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]   # poner o quitar solo-capturas relanza
   push:
     branches: [master]
 
@@ -21,6 +24,7 @@ jobs:
   core-linux:
     # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
     # Linux, con la misma imagen que en el NAS.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'solo-capturas') }}
     runs-on: ubuntu-latest
     container: swift:6.3.3
     steps:
@@ -38,6 +42,7 @@ jobs:
   pwa-tests:
     # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
     # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'solo-capturas') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +55,8 @@ jobs:
 
   app:
     runs-on: macos-26
+    env:
+      SOLO_CAPTURAS: ${{ contains(github.event.pull_request.labels.*.name, 'solo-capturas') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,6 +85,7 @@ jobs:
           swift --version
 
       - name: Tests del paquete (macOS)
+        if: env.SOLO_CAPTURAS != 'true'
         working-directory: Packages/GymCore
         run: swift test
 
@@ -92,6 +100,7 @@ jobs:
           # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
           defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
           xcrun simctl boot "$udid"
+          [ "$SOLO_CAPTURAS" = true ] && exit 0   # sin reloj
           # El reloj del usuario: Apple Watch Series 10 de 46 mm o, si no está, otro de 46 mm (el
           # Series 11 de 46 mm, que tiene la misma pantalla).
           xcrun simctl list devices available | grep -i watch || true
@@ -117,6 +126,11 @@ jobs:
 
       - name: Tests de la app en el simulador
         run: |
+          only=()
+          if [ "$SOLO_CAPTURAS" = true ]; then
+            for f in UITests/*ScreenshotTests.swift; do only+=("-only-testing:GymCompanionUITests/$(basename "$f" .swift)"); done
+            echo "Solo capturas: ${only[*]}"
+          fi
           xcrun simctl bootstatus "$SIMULATOR" -b
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
@@ -124,11 +138,13 @@ jobs:
             -destination "id=$SIMULATOR" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
+            "${only[@]}" \
             | tail -n 40
           test "${PIPESTATUS[0]}" -eq 0
 
       # La app del reloj, con su propio esquema y su simulador (capturas del reloj).
       - name: Compilar el reloj y sus tests
+        if: env.SOLO_CAPTURAS != 'true'
         run: |
           xcodebuild build-for-testing \
             -project GymCompanion.xcodeproj \
@@ -142,6 +158,7 @@ jobs:
 
       # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
       - name: El reloj lleva icono
+        if: env.SOLO_CAPTURAS != 'true'
         run: |
           app=build/Build/Products/Debug-watchsimulator/GymCompanionWatch.app
           icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$app/Info.plist")
@@ -149,6 +166,7 @@ jobs:
           test -f "$app/Assets.car"
 
       - name: Tests del reloj en el simulador
+        if: env.SOLO_CAPTURAS != 'true'
         run: |
           xcrun simctl bootstatus "$WATCH_SIMULATOR" -b
           xcodebuild test-without-building \
