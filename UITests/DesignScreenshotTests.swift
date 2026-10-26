@@ -2,7 +2,7 @@ import XCTest
 
 /// PRUEBA DE DISEÑO (rama `diseno-ios`): las mismas pantallas con cada estilo de `DesignStyle`,
 /// para compararlas en el artefacto «capturas» (`80-<estilo>-…`). Desaparece al elegir uno.
-final class DesignPreviewTests: XCTestCase {
+final class DesignScreenshotTests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
     }
