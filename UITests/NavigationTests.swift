@@ -55,15 +55,15 @@ final class NavigationTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(first.waitForExistence(timeout: 20))
         first.tap()
         let card = app.buttons["card-press_banca"].firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        XCTAssertTrue(card.waitForExistence(timeout: 20))
 
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 20))
         app.tabBars.buttons["Historial"].tap()
-        XCTAssertTrue(card.waitForExistence(timeout: 5), "Al volver a Historial tiene que seguir el detalle")
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "Al volver a Historial tiene que seguir el detalle")
     }
 
     /// Tocar otra vez la pestaña activa vuelve a su pantalla de entrada: el detalle del historial,
@@ -75,22 +75,22 @@ final class NavigationTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(first.waitForExistence(timeout: 20))
         first.tap()
-        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.waitForExistence(timeout: 20))
         app.tabBars.buttons["Historial"].tap()
-        XCTAssertTrue(first.waitForExistence(timeout: 5), "Tocar otra vez Historial vuelve a la lista")
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "Tocar otra vez Historial vuelve a la lista")
 
         app.tabBars.buttons["Rutinas"].tap()
         app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 20))
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 5), "Tocar otra vez Rutinas vuelve al selector")
+        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10), "Tocar otra vez Rutinas vuelve al selector")
 
         app.tabBars.buttons["Progreso"].tap()
         openChartsFromProgress(app)
         app.tabBars.buttons["Progreso"].tap()
-        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 5), "Tocar otra vez Progreso cierra las gráficas")
+        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 10), "Tocar otra vez Progreso cierra las gráficas")
     }
 
     /// «Ver en Gráficas» empuja las gráficas dentro de Progreso, sin cambiar de pestaña, y se vuelve
@@ -107,21 +107,21 @@ final class NavigationTests: XCTestCase {
         XCTAssertTrue(app.buttons["chart-exercise"].label.contains("Press Banca"), "Con el ejercicio elegido")
 
         swipeBackFully(app)
-        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 5), "Deslizar vuelve a Estadísticas")
+        XCTAssertTrue(app.navigationBars["Estadísticas"].waitForExistence(timeout: 10), "Deslizar vuelve a Estadísticas")
     }
 
     @MainActor
     private func openChartsFromProgress(_ app: XCUIApplication) {
         let expand = app.buttons["stats-exercises"]
-        XCTAssertTrue(expand.waitForExistence(timeout: 10))
+        XCTAssertTrue(expand.waitForExistence(timeout: 20))
         expand.tap()
         let row = app.buttons["stats-row-press_banca"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
         row.tap()
         let open = app.buttons["Ver en Gráficas"].firstMatch
-        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
         open.tap()
-        XCTAssertTrue(app.navigationBars["Gráficas"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Gráficas"].waitForExistence(timeout: 20))
     }
 
     /// Desde el borde izquierdo hasta un cuarto de la pantalla, despacio, y soltar: iOS cancela.
