@@ -414,3 +414,39 @@ struct KeepaliveTests {
         #expect(await harness.background.runs == 0)
     }
 }
+
+// Propio de la app: el indicador distingue lo que espera al final del entreno (lo normal) de lo
+// que no se ha podido subir.
+@Suite("Pendiente a la espera del entreno", .timeLimit(.minutes(1)))
+struct WaitingForWorkoutTests {
+    @Test("con un entreno en curso, lo pendiente espera a que acabe")
+    func waitsDuringWorkout() async throws {
+        let harness = SyncHarness()
+        let repository = harness.repository()
+        _ = try await repository.start()
+        try await repository.update(F.activeWorkout())
+        #expect(await repository.status == SyncStatus(state: .pending, waitingForWorkout: true))
+    }
+
+    @Test("al terminar el entreno deja de esperar, se suba o no")
+    func finishing() async throws {
+        let harness = SyncHarness()
+        let repository = harness.repository()
+        _ = try await repository.start()
+        try await repository.update(F.activeWorkout())
+        await harness.remote.fail(push: .unreachable)
+        _ = try await repository.saveAndUpload(F.finishedWorkout())
+        #expect(await repository.status == SyncStatus(state: .pending, waitingForWorkout: false))
+        await harness.remote.fail()
+        _ = await repository.forceUpload()
+        #expect(await repository.status == SyncStatus(state: .ok))
+    }
+
+    @Test("sin entreno en curso, lo pendiente no espera a nada")
+    func pendingWithoutWorkout() async throws {
+        let harness = SyncHarness(pending: true)
+        let repository = harness.repository()
+        _ = try await repository.start()
+        #expect(await repository.status == SyncStatus(state: .pending, waitingForWorkout: false))
+    }
+}

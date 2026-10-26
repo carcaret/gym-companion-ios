@@ -172,6 +172,23 @@ struct SyncModelTests {
         #expect(sync.menuAction == .syncNow)
     }
 
+    @Test("durante el entreno el indicador no late y dice que se subirá al terminar")
+    func waitingForWorkout() async {
+        let (app, sync) = await models(SyncHarness())
+        await app.update(F.activeWorkout())
+        await sync.refresh()
+        #expect(sync.status.state == .pending)
+        #expect(!sync.indicatorPulses)
+        #expect(sync.statusText == SyncText.waitingForWorkout.text)
+    }
+
+    @Test("lo pendiente que no espera al entreno hace latir el indicador; sincronizado o sin GitHub, no")
+    func pulses() async {
+        #expect(await models(SyncHarness(pending: true)).1.indicatorPulses)
+        #expect(!(await models(SyncHarness()).1.indicatorPulses))
+        #expect(!(await models(SyncHarness(configured: false)).1.indicatorPulses))
+    }
+
     @Test("todo subido, el menú del indicador dice que está sincronizado y ofrece sincronizar")
     func syncedMenu() async {
         let (_, sync) = await models(SyncHarness())

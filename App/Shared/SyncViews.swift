@@ -26,7 +26,7 @@ struct SyncIndicator: View {
         } label: {
             Image(systemName: symbol)
                 .foregroundStyle(color)
-                .symbolEffect(.pulse, isActive: sync.status.state == .pending)
+                .symbolEffect(.pulse, isActive: sync.indicatorPulses)
         }
         .accessibilityIdentifier("sync-indicator")
         .accessibilityLabel(sync.statusText)

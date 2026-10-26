@@ -111,8 +111,15 @@ public final class SyncModel {
         isConflictPresented = true
     }
 
+    /// El indicador late cuando hay algo por subir que no espera al entreno: la subida está en
+    /// marcha o no ha salido. Durante el entreno, amarillo quieto: esperar es lo normal.
+    public var indicatorPulses: Bool {
+        status.state == .pending && !status.waitingForWorkout
+    }
+
     private var statusNotice: Notice {
         switch status.state {
+        case .pending where status.waitingForWorkout: SyncText.waitingForWorkout
         case .pending: SyncText.pendingChanges
         case .ok: SyncText.synced
         case .disabled: SyncText.notConfigured

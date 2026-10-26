@@ -14,10 +14,14 @@ public struct SyncStatus: Hashable, Sendable {
     public var state: SyncState
     /// La última subida chocó con una versión remota que no era la conocida: hay que elegir.
     public var conflict: Bool
+    /// Lo pendiente espera a propósito a que acabe el entreno en curso (no se sube nada durante
+    /// el entreno): no es que algo vaya mal.
+    public var waitingForWorkout: Bool
 
-    public init(state: SyncState, conflict: Bool = false) {
+    public init(state: SyncState, conflict: Bool = false, waitingForWorkout: Bool = false) {
         self.state = state
         self.conflict = conflict
+        self.waitingForWorkout = waitingForWorkout
     }
 }
 
@@ -375,7 +379,9 @@ public actor TrainingRepository {
     }
 
     private func setStatus(state: SyncState, conflict: Bool? = nil) {
-        let new = SyncStatus(state: target == nil ? .disabled : state, conflict: conflict ?? status.conflict)
+        let state = target == nil ? .disabled : state
+        let new = SyncStatus(state: state, conflict: conflict ?? status.conflict,
+                             waitingForWorkout: state == .pending && isWorkoutActive)
         guard new != status else { return }
         status = new
         continuation.yield(.status(new))
