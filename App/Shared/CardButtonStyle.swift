@@ -36,7 +36,7 @@ private struct PressableCard: View {
         var releasedAt: Date?
     }
 
-    private static let growDuration = 0.2
+    private static let growDuration = 0.12
     private static let fadeDuration = 0.3
     private static let pressedScale = 0.985
 
