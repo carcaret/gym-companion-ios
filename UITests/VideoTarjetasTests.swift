@@ -55,6 +55,13 @@ final class VideoTarjetasTests: XCTestCase {
         let session = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(session.appears(timeout: 10))
         pause()
+        mark("historial: pulsación larga a la izquierda")
+        session.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).press(forDuration: 1.0)
+        XCTAssertTrue(card.appears(timeout: 10))
+        pause()
+        app.tabBars.buttons["Historial"].tap()
+        XCTAssertTrue(session.appears(timeout: 10))
+        pause()
         mark("historial: toque rápido en el centro")
         session.tap()
         XCTAssertTrue(card.appears(timeout: 10))

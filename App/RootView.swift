@@ -61,6 +61,8 @@ struct RootView: View {
         // Letra grande del iPhone (Dynamic Type) hasta el primer tamaño de accesibilidad: más allá
         // las filas de las tarjetas ya no caben en el ancho de un iPhone.
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        // Solo en la rama de prueba visual: si iOS pide reducir el movimiento.
+        .overlay(alignment: .bottomLeading) { ReduceMotionProbe().padding(.bottom, 90).padding(.leading, 8) }
     }
 
     private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
@@ -73,5 +75,17 @@ struct RootView: View {
                     }
                 }
         }
+    }
+}
+
+private struct ReduceMotionProbe: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Text("REDUCIR MOVIMIENTO: \(reduceMotion ? "SÍ" : "NO") · UIKit: \(UIAccessibility.isReduceMotionEnabled ? "SÍ" : "NO")")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(.yellow)
+            .background(.black)
+            .allowsHitTesting(false)
     }
 }
