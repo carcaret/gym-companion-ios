@@ -50,7 +50,7 @@ struct ChartsScreen: View {
         }
         .navigationTitle(ChartsText.title)
         .foregroundStyle(Theme.text)
-        .navigationDestination(for: ExercisePickerRoute.self) { _ in ExercisePicker(model: model) }
+        .navigationDestination(for: ExercisePickerRoute.self) { _ in ExercisePicker(model: model).syncToolbar() }
     }
 }
 

@@ -90,8 +90,7 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         capture(app, "50-catalogo")
 
-        // El indicador (y con él los ajustes) está en la pantalla de entrada de cada pestaña, no en
-        // las empujadas como el catálogo.
+        // Los ajustes, desde la nube de la pantalla de entrada de Rutinas.
         app.tabBars.buttons["Rutinas"].tap()
         app.openSyncSettings()
         XCTAssertTrue(app.staticTexts["settings-version"].appears(timeout: 10))

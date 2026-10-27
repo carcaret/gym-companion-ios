@@ -115,6 +115,56 @@ final class NavigationTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10), "Deslizar vuelve a Estadísticas")
     }
 
+    /// La nube de la sincronización sale también en las pantallas empujadas, que traen su propia
+    /// barra: antes solo estaba en la de entrada de cada pestaña (2026-10-27).
+    @MainActor
+    func testLaNubeSaleEnLasPantallasEmpujadas() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+
+        app.tabBars.buttons["Rutinas"].tap()
+        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
+        app.buttons["routine-DIA1"].tap()
+        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
+        assertSyncIndicator(app, "en la vista previa de una rutina")
+
+        app.tabBars.buttons["Historial"].tap()
+        let session = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        XCTAssertTrue(session.appears(timeout: 10))
+        session.tap()
+        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 10))
+        assertSyncIndicator(app, "en el detalle del historial")
+
+        app.tabBars.buttons["Gráficas"].tap()
+        let exercise = app.buttons["chart-exercise"]
+        XCTAssertTrue(exercise.appears(timeout: 10))
+        exercise.tap()
+        XCTAssertTrue(app.buttons["Press Banca"].firstMatch.appears(timeout: 10))
+        assertSyncIndicator(app, "al elegir ejercicio en Gráficas")
+
+        app.tabBars.buttons["Progreso"].tap()
+        openChartsFromProgress(app)
+        assertSyncIndicator(app, "en las gráficas abiertas desde Progreso")
+
+        app.tabBars.buttons["Progreso"].tap()
+        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10))
+        // La tarjeta del catálogo está al final: la lista no la crea hasta que se ve.
+        let catalog = app.buttons["catalog-card"].firstMatch
+        for _ in 0..<6 where !catalog.isHittable {
+            app.swipeUp()
+        }
+        catalog.tap()
+        XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
+        assertSyncIndicator(app, "en el catálogo")
+    }
+
+    @MainActor
+    private func assertSyncIndicator(_ app: XCUIApplication, _ place: String) {
+        let indicator = app.buttons["sync-indicator"]
+        XCTAssertTrue(indicator.appears(timeout: 5) && indicator.isHittable, "Falta la nube \(place)")
+    }
+
     @MainActor
     private func openChartsFromProgress(_ app: XCUIApplication) {
         let expand = app.buttons["stats-exercises"]
