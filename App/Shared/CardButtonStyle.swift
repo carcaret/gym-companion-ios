@@ -21,11 +21,10 @@ private struct PressableCard: View {
     let configuration: PrimitiveButtonStyleConfiguration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPressed = false
-    /// Dónde apoyó el dedo y el marco de la tarjeta, los dos en la ventana.
+    /// Dónde apoyó el dedo por última vez y dónde nació el círculo, los dos en la ventana.
     @State private var touch: CGPoint?
-    @State private var frame: CGRect = .zero
-    /// El centro del círculo en la tarjeta, lo que ha crecido (0…1) y lo que queda de él (0…1).
-    @State private var origin: CGPoint = .zero
+    @State private var origin: CGPoint?
+    /// Lo que ha crecido el círculo (0…1) y lo que queda de él (0…1).
     @State private var growth: CGFloat = 0
     @State private var veil: Double = 0
     @State private var startedAt = Date.distantPast
@@ -42,7 +41,6 @@ private struct PressableCard: View {
             configuration.label
                 .overlay { ripple }
                 .clipShape(.rect(cornerRadius: Theme.radius))
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
                 .gesture(TouchDownLocation { touch = $0 })
         }
         .buttonStyle(PressState(isPressed: $isPressed))
@@ -54,25 +52,26 @@ private struct PressableCard: View {
         }
     }
 
+    /// El marco se lee al pintar, sin guardarlo: guardarlo en un estado mientras la tarjeta se
+    /// encoge volvía a pintarla sin parar.
     private var ripple: some View {
-        // El radio llega a la esquina más lejana del dedo.
-        let radius = [CGPoint.zero, CGPoint(x: frame.width, y: 0), CGPoint(x: 0, y: frame.height), CGPoint(x: frame.width, y: frame.height)]
-            .map { hypot($0.x - origin.x, $0.y - origin.y) }
-            .max() ?? 0
-        return Circle()
-            .fill(Color.white.opacity(0.12 * veil))
-            .frame(width: radius * 2, height: radius * 2)
-            .scaleEffect(growth)
-            .position(origin)
-            .allowsHitTesting(false)
-    }
-
-    /// Sin el dedo dentro de la tarjeta (VoiceOver), el círculo nace en el centro.
-    private var touchOrigin: CGPoint {
-        guard let touch, frame.insetBy(dx: -1, dy: -1).contains(touch) else {
-            return CGPoint(x: frame.width / 2, y: frame.height / 2)
+        GeometryReader { proxy in
+            let frame = proxy.frame(in: .global)
+            // Sin el dedo dentro de la tarjeta (VoiceOver), el círculo nace en el centro.
+            let center = origin.flatMap { point in
+                frame.insetBy(dx: -1, dy: -1).contains(point) ? CGPoint(x: point.x - frame.minX, y: point.y - frame.minY) : nil
+            } ?? CGPoint(x: frame.width / 2, y: frame.height / 2)
+            // El radio llega a la esquina más lejana del dedo.
+            let radius = [CGPoint.zero, CGPoint(x: frame.width, y: 0), CGPoint(x: 0, y: frame.height), CGPoint(x: frame.width, y: frame.height)]
+                .map { hypot($0.x - center.x, $0.y - center.y) }
+                .max() ?? 0
+            Circle()
+                .fill(Color.white.opacity(0.12 * veil))
+                .frame(width: radius * 2, height: radius * 2)
+                .scaleEffect(growth)
+                .position(center)
         }
-        return CGPoint(x: touch.x - frame.minX, y: touch.y - frame.minY)
+        .allowsHitTesting(false)
     }
 
     /// Lo que le falta al círculo para llenar la tarjeta.
@@ -85,7 +84,7 @@ private struct PressableCard: View {
         hasRipple = true
         presses += 1
         startedAt = .now
-        origin = touchOrigin
+        origin = touch
         growth = 0
         veil = 1
         withAnimation(reduceMotion ? nil : .easeOut(duration: Self.growDuration)) { growth = 1 }
