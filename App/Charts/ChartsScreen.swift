@@ -29,7 +29,12 @@ struct ChartsScreen: View {
                     get: { model.to.date }, set: { model.setRange(from: model.from, to: LocalDate($0)) }
                 ), displayedComponents: .date)
                 NavigationLink(value: ExercisePickerRoute()) {
-                    LabeledContent(ChartsText.exercise, value: model.selectedName ?? ChartsText.chooseExercise)
+                    // «Elegir», apagado como el texto de ejemplo de un campo: sin él parecía un
+                    // ejercicio elegido (la lista entera va en el color del texto).
+                    LabeledContent(ChartsText.exercise) {
+                        Text(model.selectedName ?? ChartsText.chooseExercise)
+                            .foregroundStyle(model.selectedName == nil ? Theme.textMuted : Theme.text)
+                    }
                 }
                 .accessibilityIdentifier("chart-exercise")
             }
@@ -128,13 +133,18 @@ private struct ProgressChart: View {
             if let selected = nearest {
                 RuleMark(x: .value("Fecha", selected.date.date))
                     .foregroundStyle(Theme.textMuted)
-                    .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
+                    // Dentro de la gráfica: fuera de ella, la fila de la lista cortaba la mitad de
+                    // arriba. Con el aspecto del bocadillo de «Últimas sesiones».
+                    .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                         Text(ChartsText.pointLabel(chart.label, value: selected.value, carriedForward: selected.isCarriedForward))
-                            .scaledFont(11, .medium)
+                            .scaledFont(12, .semibold)
                             .foregroundStyle(Theme.text)
-                            .padding(6)
-                            .background(Theme.cardSolid, in: .rect(cornerRadius: 4))
-                            .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.border, lineWidth: 0.5) }
+                            .monospacedDigit()
+                            .fixedSize()
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Theme.surface2, in: .rect(cornerRadius: 10))
+                            .shadow(color: .black.opacity(0.45), radius: 9, y: 4)
                     }
             }
         }
