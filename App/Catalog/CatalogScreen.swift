@@ -39,7 +39,8 @@ struct CatalogCard: View {
 }
 
 /// La lista del catálogo por grupos, con buscador, y el editor de cada ejercicio. Una `List` de
-/// iOS con secciones, con las filas y las cabeceras de la PWA.
+/// iOS con sus filas y sus secciones (cada una con su número de ejercicios), con los colores de la
+/// app, como Gráficas y Ajustes; antes eran las filas tarjeta de la PWA (2026-10-27).
 struct CatalogScreen: View {
     @Bindable var model: CatalogModel
 
@@ -50,40 +51,24 @@ struct CatalogScreen: View {
                     ForEach(section.rows) { row in
                         Button { model.edit(row.exerciseID) } label: {
                             HStack(spacing: 10) {
-                                Text(row.name).scaledFont(15).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
+                                Text(row.name).foregroundStyle(Theme.text).multilineTextAlignment(.leading)
                                 Spacer()
                                 ForEach(row.secondaries, id: \.self) { secondary in
                                     CatalogChip(text: secondary)
                                 }
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background(Theme.surface, in: .rect(cornerRadius: Theme.radiusSmall))
-                            .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.borderLight) }
                             .contentShape(.rect)
                         }
-                        .buttonStyle(.plain)
-                        .catalogRow()
+                        .listRowBackground(Theme.surface)
                     }
                 } header: {
-                    HStack(spacing: 8) {
-                        Text(section.title).foregroundStyle(Theme.textSecondary)
-                        Text("\(section.rows.count)").fontWeight(.medium).foregroundStyle(Theme.textMuted)
+                    HStack(spacing: 6) {
+                        Text(section.title)
+                        Text("\(section.rows.count)").foregroundStyle(Theme.textMuted)
                     }
-                    .scaledFont(12, .semibold)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-                    .padding(.horizontal, 2)
-                    .padding(.top, 6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 6, trailing: 16))
-                    // La cabecera se queda fija arriba al desplazar: con el fondo de la pantalla.
-                    .background(Theme.background)
                 }
-                .listSectionSeparator(.hidden)
             }
         }
-        .listStyle(.plain)
         .overlay {
             if model.sections.isEmpty {
                 if model.query.isEmpty {
@@ -93,7 +78,6 @@ struct CatalogScreen: View {
                 }
             }
         }
-        .contentMargins(.bottom, 16, for: .scrollContent)
         .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
         .navigationTitle(CatalogText.title)
         .screenBackground()
@@ -102,15 +86,6 @@ struct CatalogScreen: View {
         .sheet(isPresented: Binding(get: { model.editor != nil }, set: { if !$0 { model.cancelEditing() } })) {
             CatalogEditor(model: model)
         }
-    }
-}
-
-private extension View {
-    /// Una fila del catálogo: sin fondo ni separador, con 6 px entre filas, como en la PWA.
-    func catalogRow() -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
     }
 }
 
