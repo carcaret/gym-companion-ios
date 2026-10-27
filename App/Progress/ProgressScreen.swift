@@ -4,25 +4,26 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Progreso: una lista de iOS con la sección de ejercicios (estancados primero), la de
-/// grupos musculares y la entrada al catálogo. Antes eran tarjetas de la PWA; con secciones de
-/// lista encaja con el catálogo y Gráficas, a los que lleva (decisión del usuario, 2026-10-27).
-/// Solo pinta `ProgressModel`.
+/// La pestaña Progreso: la sección de ejercicios (estancados primero), la de grupos musculares y
+/// la entrada al catálogo, con el aspecto de las secciones de lista de iOS 26 (decisión del usuario,
+/// 2026-10-27). Un `VStack` y no una `List`: no necesita sus gestos, y en una `List` las filas que
+/// se abren no animan bien (la cabecera pasaba por encima del contenido). Solo pinta `ProgressModel`.
 struct ProgressScreen: View {
     let model: ProgressModel
     /// Lo que hay debajo (la entrada al catálogo, #13): una sección más.
     var footer: AnyView?
 
     var body: some View {
-        List {
-            exercises
-            groups
-            if let footer {
-                Section { footer }
-                    .listRowBackground(Theme.surface)
+        ScrollView {
+            VStack(spacing: 28) {
+                exercises
+                groups
+                if let footer {
+                    ListSection { footer.padding(.horizontal, 16).padding(.vertical, 12) }
+                }
             }
+            .padding(16)
         }
-        .environment(\.disclosureAnimatesHeight, false)
         .navigationTitle(StatsText.title)
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
         .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {
@@ -35,25 +36,30 @@ struct ProgressScreen: View {
     /// Plegada enseña solo los estancados (`visibleRows`); desplegada, todos. La primera fila, con
     /// el resumen, es la que pliega y despliega.
     private var exercises: some View {
-        Section {
+        ListSection {
             DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises", toggle: model.toggleExpanded) {
                 Text(model.exercisesSubtitle).scaledFont(13).foregroundStyle(Theme.textSecondary)
             }
-            // Esta añade y quita filas, que la lista sí anima bien (lo que falla es hacer crecer una).
-            .environment(\.disclosureAnimatesHeight, true)
+            .padding(.horizontal, 16)
+            .frame(minHeight: 48)
             ForEach(model.visibleRows) { row in
+                ListSeparator(inset: 16)
                 ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
             }
         } header: {
             header(StatsText.exercisesTitle)
         }
-        .listRowBackground(Theme.surface)
     }
 
     private var groups: some View {
-        Section {
-            ForEach(model.groups) { group in
+        ListSection {
+            ForEach(Array(model.groups.enumerated()), id: \.element.id) { index, group in
+                if index > 0 { ListSeparator(inset: 16) }
                 GroupBarRow(group: group, scale: model.scale, band: model.referenceBand) { model.toggleGroup(group.name) }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 13)
             }
         } header: {
             header(StatsText.groupsTitle)
@@ -66,16 +72,15 @@ struct ProgressScreen: View {
             .scaledFont(11)
             .foregroundStyle(Theme.textMuted)
         }
-        .listRowBackground(Theme.surface)
     }
 
     /// La cabecera de una sección: el título y, a la derecha, la ventana de semanas.
     private func header(_ title: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title)
+            Text(title).scaledFont(17, .semibold).foregroundStyle(Theme.textSecondary)
             Spacer()
             // Más pequeña que el título: es un dato de la sección, no otro título.
-            Text(StatsText.window(weeks: ProgressModel.weeks)).font(.footnote).fontWeight(.regular).foregroundStyle(Theme.textMuted)
+            Text(StatsText.window(weeks: ProgressModel.weeks)).scaledFont(13).foregroundStyle(Theme.textMuted)
         }
     }
 
@@ -85,6 +90,45 @@ struct ProgressScreen: View {
                 .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(border) }
             Text(text)
         }
+    }
+}
+
+/// Una sección con el aspecto de las de lista de iOS 26, fuera de una `List`: la cabecera encima,
+/// las filas en un bloque redondeado y el pie debajo.
+private struct ListSection<Content: View, Header: View, Footer: View>: View {
+    @ViewBuilder let content: Content
+    @ViewBuilder let header: Header
+    @ViewBuilder let footer: Footer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            header.padding(.horizontal, 16)
+            VStack(alignment: .leading, spacing: 0) { content }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.surface, in: .rect(cornerRadius: Theme.radius))
+            footer.padding(.horizontal, 16)
+        }
+    }
+}
+
+extension ListSection where Header == EmptyView, Footer == EmptyView {
+    init(@ViewBuilder content: () -> Content) {
+        self.init(content: content, header: { EmptyView() }, footer: { EmptyView() })
+    }
+}
+
+extension ListSection where Footer == EmptyView {
+    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header) {
+        self.init(content: content, header: header, footer: { EmptyView() })
+    }
+}
+
+/// La línea fina entre dos filas de una sección, con su sangría a la izquierda, como en iOS.
+private struct ListSeparator: View {
+    let inset: CGFloat
+
+    var body: some View {
+        Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, inset)
     }
 }
 
