@@ -115,6 +115,27 @@ final class NavigationTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10), "Deslizar vuelve a Estadísticas")
     }
 
+    /// El entreno terminado entra empujado sobre las rutinas: se vuelve deslizando desde el borde,
+    /// como en la vista previa (decisión del usuario, 2026-10-27).
+    @MainActor
+    func testDeslizarDesdeElEntrenoTerminadoVuelveALasRutinas() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Rutinas"].tap()
+        let routine = app.buttons["routine-DIA1"]
+        XCTAssertTrue(routine.appears(timeout: 20))
+        routine.tap()
+        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
+        app.buttons["start-workout"].tap()
+        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
+        app.buttons["finish-workout"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+
+        swipeBackFully(app)
+        XCTAssertTrue(routine.appears(timeout: 10), "Deslizar desde el entreno terminado vuelve a las rutinas")
+    }
+
     /// La nube de la sincronización sale también en las pantallas empujadas, que traen su propia
     /// barra: antes solo estaba en la de entrada de cada pestaña (2026-10-27).
     @MainActor
