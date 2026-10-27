@@ -20,7 +20,9 @@ struct TodayScreen: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: Binding(get: { isPreviewing }, set: { if !$0 { model.backToSelector() } })) {
-            preview
+            // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
+            // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
+            RoutinePreview(model: model)
                 .navigationTitle(model.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .screenBackground()
@@ -64,24 +66,6 @@ struct TodayScreen: View {
         .screenBackground()
     }
 
-    private var preview: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                ForEach(Array(model.previewCards.enumerated()), id: \.offset) { index, card in
-                    ExerciseCardView(card: card, toggle: { model.togglePreviewCard(index) })
-                }
-            }
-            .padding()
-        }
-        .safeAreaInset(edge: .bottom) {
-            BottomActions(primary: {
-                Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
-                    .buttonStyle(.pill())
-                    .accessibilityIdentifier("start-workout")
-            })
-        }
-    }
-
     private var completed: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -103,6 +87,29 @@ struct TodayScreen: View {
         }
         // Sin botón para salir: arriba solo va la nube, que ya dice si se ha subido (decisión del
         // usuario, 2026-10-26). Se vuelve a las rutinas tocando otra vez la pestaña (`reselect`).
+    }
+}
+
+/// La vista previa de una rutina, empujada sobre el selector.
+private struct RoutinePreview: View {
+    @Bindable var model: TodayModel
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                ForEach(Array(model.previewCards.enumerated()), id: \.offset) { index, card in
+                    ExerciseCardView(card: card, toggle: { model.togglePreviewCard(index) })
+                }
+            }
+            .padding()
+        }
+        .safeAreaInset(edge: .bottom) {
+            BottomActions(primary: {
+                Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
+                    .buttonStyle(.pill())
+                    .accessibilityIdentifier("start-workout")
+            })
+        }
     }
 }
 
