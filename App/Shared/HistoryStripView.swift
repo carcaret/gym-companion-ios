@@ -107,14 +107,14 @@ struct HistoryStripView: View {
     }
 
     /// El detalle de una sesión: el peso y las reps destacados, y debajo el e1RM (las dos líneas del
-    /// tooltip de la PWA, al revés). Sin la fecha: ya está debajo de la barra (decisión del usuario,
-    /// 2026-10-27).
+    /// tooltip de la PWA, al revés), centradas. Sin la fecha: ya está debajo de la barra (decisión
+    /// del usuario, 2026-10-27).
     @ViewBuilder
     private func bubble(_ bar: StripBar) -> some View {
         if case .session(_, _, _, let tooltip) = bar.kind, !tooltip.isEmpty {
             let lines = tooltip.split(separator: "\n").map(String.init)
             let main = lines.count > 1 ? lines[1] : lines[0]
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .center, spacing: 2) {
                 Text(main).scaledFont(12, .semibold).foregroundStyle(Theme.text)
                 if lines.count > 1 {
                     Text(lines[0]).scaledFont(11).foregroundStyle(Theme.textSecondary)
