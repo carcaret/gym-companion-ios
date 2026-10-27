@@ -51,6 +51,28 @@ struct SyncIndicator: View {
 
 }
 
+extension View {
+    /// La nube en la barra. La lleva toda pantalla de una pila: la de entrada de cada pestaña y
+    /// cada empujada, que trae su propia barra (antes solo salía en la de entrada, 2026-10-27). Va
+    /// donde se empuja la pantalla, no dentro de ella: Gráficas es la entrada de su pestaña y
+    /// también se empuja desde Progreso. El modelo llega por el entorno (`RootView`).
+    func syncToolbar() -> some View {
+        modifier(SyncToolbar())
+    }
+}
+
+private struct SyncToolbar: ViewModifier {
+    @Environment(SyncModel.self) private var sync
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                SyncIndicator(sync: sync)
+            }
+        }
+    }
+}
+
 /// Los avisos y diálogos de la sincronización, en la raíz y en la hoja de los ajustes (sus botones
 /// también avisan y pueden abrir el conflicto, y lo que cuelga de la raíz queda debajo de la hoja).
 struct SyncPresentation: ViewModifier {

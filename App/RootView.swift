@@ -28,7 +28,7 @@ struct RootView: View {
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
                     ProgressScreen(model: root.progress, footer: AnyView(CatalogCard(model: root.catalog)))
-                        .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog) }
+                        .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
                 }
             }
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
@@ -54,6 +54,8 @@ struct RootView: View {
             NavigationStack { SettingsScreen(model: root.settings) }
                 .syncPresentation(root.sync, noticeDuration: root.noticeDuration, bottomInset: 16)
         }
+        // Para la nube de cada pantalla (`syncToolbar`).
+        .environment(root.sync)
         .tint(Theme.accentLight)
         .preferredColorScheme(.dark)
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
@@ -67,11 +69,7 @@ struct RootView: View {
         NavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
             content()
                 .screenBackground()
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        SyncIndicator(sync: root.sync)
-                    }
-                }
+                .syncToolbar()
         }
     }
 }

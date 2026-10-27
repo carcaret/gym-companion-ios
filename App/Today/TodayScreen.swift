@@ -23,6 +23,7 @@ struct TodayScreen: View {
             // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
             // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
             RoutinePreview(model: model)
+                .syncToolbar()
                 .navigationTitle(model.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .screenBackground()

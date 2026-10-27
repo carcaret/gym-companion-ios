@@ -24,7 +24,7 @@ struct ProgressScreen: View {
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
         .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {
             if let charts = model.charts {
-                ChartsScreen(model: charts).screenBackground()
+                ChartsScreen(model: charts).screenBackground().syncToolbar()
             }
         }
     }
