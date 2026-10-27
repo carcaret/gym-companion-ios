@@ -13,12 +13,12 @@ final class DisclosureTests: XCTestCase {
         app.launchArguments = ["-demo"]
         app.launch()
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
         app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
         app.buttons["start-workout"].tap()
         let card = app.buttons["card-press_banca"].firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        XCTAssertTrue(card.appears(timeout: 10))
 
         let before = card.value as? String
         XCTAssertTrue(["Plegado", "Desplegado"].contains(before), "Valor de VoiceOver: \(before ?? "ninguno")")

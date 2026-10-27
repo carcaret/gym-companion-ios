@@ -1,8 +1,22 @@
-# Tests en cada PR y en master. Solo en master, y solo si pasan, compila la app sin firmar y la
-# publica como release "latest": la firma (Apple ID gratuito) y la instalación en el iPhone las
-# hace el NAS (ios-signer). Si los tests fallan, el iPhone se queda con la versión anterior.
+# Tests en cada PR y en master. Solo en master, y solo si pasan, publica la app sin firmar como
+# release "latest": la firma (Apple ID gratuito) y la instalación en el iPhone las hace el NAS
+# (ios-signer). Si los tests fallan, el iPhone se queda con la versión anterior.
 # (El fichero se sigue llamando build.yml para que el número de ejecución, que es el número de
 # compilación de la app, siga creciendo.)
+#
+# Todo va en paralelo, cada cosa en su máquina (el plan gratuito deja 5 macOS a la vez): los tests
+# de UI del iPhone en tres partes, el reloj (con el paquete en macOS) y la compilación de la release.
+# Cada job con simulador deja en el resumen del run su cronología (también el arranque del
+# simulador, que va en segundo plano) y lo que tarda cada test, y sube los logs enteros y el
+# .xcresult (con el vídeo de los fallos) como artefacto diagnostico-<job>.
+#
+# Un test de UI que falla se repite una vez en la misma máquina (decisión del usuario, 2026-10-27:
+# un fallo del entorno costaba otro run entero). El resumen del run lista los que han necesitado
+# repetirse, y el .xcresult guarda el vídeo del primer intento.
+#
+# En master no se repiten los tests de lo que ya pasó en su PR con el mismo árbol (job gate,
+# scripts/ci-gate.sh): se publica en cuanto compila la release. Los jobs del iPhone y del reloj
+# siguen corriendo, sin tests, para dejar en master las cachés que usan las PR.
 name: build
 
 on:
@@ -12,15 +26,31 @@ on:
 
 permissions:
   contents: write
+  actions: read         # gate: el run de la PR
+  pull-requests: read   # gate: qué PR se ha fusionado
 
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  gate:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      tested: ${{ steps.gate.outputs.tested }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/ci-gate.sh
+
   core-linux:
     # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
     # Linux, con la misma imagen que en el NAS.
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
     container: swift:6.3.3
     steps:
@@ -38,6 +68,8 @@ jobs:
   pwa-tests:
     # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
     # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,95 +81,226 @@ jobs:
         run: python3 scripts/pwa_tests.py pwa
 
   app:
+    # Los tests de UI del iPhone, en tres partes en paralelo. La 1 corre las clases de PART_1, la 2
+    # las de PART_2 y la 3 todas las demás, para que una clase nueva nunca se quede sin correr. Si
+    # una parte tarda mucho más que las otras, se mueve una clase (el resumen dice lo que tarda
+    # cada test).
+    name: app (${{ matrix.part }})
+    needs: gate
+    if: ${{ !cancelled() }}
     runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3]
+    env:
+      TESTED: ${{ needs.gate.outputs.tested }}
+      # Medido el 2026-10-26: unos 230-250 s de tests en cada parte. Cada parte corre sus clases por
+      # orden alfabético. SettingsTests va detrás de KeyboardTests: es el primer test que teclea y,
+      # con el teclado sin estrenar, tarda más de 5 s en salir. NavigationTests, sin KeyboardTests
+      # delante: con ellos, el gesto de volver de testDeslizarAMediasNoCierraElDetalleDelHistorial
+      # falló 3 de 4 veces. La 3: ScreenshotTests, HistoryTests, DynamicTypeTests y las nuevas.
+      PART_1: DisclosureTests KeyboardTests SettingsTests SyncMenuTests TypingTests
+      PART_2: NavigationTests WorkoutTests
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # para restore-mtimes.sh
+      # El servicio de los simuladores tarda de segundos a más de 2 minutos en arrancar la primera
+      # vez: se arranca ya, en segundo plano, mientras se preparan la compilación y el proyecto.
+      - name: Inicio
+        run: |
+          scripts/ci-timeline.sh mark "checkout"
+          nohup xcrun simctl list devices > /dev/null 2>&1 &
+          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
-      # Compilación incremental: la carpeta de compilación de Xcode y la de SwiftPM de la última
-      # ejecución, con cada fichero en la fecha de su commit para que solo se recompile lo que
-      # cambia. Las ejecuciones de master guardan la caché que usan las PR.
+      # Compilación incremental: la carpeta de compilación de Xcode de la última ejecución, con
+      # cada fichero en la fecha de su commit para que solo se recompile lo que cambia. Las
+      # ejecuciones de master guardan la caché que usan las PR.
       - name: Fechas de los ficheros
         run: |
           scripts/restore-mtimes.sh
           defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
       - uses: actions/cache@v4
         with:
-          path: |
-            build
-            Packages/GymCore/.build
+          path: build
           key: app-debug-${{ github.sha }}
           restore-keys: app-debug-
 
       - name: Generar proyecto
         run: |
-          brew install xcodegen
-          xcodegen generate
+          scripts/ci-xcodegen.sh
           xcodebuild -version
           swift --version
+          scripts/ci-timeline.sh mark "proyecto generado"
 
-      - name: Tests del paquete (macOS)
-        working-directory: Packages/GymCore
-        run: swift test
-
-      # El simulador arranca mientras se compila la app (con los tests del paquete a la vez, los
-      # frena); los tests de la app esperan a que acabe.
+      # El simulador arranca en segundo plano mientras se compila (al de la caché le basta un
+      # minuto; la compilación tarda más), y los tests esperan a que acabe. Va después de la caché
+      # de la compilación para no competir con ella al descomprimir. Ver scripts/ci-simulator.sh.
+      - name: Elegir el simulador
+        id: sim
+        run: scripts/ci-simulator.sh pick iphone
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/sim-cache
+          key: ${{ steps.sim.outputs.key }}
       - name: Arrancar el simulador
         run: |
-          udid=$(xcrun simctl list devices available -j \
-            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
-          echo "Simulador: $udid"
-          echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
           # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
           defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
-          xcrun simctl boot "$udid"
-          # El reloj del usuario: Apple Watch Series 10 de 46 mm o, si no está, otro de 46 mm (el
-          # Series 11 de 46 mm, que tiene la misma pantalla).
-          xcrun simctl list devices available | grep -i watch || true
-          watch=$(xcrun simctl list devices available -j \
-            | jq -r '[.devices | to_entries[] | select(.key | contains("watchOS")) | .value[]]
-                     | (map(select(.name | contains("Series 10 (46mm)"))) + map(select(.name | contains("46mm"))))[0].udid')
-          echo "Simulador del reloj: $watch"
-          echo "WATCH_SIMULATOR=$watch" >> "$GITHUB_ENV"
-          xcrun simctl boot "$watch"
+          scripts/ci-simulator.sh start "${{ steps.sim.outputs.devtype }}" "${{ steps.sim.outputs.runtime }}"
 
       - name: Compilar la app y los tests
         run: |
+          mkdir -p diagnostico
           xcodebuild build-for-testing \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
-            -destination "id=$SIMULATOR" \
+            -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -showBuildTimingSummary \
-            | tee build.log | tail -n 40
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
+            | tee diagnostico/build.log | tail -n 40
           status=${PIPESTATUS[0]}
-          grep -E ': error:' build.log | sort -u | head -n 30 || true
+          scripts/ci-timeline.sh mark "app compilada"
+          grep -E ': error:' diagnostico/build.log | sort -u | head -n 30 || true
           test "$status" -eq 0
 
+      - name: Esperar al simulador
+        run: scripts/ci-simulator.sh wait
+
       - name: Tests de la app en el simulador
+        if: env.TESTED != 'true'
         run: |
-          xcrun simctl bootstatus "$SIMULATOR" -b
+          selection=()
+          case "${{ matrix.part }}" in
+            1) for class in $PART_1; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
+            2) for class in $PART_2; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
+            3) for class in $PART_1 $PART_2; do selection+=("-skip-testing:GymCompanionUITests/$class"); done ;;
+          esac
+          scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
-            -destination "id=$SIMULATOR" \
+            -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
+            -retry-tests-on-failure -test-iterations 2 \
+            "${selection[@]}" \
+            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
+            | tee diagnostico/test.log | tail -n 60
+          status=${PIPESTATUS[0]}
+          scripts/ci-timeline.sh mark "tests: terminan"
+          test "$status" -eq 0
 
-      # La app del reloj, con su propio esquema y su simulador (capturas del reloj).
+      # El simulador recién migrado (copiado antes de instalar la app), para los runs siguientes.
+      - name: ¿Simulador para la caché?
+        id: simsave
+        if: always() && env.SIM_CACHED == '0'
+        run: test -f ~/sim-cache/udid && echo "save=1" >> "$GITHUB_OUTPUT" || true
+      - uses: actions/cache/save@v4
+        if: always() && steps.simsave.outputs.save == '1'
+        with:
+          path: ~/sim-cache
+          key: ${{ steps.sim.outputs.key }}
+
+      - name: Capturas, tiempos y cronología
+        if: always()
+        run: |
+          scripts/ci-capturas.sh capturas Tests.xcresult || true
+          scripts/ci-test-times.sh Tests.xcresult "Tests de app (${{ matrix.part }})" diagnostico || true
+          scripts/ci-timeline.sh mark "fin"
+          scripts/ci-timeline.sh summary "Cronología de app (${{ matrix.part }}) · simulador de la caché: ${SIM_CACHED:-?}"
+          cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
+          du -sh ~/sim-cache 2>/dev/null || true
+      # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
+      # que tardaban en descomprimirse.
+      - name: Limpiar la carpeta de compilación
+        if: always()
+        run: |
+          du -sh build/* build/Build/* 2>/dev/null || true
+          rm -rf build/Index.noindex build/Logs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-${{ matrix.part }}
+          path: capturas
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostico-app-${{ matrix.part }}
+          path: |
+            diagnostico
+            Tests.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
+
+  watch:
+    # La app del reloj, con su propio esquema y su simulador (capturas del reloj), y al final los
+    # tests del paquete en macOS: este job acaba mucho antes que los del iPhone, y así no hacen
+    # falta más de 5 máquinas a la vez.
+    needs: gate
+    if: ${{ !cancelled() }}
+    runs-on: macos-26
+    env:
+      TESTED: ${{ needs.gate.outputs.tested }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inicio   # ver el job app
+        run: |
+          scripts/ci-timeline.sh mark "checkout"
+          nohup xcrun simctl list devices > /dev/null 2>&1 &
+          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
+
+      - name: Fechas de los ficheros   # ver el job app
+        run: |
+          scripts/restore-mtimes.sh
+          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: watch-debug-${{ github.sha }}
+          restore-keys: watch-debug-
+      - uses: actions/cache@v4
+        with:
+          path: Packages/GymCore/.build
+          key: core-macos-${{ github.sha }}
+          restore-keys: core-macos-
+
+      - name: Generar proyecto
+        run: |
+          scripts/ci-xcodegen.sh
+          scripts/ci-timeline.sh mark "proyecto generado"
+
+      - name: Elegir el simulador   # ver el job app
+        id: sim
+        run: scripts/ci-simulator.sh pick watch
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/sim-cache
+          key: ${{ steps.sim.outputs.key }}
+      - name: Arrancar el simulador
+        run: scripts/ci-simulator.sh start "${{ steps.sim.outputs.devtype }}" "${{ steps.sim.outputs.runtime }}"
+
       - name: Compilar el reloj y sus tests
         run: |
+          mkdir -p diagnostico
           xcodebuild build-for-testing \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanionWatch \
-            -destination "id=$WATCH_SIMULATOR" \
+            -destination "id=$SIM_UDID" \
             -derivedDataPath build \
-            | tee build-watch.log | tail -n 40
+            -showBuildTimingSummary \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
+            | tee diagnostico/build.log | tail -n 40
           status=${PIPESTATUS[0]}
-          grep -E ': error:' build-watch.log | sort -u | head -n 30 || true
+          scripts/ci-timeline.sh mark "reloj compilado"
+          grep -E ': error:' diagnostico/build.log | sort -u | head -n 30 || true
           test "$status" -eq 0
 
       # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
@@ -148,45 +311,89 @@ jobs:
           test "$icon" = AppIcon
           test -f "$app/Assets.car"
 
+      - name: Esperar al simulador
+        run: scripts/ci-simulator.sh wait
+
       - name: Tests del reloj en el simulador
+        if: env.TESTED != 'true'
         run: |
-          xcrun simctl bootstatus "$WATCH_SIMULATOR" -b
+          scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanionWatch \
-            -destination "id=$WATCH_SIMULATOR" \
+            -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Watch.xcresult \
-            | tail -n 40
-          test "${PIPESTATUS[0]}" -eq 0
+            -retry-tests-on-failure -test-iterations 2 \
+            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
+            | tee diagnostico/test.log | tail -n 40
+          status=${PIPESTATUS[0]}
+          scripts/ci-timeline.sh mark "tests: terminan"
+          test "$status" -eq 0
 
-      - name: Extraer capturas
+      - name: ¿Simulador para la caché?   # ver el job app
+        id: simsave
+        if: always() && env.SIM_CACHED == '0'
+        run: test -f ~/sim-cache/udid && echo "save=1" >> "$GITHUB_OUTPUT" || true
+      - uses: actions/cache/save@v4
+        if: always() && steps.simsave.outputs.save == '1'
+        with:
+          path: ~/sim-cache
+          key: ${{ steps.sim.outputs.key }}
+
+      - name: Capturas, tiempos y cronología
         if: always()
         run: |
-          mkdir -p capturas
-          for result in Tests.xcresult Watch.xcresult; do
-            [ -d "$result" ] || continue
-            rm -rf attachments
-            xcrun xcresulttool export attachments --path "$result" --output-path attachments
-            jq -r '.[].attachments[] | [.exportedFileName, .suggestedHumanReadableName] | @tsv' attachments/manifest.json \
-              | while IFS=$'\t' read -r file name; do
-                  # upload-artifact no admite " : < > | * ? en los nombres (salen en las descripciones de un fallo).
-                  name=$(printf '%s' "${name%%_*}" | tr -d '":<>|*?')
-                  cp "attachments/$file" "capturas/$name.png"
-                done
-          done
-          ls capturas
-
+          scripts/ci-capturas.sh capturas Watch.xcresult || true
+          scripts/ci-test-times.sh Watch.xcresult "Tests del reloj" diagnostico || true
+          scripts/ci-timeline.sh mark "fin"
+          scripts/ci-timeline.sh summary "Cronología de watch · simulador de la caché: ${SIM_CACHED:-?}"
+          cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
+          du -sh ~/sim-cache 2>/dev/null || true
+      # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
+      # que tardaban en descomprimirse.
+      - name: Limpiar la carpeta de compilación
+        if: always()
+        run: |
+          du -sh build/* build/Build/* 2>/dev/null || true
+          rm -rf build/Index.noindex build/Logs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: capturas
+          name: capturas-reloj
           path: capturas
           if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostico-watch
+          path: |
+            diagnostico
+            Watch.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
 
-  release:
-    needs: [core-linux, pwa-tests, app]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      - name: Tests del paquete (macOS)
+        if: env.TESTED != 'true'
+        working-directory: Packages/GymCore
+        run: swift test
+
+  capturas:
+    # Las capturas de las tres partes y del reloj, juntas en un solo artefacto "capturas".
+    needs: [app, watch]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact/merge@v4
+        with:
+          name: capturas
+          pattern: capturas-*
+          delete-merged: true
+        continue-on-error: true   # sin capturas (falló la compilación) no hay nada que juntar
+
+  release-build:
+    # La release se compila a la vez que corren los tests (también en las PR: así se sabe que
+    # compila en Release) y solo se publica, en el job publish, si todo pasa en master.
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -205,8 +412,7 @@ jobs:
 
       - name: Generar proyecto
         run: |
-          brew install xcodegen
-          xcodegen generate
+          scripts/ci-xcodegen.sh
 
       - name: Compilar (sin firmar)
         run: |
@@ -218,6 +424,7 @@ jobs:
             -derivedDataPath build \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             | tail -n 30
           test "${PIPESTATUS[0]}" -eq 0
 
@@ -227,13 +434,42 @@ jobs:
           cp -R build/Build/Products/Release-iphoneos/GymCompanion.app Payload/
           zip -qr GymCompanion.ipa Payload
           shasum -a 256 GymCompanion.ipa | tee GymCompanion.ipa.sha256
+          du -sh build/* build/Build/* 2>/dev/null || true
+          rm -rf build/Index.noindex build/Logs   # ver el job app
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: |
+            GymCompanion.ipa
+            GymCompanion.ipa.sha256
+          retention-days: 7
+
+  publish:
+    needs: [gate, core-linux, pwa-tests, app, watch, release-build]
+    if: github.event_name == 'push' && needs.gate.outputs.tested != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ipa
       - name: Publicar release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest GymCompanion.ipa GymCompanion.ipa.sha256 \
-            --title "Build ${{ github.run_number }}" \
-            --notes "Commit ${{ github.sha }}" \
-            --target ${{ github.sha }}
+        run: scripts/ci-publish.sh
+
+  # Lo mismo, sin esperar a los jobs de tests, cuando el gate dice que ya pasaron en la PR.
+  publish-tested:
+    needs: [gate, release-build]
+    if: github.event_name == 'push' && needs.gate.outputs.tested == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ipa
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/ci-publish.sh

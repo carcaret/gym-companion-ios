@@ -15,16 +15,16 @@ final class HistoryTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(first.appears(timeout: 10))
         let row = app.buttons[first.identifier]
 
         row.swipeLeft()
         let swipeDelete = app.buttons["Borrar"].firstMatch
-        XCTAssertTrue(swipeDelete.waitForExistence(timeout: 5))
+        XCTAssertTrue(swipeDelete.appears(timeout: 5))
         swipeDelete.tap()
 
         let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.appears(timeout: 5))
         alert.buttons["Borrar"].tap()
 
         let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
@@ -41,16 +41,16 @@ final class HistoryTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Historial"].tap()
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'"))
-        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(rows.firstMatch.appears(timeout: 10))
         let before = rows.allElementsBoundByIndex.map(\.identifier)
         XCTAssertGreaterThan(before.count, 2)
 
         app.buttons[before[0]].swipeLeft()
         let swipeDelete = app.buttons["Borrar"].firstMatch
-        XCTAssertTrue(swipeDelete.waitForExistence(timeout: 5))
+        XCTAssertTrue(swipeDelete.appears(timeout: 5))
         swipeDelete.tap()
         let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.appears(timeout: 5))
         XCTAssertEqual(rows.allElementsBoundByIndex.map(\.identifier), before)
 
         alert.buttons["Cancelar"].tap()
@@ -70,7 +70,7 @@ final class HistoryTests: XCTestCase {
         app.launch()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 20))
+        XCTAssertTrue(first.appears(timeout: 20))
 
         // Desde la parte vacía de la lista, debajo de las filas, hasta abajo, aguantando antes de
         // soltar para pasar del umbral del refresco.
@@ -78,7 +78,7 @@ final class HistoryTests: XCTestCase {
             .press(forDuration: 0, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
                    withVelocity: .default, thenHoldForDuration: 1)
         let notice = app.staticTexts.matching(identifier: "notice").firstMatch
-        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        XCTAssertTrue(notice.appears(timeout: 10))
         XCTAssertEqual(notice.label, "GitHub no configurado")
     }
 }

@@ -15,23 +15,23 @@ final class TypingTests: XCTestCase {
         app.launchArguments = ["-demo"]
         app.launch()
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
         app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
         app.buttons["start-workout"].tap()
-        XCTAssertTrue(app.buttons["finish-workout"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
 
         let weight = app.textFields["Peso (kg)"].firstMatch
-        XCTAssertTrue(weight.waitForExistence(timeout: 10))
+        XCTAssertTrue(weight.appears(timeout: 10))
         // Al final del texto, para que los borrados se lleven el valor entero.
         weight.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         weight.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 6) + "61")
         XCTAssertTrue(app.keyboards.firstMatch.exists, "El teclado tiene que seguir abierto")
 
         app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
         let typed = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '61 kg'")).firstMatch
-        XCTAssertTrue(typed.waitForExistence(timeout: 5), "El entreno terminado no tiene el peso tecleado")
+        XCTAssertTrue(typed.appears(timeout: 5), "El entreno terminado no tiene el peso tecleado")
     }
 }
