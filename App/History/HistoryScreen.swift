@@ -22,6 +22,7 @@ struct HistoryScreen: View {
                 SessionDetail(model: model)
                     .syncToolbar()
                     .navigationTitle(model.detailTitle)
+                    .navigationSubtitle(model.detailSubtitle)
                     .navigationBarTitleDisplayMode(.inline)
                     .screenBackground()
             }

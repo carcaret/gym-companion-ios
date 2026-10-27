@@ -4,11 +4,13 @@ import Domain
 public enum TodayText {
     // Títulos
     public static let selectorTitle = "Rutinas"
-    public static let selectorPrompt = "Selecciona una rutina para entrenar"
-    public static func previewTitle(_ routine: String) -> String { "Rutina de \(routine)" }
-    public static func activeTitle(_ routine: String) -> String { "Entreno \(routine)" }
+    // La vista previa, el entreno en curso y el terminado llevan de título el nombre de la rutina y
+    // debajo, de subtítulo, en qué punto está (decisión del usuario, 2026-10-27; la PWA ponía
+    // «Rutina de …» y «Entreno …»).
+    public static let previewStatus = "Vista previa"
     /// El subtítulo de la barra en el entreno en curso (el `.workout-status` de la PWA).
     public static let inProgress = "En curso"
+    public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 
     /// "3 ejercicios · Press Banca, Curl Bíceps, Remo..." (los tres primeros).

@@ -14,7 +14,7 @@ final class ScreenshotTests: XCTestCase {
         app.launch()
         // Pestaña, título de su pantalla y nombre de la captura.
         let tabs = [("Rutinas", "Rutinas", "01-rutinas"), ("Historial", "Historial", "02-historial"),
-                    ("Progreso", "Estadísticas", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas")]
+                    ("Progreso", "Progreso", "03-progreso"), ("Gráficas", "Gráficas", "04-graficas")]
         for (tab, title, name) in tabs {
             app.tabBars.buttons[tab].tap()
             XCTAssertTrue(app.navigationBars[title].appears(timeout: 10), "No se abrió \(tab)")
@@ -84,8 +84,8 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["Ver en Gráficas"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Gráficas"].appears(timeout: 10))
         capture(app, "41-progreso-graficas")
-        app.tabBars.buttons["Progreso"].tap()  // tocar otra vez la pestaña vuelve a Estadísticas
-        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10))
+        app.tabBars.buttons["Progreso"].tap()  // tocar otra vez la pestaña vuelve a Progreso
+        XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
 
         // La tarjeta del catálogo está al final de la lista: la List no la crea hasta que se ve.
         let catalog = app.buttons["catalog-card"].firstMatch

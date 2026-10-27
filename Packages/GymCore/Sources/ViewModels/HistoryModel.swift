@@ -119,7 +119,12 @@ public final class HistoryModel {
 
     public var detailTitle: String {
         guard let session else { return HistoryText.title }
-        return HistoryText.detailTitle(routine: routineName(session.routineID), date: session.date)
+        return routineName(session.routineID)
+    }
+
+    /// La fecha de la sesión, debajo del título.
+    public var detailSubtitle: String {
+        session.map { HistoryText.detailSubtitle($0.date) } ?? ""
     }
 
     public var isIncomplete: Bool { session.map { !$0.completed } ?? false }

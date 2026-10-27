@@ -51,9 +51,10 @@ struct DaySelectorTests {
         await today.start("DIA2")
         #expect(today.model.stage == .active)
         // El recuadro «Entreno en curso — …» de la PWA es ahora el título y el subtítulo de la
-        // barra (cambiado con la aprobación del usuario, 2026-10-26).
-        #expect(today.model.title == "Entreno Full Body - Día 2")
-        #expect(TodayText.inProgress == "En curso")
+        // barra (cambiado con la aprobación del usuario, 2026-10-26); el título, solo el nombre de
+        // la rutina (2026-10-27).
+        #expect(today.model.title == "Full Body - Día 2")
+        #expect(today.model.subtitle == "En curso")
         #expect(await today.savedToday?.routineID == "DIA2")
     }
 
@@ -88,7 +89,10 @@ struct RoutineRowTests {
     func previewTitle() async {
         let today = await TodayHarness.make()
         today.model.select("DIA1")
-        #expect(today.model.title == "Rutina de Full Body - Día 1")
+        // El nombre de la rutina y «Vista previa» debajo (la PWA: «Rutina de …»; cambio aprobado
+        // por el usuario, 2026-10-27).
+        #expect(today.model.title == "Full Body - Día 1")
+        #expect(today.model.subtitle == "Vista previa")
     }
 }
 

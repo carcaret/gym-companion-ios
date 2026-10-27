@@ -95,7 +95,7 @@ final class NavigationTests: XCTestCase {
         app.tabBars.buttons["Progreso"].tap()
         openChartsFromProgress(app)
         app.tabBars.buttons["Progreso"].tap()
-        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10), "Tocar otra vez Progreso cierra las gráficas")
+        XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10), "Tocar otra vez Progreso cierra las gráficas")
     }
 
     /// «Ver en Gráficas» empuja las gráficas dentro de Progreso, sin cambiar de pestaña, y se vuelve
@@ -112,7 +112,7 @@ final class NavigationTests: XCTestCase {
         XCTAssertTrue(app.buttons["chart-exercise"].label.contains("Press Banca"), "Con el ejercicio elegido")
 
         swipeBackFully(app)
-        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10), "Deslizar vuelve a Estadísticas")
+        XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10), "Deslizar vuelve a Progreso")
     }
 
     /// El entreno terminado entra empujado sobre las rutinas: se vuelve deslizando desde el borde,
@@ -169,7 +169,7 @@ final class NavigationTests: XCTestCase {
         assertSyncIndicator(app, "en las gráficas abiertas desde Progreso")
 
         app.tabBars.buttons["Progreso"].tap()
-        XCTAssertTrue(app.navigationBars["Estadísticas"].appears(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
         // La tarjeta del catálogo está al final: la lista no la crea hasta que se ve.
         let catalog = app.buttons["catalog-card"].firstMatch
         for _ in 0..<6 where !catalog.isHittable {
