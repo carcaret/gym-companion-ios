@@ -1,3 +1,4 @@
+import Presentation
 import SwiftUI
 import ViewModels
 
@@ -48,6 +49,18 @@ struct RootView: View {
             case .progress: root.progress.reselect()
             case .charts: break
             }
+        }
+        // Si los datos no se pueden leer, la app no sale vacía como si no hubiera nada: lo dice,
+        // encima de todo, y ofrece reintentar o descargarlos de GitHub (2026-10-27).
+        .overlay {
+            if root.model.loadError != nil {
+                DataLoadErrorView(model: root.model, sync: root.sync)
+            }
+        }
+        .alert(DataErrorText.saveTitle, isPresented: Bindable(root.model).isSaveErrorPresented) {
+            Button(DataErrorText.understood) {}
+        } message: {
+            Text(DataErrorText.saveMessage)
         }
         .syncPresentation(root.sync, noticeDuration: root.noticeDuration, isActive: !root.sync.isSettingsPresented)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {

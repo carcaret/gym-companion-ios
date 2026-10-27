@@ -556,3 +556,51 @@ struct WorkoutReorderTests {
         #expect(today.model.activeCards.allSatisfy { !$0.isOpen })
     }
 }
+
+// Propio de la app (2026-10-27): el `db.json` guarda un entreno por día. La PWA borraba sin
+// preguntar el terminado de hoy al empezar otra rutina; ahora se confirma antes.
+@MainActor
+@Suite("Empezar con el entreno de hoy ya terminado")
+struct TodayReplaceTests {
+    @Test("sin entreno hoy, empezar no pregunta")
+    func noPrompt() async {
+        let today = await TodayHarness.make()
+        today.model.select("DIA1")
+        await today.model.requestStart()
+        #expect(today.model.replacePrompt == nil)
+        #expect(today.model.stage == .active)
+    }
+
+    @Test("con el de hoy terminado, pregunta antes de sustituirlo y cancelar lo deja")
+    func cancel() async throws {
+        let today = await TodayHarness.make()
+        await today.start("DIA1")
+        await today.finish()
+        today.model.backToSelector()
+        today.model.select("DIA2")
+        await today.model.requestStart()
+        let prompt = try #require(today.model.replacePrompt)
+        #expect(prompt.title == "Ya has entrenado hoy (Full Body - Día 1)")
+        #expect(prompt.message == "Si empiezas Full Body - Día 2, sustituye al entreno de hoy.")
+        today.model.cancelReplace()
+        #expect(today.model.replacePrompt == nil)
+        #expect(await today.savedToday?.routineID == "DIA1")
+        #expect(await today.savedToday?.completed == true)
+    }
+
+    @Test("sustituir desde el diálogo, que se cierra antes de la acción, empieza el nuevo")
+    func replace() async throws {
+        let today = await TodayHarness.make()
+        await today.start("DIA1")
+        await today.finish()
+        today.model.backToSelector()
+        today.model.select("DIA2")
+        await today.model.requestStart()
+        let prompt = try #require(today.model.replacePrompt)
+        today.model.cancelReplace()
+        await today.model.confirmReplace(prompt)
+        #expect(today.model.stage == .active)
+        #expect(await today.savedToday?.routineID == "DIA2")
+        #expect(await today.savedToday?.completed == false)
+    }
+}

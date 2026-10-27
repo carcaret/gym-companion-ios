@@ -13,8 +13,12 @@ public final class AppModel {
     }
     /// Si los datos guardados no se pudieron leer: no se machacan, se avisa.
     public private(set) var loadError: String?
-    /// Si un cambio no se pudo guardar en el iPhone.
-    public private(set) var saveError: String?
+    /// Si un cambio no se pudo guardar en el iPhone. Al pasar de guardar bien a fallar, se avisa
+    /// una vez (`isSaveErrorPresented`); los fallos siguientes no repiten el aviso.
+    public private(set) var saveError: String? {
+        didSet { if oldValue == nil, saveError != nil { isSaveErrorPresented = true } }
+    }
+    public var isSaveErrorPresented = false
     /// El aviso breve que hay que enseñar (uno para toda la app, como el toast de la PWA); la
     /// vista lo quita cuando se ha visto.
     public var notice: Notice?
@@ -67,8 +71,10 @@ public final class AppModel {
         watch?.send(data)
     }
 
-    /// Lo remoto sustituye a lo local (lo decide la sincronización).
+    /// Lo remoto sustituye a lo local (lo decide la sincronización). Si los datos no se podían leer,
+    /// ya están: los de GitHub, guardados encima.
     func replace(with remoteData: TrainingData) {
         data = remoteData
+        loadError = nil
     }
 }

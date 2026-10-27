@@ -76,6 +76,10 @@ public enum TodayText {
     public static func reciprocalMessage(new: String, outgoing: String, routine: String) -> String {
         "\(new) pertenece a \(routine). ¿Poner \(outgoing) en su lugar la próxima vez que hagas \(routine) (esta semana)?"
     }
+    // Empezar con el entreno de hoy ya terminado
+    public static func replaceTitle(_ done: String) -> String { "Ya has entrenado hoy (\(done))" }
+    public static func replaceMessage(_ routine: String) -> String { "Si empiezas \(routine), sustituye al entreno de hoy." }
+    public static let replaceConfirm = "Sustituir"
     public static let yes = "Sí"
     public static let no = "No"
 

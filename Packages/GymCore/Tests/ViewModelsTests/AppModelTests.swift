@@ -49,6 +49,63 @@ struct AppModelTests {
     }
 }
 
+// Propio de la app (2026-10-27): los errores de los datos se ven. Antes se guardaban en el modelo
+// y ninguna pantalla los enseñaba: la app salía vacía, como si no hubiera nada.
+@MainActor
+@Suite("Errores de los datos")
+struct AppModelDataErrorTests {
+    @Test("si un cambio no se puede guardar, avisa una vez hasta que vuelva a guardarse")
+    func saveFailure() async {
+        let harness = SyncHarness(configured: false)
+        let model = AppModel(repository: harness.repository())
+        await model.start()
+        await harness.local.fail(saving: true)
+        await model.update(SyncFixtures.finishedWorkout())
+        #expect(model.data == SyncFixtures.finishedWorkout())
+        #expect(model.isSaveErrorPresented)
+        model.isSaveErrorPresented = false
+        await model.update(SyncFixtures.activeWorkout())
+        #expect(!model.isSaveErrorPresented, "Mientras sigue sin poder guardar, no avisa en cada cambio")
+        await harness.local.fail()
+        await model.update(SyncFixtures.finishedWorkout())
+        #expect(model.saveError == nil)
+        await harness.local.fail(saving: true)
+        _ = await model.finishWorkout(SyncFixtures.finishedWorkout())
+        #expect(model.isSaveErrorPresented, "Tras guardar bien, el siguiente fallo vuelve a avisar")
+    }
+
+    @Test("si no puede leer los datos, se puede reintentar")
+    func retry() async {
+        let harness = SyncHarness(configured: false)
+        await harness.local.fail(loading: true)
+        let model = AppModel(repository: harness.repository())
+        await model.start()
+        #expect(model.loadError != nil)
+        await harness.local.fail()
+        await model.start()
+        #expect(model.data == SyncFixtures.base)
+        #expect(model.loadError == nil)
+    }
+
+    @Test("si no puede leer los datos, descargarlos de GitHub los recupera")
+    func recoverFromGitHub() async {
+        let remote = SyncFixtures.finishedWorkout()
+        let harness = SyncHarness(remote: remote)
+        await harness.local.fail(loading: true)
+        let repository = harness.repository()
+        let model = AppModel(repository: repository)
+        let sync = SyncModel(repository: repository, app: model)
+        await model.start()
+        await sync.refresh()
+        #expect(model.loadError != nil)
+        #expect(sync.status.state != .disabled, "Con GitHub, la pantalla del error ofrece descargar")
+        await sync.download()
+        #expect(model.data == remote)
+        #expect(model.loadError == nil)
+        #expect(await harness.local.data == remote)
+    }
+}
+
 private struct FailingStore: TrainingDataStore {
     struct Failure: Error {}
     func load() async throws -> TrainingData? { throw Failure() }

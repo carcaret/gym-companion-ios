@@ -16,6 +16,13 @@ public final class TodayModel {
         case completed
     }
 
+    /// Empezar con el entreno de hoy ya terminado: el `db.json` guarda uno por día, así que el
+    /// nuevo lo sustituye. Se confirma antes.
+    public struct ReplacePrompt: Hashable, Sendable {
+        public let title: String
+        public let message: String
+    }
+
     public struct RoutineRow: Hashable, Sendable {
         public let id: RoutineID
         public let title: String
@@ -200,6 +207,31 @@ public final class TodayModel {
         if openPreviewCards.contains(index) { openPreviewCards.remove(index) } else { openPreviewCards.insert(index) }
     }
 
+    public private(set) var replacePrompt: ReplacePrompt?
+
+    /// «Iniciar entreno»: si hoy ya hay uno terminado, antes pregunta.
+    public func requestStart() async {
+        guard case .preview(let routine) = storedStage else { return }
+        if let done = todaySession, done.completed {
+            replacePrompt = ReplacePrompt(title: TodayText.replaceTitle(name(of: done.routineID)),
+                                          message: TodayText.replaceMessage(name(of: routine)))
+            return
+        }
+        await start()
+    }
+
+    /// «Sustituir». Recibe el aviso que se confirma, no lo lee de `replacePrompt`: SwiftUI cierra
+    /// el diálogo (`cancelReplace`) antes de ejecutar la acción del botón.
+    public func confirmReplace(_ prompt: ReplacePrompt) async {
+        replacePrompt = nil
+        await start()
+    }
+
+    public func cancelReplace() {
+        replacePrompt = nil
+    }
+
+    /// Empieza sin preguntar: el entreno de hoy, si lo hay, se sustituye.
     public func start() async {
         guard case .preview(let routine) = storedStage else { return }
         let weekStart = today.weekStart
