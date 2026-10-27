@@ -6,8 +6,6 @@ import SwiftUI
 /// `List` (el entreno en curso) la cabecera y el contenido se pintaban uno encima de otro (captura
 /// del CI, 2026-10-26).
 struct CardDisclosure<Label: View, Content: View>: View {
-    @Environment(\.disclosureAnimatesHeight) private var animatesHeight
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let isExpanded: Bool
     var chevronSize: CGFloat = 13
     /// Para los tests: va en el botón de la cabecera.
@@ -22,23 +20,14 @@ struct CardDisclosure<Label: View, Content: View>: View {
                 label
             }
             if isExpanded {
-                if animatesHeight {
-                    content.transition(.opacity.combined(with: .offset(y: -8)))
-                } else {
-                    // Con su propia animación: solo la opacidad, la fila cambia de golpe.
-                    content.transition(reduceMotion ? .identity : .opacity.animation(.easeOut(duration: 0.2)))
-                }
+                // Solo opacidad, sin desplazarlo: en una fila de `List` (el entreno), entrar con
+                // `.offset` hacía que la lista bajara el contenido y la cabecera pasara por encima
+                // (vídeo del CI, 2026-10-27). Sin él, en un `VStack` la tarjeta crece con
+                // animación y en la `List` la fila cambia de golpe, limpia.
+                content.transition(.opacity)
             }
         }
     }
-}
-
-extension EnvironmentValues {
-    /// Si abrir y cerrar anima la altura. En una fila de `List` no: la lista coloca el contenido
-    /// de la fila más abajo mientras la hace crecer, y la cabecera pasaba por encima de él (en el
-    /// simulador se quedaba así varios segundos; vídeo del CI, 2026-10-27). Ahí la fila cambia de
-    /// golpe y el contenido entra con un fundido. Lo apagan el entreno y Progreso.
-    @Entry var disclosureAnimatesHeight = true
 }
 
 /// La cabecera de `CardDisclosure`, también suelta para lo que al abrirse enseña más de lo mismo
@@ -50,25 +39,17 @@ struct DisclosureHeader<Label: View>: View {
     let toggle: () -> Void
     @ViewBuilder let label: Label
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.disclosureAnimatesHeight) private var animatesHeight
 
     var body: some View {
-        // Con animación, la tarjeta crece con el muelle de iOS y la flecha gira a la vez. En una
-        // `List` (`disclosureAnimatesHeight`), la fila cambia de golpe y solo gira la flecha.
-        let button = Button {
-            if animatesHeight {
-                withAnimation(reduceMotion ? nil : .snappy) { toggle() }
-            } else {
-                toggle()
-            }
-        } label: {
+        // Con animación, la tarjeta (o la fila de la lista) crece con el muelle de iOS y la flecha
+        // gira a la vez.
+        let button = Button { withAnimation(reduceMotion ? nil : .snappy) { toggle() } } label: {
             HStack(spacing: 10) {
                 label
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .scaledFont(chevronSize, .semibold)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                    .animation(animatesHeight || reduceMotion ? nil : .snappy, value: isExpanded)
                     .foregroundStyle(Theme.textMuted)
             }
             .contentShape(.rect)
