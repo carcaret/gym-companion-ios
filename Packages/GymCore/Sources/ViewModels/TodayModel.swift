@@ -127,16 +127,26 @@ public final class TodayModel {
     /// Con un entreno en curso, siempre el entreno.
     public var stage: Stage { activeSession != nil ? .active : storedStage }
 
+    /// El selector, «Rutinas»; lo demás, el nombre de la rutina (y en qué punto está, `subtitle`).
     public var title: String {
         switch stage {
         case .selector: TodayText.selectorTitle
-        case .preview(let routine): TodayText.previewTitle(name(of: routine))
-        case .active: TodayText.activeTitle(name(of: activeSession?.routineID))
+        case .preview(let routine): name(of: routine)
+        case .active: name(of: activeSession?.routineID)
         case .completed: name(of: todaySession?.routineID)
         }
     }
 
-    /// "Entreno en curso — Full Body - Día 1".
+    /// Debajo del título: vista previa, en curso o terminado; el selector no lleva.
+    public var subtitle: String? {
+        switch stage {
+        case .selector: nil
+        case .preview: TodayText.previewStatus
+        case .active: TodayText.inProgress
+        case .completed: TodayText.completedSubtitle
+        }
+    }
+
 
     // MARK: - Selector
 

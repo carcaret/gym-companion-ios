@@ -77,7 +77,8 @@ struct CatalogTests {
         catalog.model.leave()
         #expect(catalog.model.query.isEmpty)
         #expect(StatsText.exercisesTitle == "Ejercicios")
-        #expect(StatsText.title == "Estadísticas")
+        // Como su pestaña (la PWA: «Estadísticas»; cambio aprobado por el usuario, 2026-10-27).
+        #expect(StatsText.title == "Progreso")
     }
 
     @Test("renombrar un ejercicio se propaga al resto de la app")

@@ -14,10 +14,9 @@ public enum HistoryText {
         return "\(names.count) ejercicios · \(preview)"
     }
 
-    /// "Full Body - Día 1 — lun, 8 ene 2024".
-    public static func detailTitle(routine: String, date: LocalDate) -> String {
-        "\(routine) — \(DateText.long(date))"
-    }
+    /// El detalle de una sesión: la rutina de título y la fecha larga debajo, de subtítulo («lun, 8
+    /// ene 2024»); en una sola línea se cortaba (decisión del usuario, 2026-10-27).
+    public static func detailSubtitle(_ date: LocalDate) -> String { DateText.long(date) }
 
     public static let deleteTitle = "¿Borrar entreno?"
     public static func deleteMessage(_ date: LocalDate) -> String {

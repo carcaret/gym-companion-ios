@@ -2,7 +2,8 @@ import Domain
 
 /// Los textos de la pestaña Progreso (`views/estadisticas.js`).
 public enum StatsText {
-    public static let title = "Estadísticas"
+    /// Como su pestaña (la PWA: «Estadísticas»; decisión del usuario, 2026-10-27).
+    public static let title = "Progreso"
     public static let exercisesTitle = "Ejercicios"
     public static let groupsTitle = "Grupos musculares"
     public static let recentSessions = "Últimas sesiones"

@@ -13,11 +13,15 @@ struct TodayScreen: View {
             switch model.stage {
             // La vista previa y el entreno terminado entran empujados sobre el selector: se vuelve
             // con la flecha de la barra o deslizando desde el borde, como en cualquier app de iOS.
-            case .selector, .preview, .completed: selector.navigationTitle(TodayText.selectorTitle)
-            case .active: ActiveWorkoutView(model: model).navigationTitle(model.title)
+            // El selector, con el título grande que se encoge al desplazar, como la entrada de
+            // las demás pestañas. El entreno en curso, en pequeño: un título largo con «En curso»
+            // debajo, y el sitio es para las tarjetas (decisión del usuario, 2026-10-27).
+            case .selector, .preview, .completed:
+                selector.navigationTitle(TodayText.selectorTitle).navigationBarTitleDisplayMode(.large)
+            case .active:
+                ActiveWorkoutView(model: model).navigationTitle(model.title).navigationBarTitleDisplayMode(.inline)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: Binding(get: { isPushed }, set: { if !$0 { model.backToSelector() } })) {
             // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
             // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
@@ -30,6 +34,7 @@ struct TodayScreen: View {
             }
             .syncToolbar()
             .navigationTitle(model.title)
+            .navigationSubtitle(model.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .screenBackground()
         }
@@ -45,14 +50,9 @@ struct TodayScreen: View {
 
     /// Una `List` de iOS con las tarjetas de la PWA como filas (`cardRow`).
     private var selector: some View {
+        // Sin la frase «Selecciona una rutina para entrenar» de la PWA: el título y las tarjetas
+        // ya lo dicen (decisión del usuario, 2026-10-27).
         List {
-            Text(TodayText.selectorPrompt)
-                .scaledFont(16)
-                .foregroundStyle(Theme.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 14)
-                .padding(.bottom, 8)
-                .cardRow()
             ForEach(model.routineRows, id: \.id) { row in
                 Button { model.select(row.id) } label: {
                     VStack(alignment: .leading, spacing: 4) {

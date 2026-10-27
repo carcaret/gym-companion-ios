@@ -263,7 +263,10 @@ struct HistoryListTests {
     func detailTitle() async {
         let history = await HistoryHarness.make()
         history.model.open(history.model.rows[1].date)
-        #expect(history.model.detailTitle == "Full Body - Día 1 — lun, 8 ene 2024")
+        // La rutina de título y la fecha debajo (la PWA: las dos en una línea con «—»; cambio
+        // aprobado por el usuario, 2026-10-27).
+        #expect(history.model.detailTitle == "Full Body - Día 1")
+        #expect(history.model.detailSubtitle == "lun, 8 ene 2024")
     }
 
     @Test("tocar otra vez la pestaña enseña la lista")
@@ -397,8 +400,10 @@ struct HistoryIncompleteTests {
     func badgeSeparate() async {
         let history = await make()
         history.model.open(Self.incompleteDate)
-        #expect(history.model.detailTitle.contains("—"))
+        // La fecha va ahora en el subtítulo (cambio aprobado por el usuario, 2026-10-27).
+        #expect(!history.model.detailSubtitle.isEmpty)
         #expect(!history.model.detailTitle.contains("Incompleto"))
+        #expect(!history.model.detailSubtitle.contains("Incompleto"))
         #expect(history.model.isIncomplete)
     }
 }
