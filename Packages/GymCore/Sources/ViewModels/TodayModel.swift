@@ -93,6 +93,7 @@ public final class TodayModel {
         public let swap: PendingSwap
         public let title: String
         public let message: String
+        public let acceptLabel: String
     }
 
     // MARK: - Estado
@@ -119,12 +120,10 @@ public final class TodayModel {
     public private(set) var reciprocalOffer: ReciprocalOffer?
 
     private let app: AppModel
-    private let sync: SyncModel
     private let clock: any Clock
 
-    public init(app: AppModel, sync: SyncModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock) {
         self.app = app
-        self.sync = sync
         self.clock = clock
     }
 
@@ -351,8 +350,8 @@ public final class TodayModel {
         replaceSession(session, in: &data)
         storedStage = .completed
         openExercise = nil
-        let result = await app.finishWorkout(data)
-        sync.workoutFinished(result)
+        // Si no se puede subir, no se interrumpe: la nube se queda pendiente y se sube sola.
+        _ = await app.finishWorkout(data)
     }
 
     // MARK: - Entreno terminado
@@ -522,7 +521,8 @@ public final class TodayModel {
         else { return }
         reciprocalOffer = ReciprocalOffer(
             routine: target, swap: swap, title: TodayText.reciprocalTitle,
-            message: TodayText.reciprocalMessage(new: data.catalog.name(of: new), outgoing: data.catalog.name(of: outgoing), routine: name(of: target))
+            message: TodayText.reciprocalMessage(new: data.catalog.name(of: new), outgoing: data.catalog.name(of: outgoing), routine: name(of: target)),
+            acceptLabel: TodayText.reciprocalAccept(name(of: target))
         )
     }
 

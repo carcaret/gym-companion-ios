@@ -17,8 +17,8 @@ public final class HistoryModel {
         public let routine: String
         public let day: String
         public let month: String
-        /// "Hace 3 días".
-        public let relative: String
+        /// "Hace 3 días"; más de un mes, nada.
+        public let relative: String?
         public let summary: String
         /// Sin terminar: se pinta con tinte azul y el icono de pausa.
         public let isIncomplete: Bool
@@ -29,6 +29,13 @@ public final class HistoryModel {
     public struct DiscardPrompt: Hashable, Sendable {
         /// Viene de tocar la pestaña: al descartar, a la lista.
         public let leavesDetail: Bool
+    }
+
+    /// Un mes del Historial: «Octubre de 2026» y sus sesiones.
+    public struct MonthSection: Hashable, Sendable, Identifiable {
+        public var id: String { title }
+        public let title: String
+        public let rows: [Row]
     }
 
     public struct DeletePrompt: Hashable, Sendable {
@@ -74,6 +81,20 @@ public final class HistoryModel {
                        isIncomplete: !session.completed,
                        tint: RoutineTint.of(session.routineID, in: data.routines.map(\.id)))
         }
+    }
+
+    /// Las sesiones por mes, de la más reciente a la más antigua (como Fotos o Fitness).
+    public var sections: [MonthSection] {
+        var sections: [MonthSection] = []
+        for row in rows {
+            let title = DateText.monthYear(row.date)
+            if let last = sections.last, last.title == title {
+                sections[sections.count - 1] = MonthSection(title: title, rows: last.rows + [row])
+            } else {
+                sections.append(MonthSection(title: title, rows: [row]))
+            }
+        }
+        return sections
     }
 
     public func open(_ date: LocalDate) {

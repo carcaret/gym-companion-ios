@@ -89,8 +89,7 @@ struct CatalogTests {
         await catalog.model.save()
         #expect(catalog.rows.contains { $0.name == "Press Banca Plano" })
         #expect(await catalog.harness.savedLocally?.catalog["press_banca"]?.name == "Press Banca Plano")
-        let today = TodayModel(app: catalog.app, sync: SyncModel(repository: catalog.harness.repository(), app: catalog.app),
-                               clock: FixedClock(SyncFixtures.today))
+        let today = TodayModel(app: catalog.app, clock: FixedClock(SyncFixtures.today))
         #expect(today.routineRows.contains { $0.subtitle.contains("Press Banca Plano") })
     }
 

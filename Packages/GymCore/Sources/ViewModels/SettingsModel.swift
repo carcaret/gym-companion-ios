@@ -20,7 +20,7 @@ public final class SettingsModel {
     /// Lo que está en marcha: su fila enseña una ruedita y los botones esperan (en la PWA, un
     /// aviso «Probando conexión...», «Subiendo...»).
     public enum Activity: Hashable, Sendable {
-        case saving, testing, uploading, downloading
+        case saving, testing, downloading
     }
 
     public private(set) var activity: Activity?
@@ -47,7 +47,7 @@ public final class SettingsModel {
     public var canSave: Bool { activity == nil && SyncModel.isComplete(repository: repository, token: token) }
     /// Se prueba lo escrito, sin guardarlo antes.
     public var canTestConnection: Bool { canSave }
-    /// Subir y descargar trabajan con lo guardado.
+    /// Descargar trabaja con lo guardado.
     public var canTransfer: Bool { activity == nil && savedLocation != nil }
 
     public var status: SyncStatus { sync.status }
@@ -89,12 +89,6 @@ public final class SettingsModel {
             let result = await sync.testConnection(repository: repository, branch: branch, path: path, token: token)
             connectionResult = result
         }
-    }
-
-    /// "Subir a GitHub".
-    public func upload() async {
-        guard canTransfer else { return }
-        await run(.uploading) { await sync.forceUpload() }
     }
 
     /// "Descargar de GitHub": primero se confirma.

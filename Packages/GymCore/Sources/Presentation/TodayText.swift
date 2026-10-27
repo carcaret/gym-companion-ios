@@ -80,8 +80,9 @@ public enum TodayText {
     public static func replaceTitle(_ done: String) -> String { "Ya has entrenado hoy (\(done))" }
     public static func replaceMessage(_ routine: String) -> String { "Si empiezas \(routine), sustituye al entreno de hoy." }
     public static let replaceConfirm = "Sustituir"
-    public static let yes = "Sí"
-    public static let no = "No"
+    /// Botones con verbo, no «Sí» y «No» (2026-10-27).
+    public static func reciprocalAccept(_ routine: String) -> String { "Cambiar también en \(routine)" }
+    public static let reciprocalDecline = "Ahora no"
 
     /// En el mensaje de la alerta de crear, que se vuelve a abrir con el nombre: un aviso quedaría
     /// debajo de la alerta.

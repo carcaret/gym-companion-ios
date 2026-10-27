@@ -81,8 +81,8 @@ struct ActiveWorkoutView: View {
         .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(
             get: { model.reciprocalOffer != nil }, set: { if !$0 { model.declineReciprocal() } }
         ), presenting: model.reciprocalOffer) { offer in
-            Button(TodayText.no, role: .cancel) { model.declineReciprocal() }
-            Button(TodayText.yes) { Task { await model.acceptReciprocal(offer) } }
+            Button(TodayText.reciprocalDecline, role: .cancel) { model.declineReciprocal() }
+            Button(offer.acceptLabel) { Task { await model.acceptReciprocal(offer) } }
         } message: { offer in
             Text(offer.message)
         }

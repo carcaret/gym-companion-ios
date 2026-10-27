@@ -222,6 +222,8 @@ struct ReciprocalSwapTests {
         let offer = try #require(today.model.reciprocalOffer)
         #expect(offer.title == "Intercambio recíproco")
         #expect(offer.message.contains("Full Body - Día 1"))
+        // Botones con verbo, no «Sí» y «No» (2026-10-27).
+        #expect(offer.acceptLabel == "Cambiar también en Full Body - Día 1")
         await today.model.acceptReciprocal(offer)
         let pending = try #require(await today.saved?.pendingSwaps["DIA1"])
         #expect(pending.from == "curl_biceps")
@@ -634,14 +636,19 @@ struct FinishValidationTests {
         #expect(today.model.activeCards.map(\.isOpen) == [false, true, false])
     }
 
-    @Test("terminar sin poder subir a GitHub avisa de que queda guardado en el iPhone")
+    // Antes avisaba con la alerta «Entreno guardado localmente» (quitada con la aprobación del
+    // usuario, 2026-10-27): queda guardado, pendiente de subir, y la nube lo dice.
+    @Test("terminar sin poder subir a GitHub lo guarda en el iPhone, pendiente de subir, sin interrumpir")
     func savedLocally() async {
         let today = await TodayHarness.make(configured: true)
         await today.harness.remote.fail(fetch: .unreachable, push: .unreachable)
         await today.start()
         await today.finish()
         #expect(today.model.stage == .completed)
-        #expect(today.sync.isSavedLocallyPresented)
+        #expect(await today.savedToday?.completed == true)
+        await today.sync.refresh()
+        #expect(today.sync.status.state == .pending)
+        #expect(today.app.notice == nil)
     }
 }
 

@@ -35,17 +35,22 @@ struct HistoryScreen: View {
         if model.rows.isEmpty {
             ContentUnavailableView(HistoryText.empty, systemImage: "list.clipboard")
         } else {
-            List(model.rows) { row in
-                Button { model.open(row.date) } label: { HistoryRowView(row: row) }
-                    .buttonStyle(.card)
-                    .cardRow()
-                    .swipeActions {
-                        // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
-                        // tocarlo y la quita antes de que se confirme. El rojo, a mano.
-                        Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
-                            .tint(Theme.red)
+            // Por meses, como Fotos o Fitness (2026-10-27).
+            List(model.sections) { section in
+                Section(section.title) {
+                    ForEach(section.rows) { row in
+                        Button { model.open(row.date) } label: { HistoryRowView(row: row) }
+                            .buttonStyle(.card)
+                            .cardRow()
+                            .swipeActions {
+                                // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
+                                // tocarlo y la quita antes de que se confirme. El rojo, a mano.
+                                Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
+                                    .tint(Theme.red)
+                            }
+                            .accessibilityIdentifier("history-\(row.date.iso)")
                     }
-                    .accessibilityIdentifier("history-\(row.date.iso)")
+                }
             }
             .listStyle(.plain)
             .screenBackground()
@@ -163,7 +168,9 @@ private struct HistoryRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     RoutineBadge(text: row.routine, color: Theme.color(row.tint) ?? Theme.textSecondary)
-                    Text(row.relative).scaledFont(11).foregroundStyle(Theme.textSecondary)
+                    if let relative = row.relative {
+                        Text(relative).scaledFont(11).foregroundStyle(Theme.textSecondary)
+                    }
                     if row.isIncomplete {
                         Image(systemName: "pause.fill").scaledFont(10).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
                     }

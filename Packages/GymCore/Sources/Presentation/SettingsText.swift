@@ -14,8 +14,9 @@ public enum SettingsText {
     public static let tokenPlaceholder = "ghp_..."
     public static let save = "Guardar"
     public static let testConnection = "Probar conexión"
-    public static let upload = "Subir a GitHub"
-    public static let download = "Descargar de GitHub"
+    /// Para recuperar los datos de GitHub (la subida es automática; «Subir a GitHub» se quitó el
+    /// 2026-10-27).
+    public static let download = "Sustituir por los datos de GitHub"
     public static let status = "Estado"
 
     public static func status(_ state: String) -> String { state }

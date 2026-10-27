@@ -40,22 +40,18 @@ public enum SyncText {
     public static let downloadFailed = Notice("No se pudo descargar de GitHub", .error)
     public static let configureFailed = Notice("No se pudo guardar la configuración", .error)
 
-    // "Descargar de GitHub"
-    public static let downloadTitle = "Descargar de GitHub"
-    public static let downloadWarning = "Esto sobreescribirá tus datos locales con los de GitHub. Los cambios no subidos se perderán. ¿Continuar?"
-    public static let downloadConfirm = "Sobreescribir local"
+    // «Sustituir por los datos de GitHub» (2026-10-27; antes «Descargar de GitHub» con el
+    // «¿Continuar?» del `confirm()` de la PWA)
+    public static let downloadTitle = "Sustituir por los datos de GitHub"
+    public static let downloadWarning = "Los datos de este iPhone se sustituirán por los de GitHub. Lo que no se haya subido se perderá."
+    public static let downloadConfirm = "Sustituir"
 
-    // Conflicto
+    // Conflicto: qué datos se quedan, sin flechas ni nombres de fichero (2026-10-27)
     public static let conflictTitle = "Conflicto con GitHub"
-    public static let conflictMessage = "GitHub tiene cambios que no coinciden con los locales (posiblemente editaste db.json a mano). Elige cómo resolver:"
-    public static let keepLocalLabel = "Subir local → GitHub"
-    public static let keepRemoteLabel = "Bajar GitHub → local"
+    public static let conflictMessage = "GitHub tiene datos distintos de los de este iPhone. ¿Cuáles quieres conservar?"
+    public static let keepLocalLabel = "Usar los de este iPhone"
+    public static let keepRemoteLabel = "Usar los de GitHub"
     public static let cancelLabel = "Cancelar"
-
-    // Al terminar un entreno sin poder subirlo
-    public static let savedLocallyTitle = "Entreno guardado localmente"
-    public static let savedLocallyMessage = "El entreno se ha guardado en este dispositivo, pero no se pudo subir a GitHub. Se subirá automáticamente cuando haya conexión."
-    public static let understood = "Entendido"
 
     // "Probar conexión": el resultado va debajo del botón, en el formulario, no en un aviso
     public static let connected = Notice("Conexión exitosa", .success)

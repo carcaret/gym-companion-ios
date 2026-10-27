@@ -266,6 +266,21 @@ struct HistoryListTests {
         #expect(rows[1].summary == "2 ejercicios · Press Banca · Curl Bíceps")
     }
 
+    // Propio de la app (2026-10-27): por meses, como Fotos o Fitness.
+    @Test("las sesiones van en secciones por mes, de la más reciente a la más antigua")
+    func sections() async {
+        let data = TrainingData(
+            catalog: Catalog([Exercise(id: "press_banca", name: "Press Banca")]),
+            routines: [Routine(id: "DIA1", name: "Día 1", exerciseIDs: ["press_banca"])],
+            history: ["2026-09-30", "2026-10-02", "2025-12-15", "2026-10-20"].map {
+                Session(date: LocalDate(iso: $0)!, routineID: "DIA1", completed: true, logs: [])
+            }
+        )
+        let history = await HistoryHarness.make(data)
+        #expect(history.model.sections.map(\.title) == ["Octubre de 2026", "Septiembre de 2026", "Diciembre de 2025"])
+        #expect(history.model.sections.map { $0.rows.map(\.date.iso) } == [["2026-10-20", "2026-10-02"], ["2026-09-30"], ["2025-12-15"]])
+    }
+
     @Test("cada sesión lleva el color de su rutina (filete y etiqueta de la PWA)")
     func tint() async {
         let history = await HistoryHarness.make()

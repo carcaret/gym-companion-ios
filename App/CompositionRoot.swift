@@ -46,7 +46,7 @@ struct CompositionRoot {
         sync = SyncModel(repository: repository, app: model)
         let navigation = NavigationModel()
         self.navigation = navigation
-        today = TodayModel(app: model, sync: sync, clock: SystemClock())
+        today = TodayModel(app: model, clock: SystemClock())
         history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
         charts = ChartsModel(app: model, clock: SystemClock())
         progress = ProgressModel(app: model, clock: SystemClock())

@@ -172,7 +172,7 @@ struct DirectStartTests {
     @Test("la vista inicial es Rutinas")
     func startsOnRoutines() async {
         let settings = await SettingsHarness.make()
-        let today = TodayModel(app: settings.app, sync: settings.sync, clock: FixedClock(SyncFixtures.today))
+        let today = TodayModel(app: settings.app, clock: FixedClock(SyncFixtures.today))
         #expect(NavigationModel().selectedTab == .routines)
         #expect(today.title == "Rutinas")
     }
@@ -220,14 +220,6 @@ struct SettingsModelTests {
         #expect(!settings.model.isDownloadConfirmationPresented)
         #expect(settings.app.data == SyncFixtures.base)
         #expect(settings.app.notice == SyncText.remoteApplied)
-    }
-
-    @Test("subir a GitHub sube lo local")
-    func upload() async {
-        let settings = await SettingsHarness.make(configured: true)
-        await settings.model.upload()
-        #expect(settings.app.notice == SyncText.uploaded)
-        #expect(await settings.harness.remote.data == PWATestDB.data)
     }
 }
 

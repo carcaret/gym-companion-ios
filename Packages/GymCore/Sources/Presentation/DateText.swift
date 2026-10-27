@@ -15,6 +15,8 @@ public struct DateBlock: Hashable, Sendable {
 public enum DateText {
     private static let weekdays = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
     private static let months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"]
+    private static let fullMonths = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre",
+                                     "Octubre", "Noviembre", "Diciembre"]
 
     /// "lun, 15 ene 2024" (el `toLocaleDateString('es-ES', …)` de la PWA).
     public static func long(_ date: LocalDate) -> String {
@@ -31,16 +33,23 @@ public enum DateText {
         "\(date.day)/\(date.month)"
     }
 
-    /// "Hoy", "Ayer", "Hace 3 días", "Hace 1 semana", "Hace 5 semanas".
-    public static func relative(_ date: LocalDate, today: LocalDate) -> String {
+    /// "Hoy", "Ayer", "Hace 3 días", "Hace 1 semana", "Hace 4 semanas". Más de un mes, nada: ya lo
+    /// dicen la fecha y la sección del mes (2026-10-27; la PWA seguía, «Hace 52 semanas»).
+    public static func relative(_ date: LocalDate, today: LocalDate) -> String? {
         let days = date.days(until: today)
         switch days {
         case 0: return "Hoy"
         case 1: return "Ayer"
         case ..<7: return "Hace \(days) días"
         case ..<14: return "Hace 1 semana"
-        default: return "Hace \(days / 7) semanas"
+        case ...30: return "Hace \(days / 7) semanas"
+        default: return nil
         }
+    }
+
+    /// "Octubre de 2026": la sección de un mes en el Historial.
+    public static func monthYear(_ date: LocalDate) -> String {
+        "\(fullMonths[date.month - 1]) de \(date.year)"
     }
 
     /// Día del mes y mes abreviado en mayúsculas ("5", "MAR").

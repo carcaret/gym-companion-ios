@@ -19,7 +19,7 @@ struct TodayHarness {
         let sync = SyncModel(repository: repository, app: app)
         await app.start()
         await sync.refresh()
-        return TodayHarness(harness: harness, app: app, sync: sync, model: TodayModel(app: app, sync: sync, clock: FixedClock(SyncFixtures.today)))
+        return TodayHarness(harness: harness, app: app, sync: sync, model: TodayModel(app: app, clock: FixedClock(SyncFixtures.today)))
     }
 
     var today: LocalDate { SyncFixtures.today }

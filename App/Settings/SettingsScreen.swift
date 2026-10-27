@@ -51,8 +51,6 @@ struct SettingsScreen: View {
             }
             .listRowBackground(Theme.surface)
             Section {
-                action(SettingsText.upload, .uploading) { Task { await model.upload() } }
-                    .disabled(!model.canTransfer)
                 action(SettingsText.download, .downloading, role: .destructive) { model.requestDownload() }
                     .disabled(!model.canTransfer)
                     // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.

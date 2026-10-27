@@ -16,8 +16,6 @@ public final class SyncModel {
     }
     /// Diálogo de conflicto: subir lo local, bajar lo remoto o cancelar.
     public var isConflictPresented = false
-    /// Aviso de que el entreno terminado se quedó en el iPhone sin subir.
-    public var isSavedLocallyPresented = false
     /// La hoja de los ajustes de sincronización (`SettingsModel`), que se abre desde el indicador.
     public var isSettingsPresented = false
 
@@ -125,27 +123,7 @@ public final class SyncModel {
         status.state == .pending && !status.waitingForWorkout
     }
 
-    /// Tras terminar un entreno: si había GitHub y no se pudo subir, se avisa.
-    public func workoutFinished(_ result: UploadResult) {
-        switch result {
-        case .unreachable, .failed, .conflict: isSavedLocallyPresented = true
-        case .uploaded, .notConfigured: break
-        }
-    }
-
     // MARK: - Botones
-
-    /// "Subir a GitHub". Lo que está en marcha lo dice la fila del botón (`SettingsModel.activity`).
-    public func forceUpload() async {
-        switch await repository.forceUpload() {
-        case .uploaded: notice = SyncText.uploaded
-        case .notConfigured: notice = SyncText.notConfigured
-        case .conflict: isConflictPresented = true
-        case .unreachable: notice = SyncText.offline
-        case .failed: notice = SyncText.uploadFailed
-        }
-        await refresh()
-    }
 
     /// "Descargar de GitHub", ya confirmado.
     public func download() async {
