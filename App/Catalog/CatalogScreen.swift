@@ -6,8 +6,8 @@ import ViewModels
 /// El catálogo, empujado con valor desde Progreso para que tocar otra vez la pestaña lo cierre.
 struct CatalogRoute: Hashable {}
 
-/// La entrada al catálogo al final de Progreso (`.catalog-card`), una fila de su lista: total y
-/// cuántos ejercicios no tienen grupo. La flecha la pone la lista.
+/// La entrada al catálogo al final de Progreso (`.catalog-card`), una fila de sección: total y
+/// cuántos ejercicios no tienen grupo.
 struct CatalogCard: View {
     let model: CatalogModel
 
@@ -26,9 +26,11 @@ struct CatalogCard: View {
                 }
                 Spacer()
                 Text(CatalogText.total(model.total)).scaledFont(12).foregroundStyle(Theme.textMuted)
+                Image(systemName: "chevron.right").scaledFont(13, .semibold).foregroundStyle(Theme.textMuted)
             }
-            .padding(.vertical, 4)
+            .contentShape(.rect)
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier("catalog-card")
     }
 }
