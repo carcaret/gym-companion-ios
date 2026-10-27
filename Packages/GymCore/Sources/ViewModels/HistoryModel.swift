@@ -4,9 +4,10 @@ import Observation
 import Presentation
 
 /// La pestaña Historial (`views/historial.js` de la PWA): la lista de sesiones, de la más reciente
-/// a la más antigua, y el detalle de una, donde se puede corregir cada ejercicio. Los cambios de
-/// una tarjeta se hacen sobre una copia y solo cuentan al pulsar "Guardar"; cerrar la tarjeta o
-/// volver a la lista los descarta.
+/// a la más antigua, y el detalle de una. El detalle es de solo lectura y se corrige con «Editar»,
+/// como en Contactos (2026-10-27; la PWA tenía un «Guardar» por tarjeta, y cerrarla o volver tiraba
+/// lo corregido sin avisar): los cambios van sobre una copia de la sesión, «OK» la guarda entera y
+/// «Cancelar» con cambios pregunta antes de tirarlos.
 @MainActor
 @Observable
 public final class HistoryModel {
@@ -24,6 +25,12 @@ public final class HistoryModel {
         public let tint: RoutineTint?
     }
 
+    /// «Cancelar» con cambios, o tocar otra vez la pestaña: «Descartar cambios» o «Seguir editando».
+    public struct DiscardPrompt: Hashable, Sendable {
+        /// Viene de tocar la pestaña: al descartar, a la lista.
+        public let leavesDetail: Bool
+    }
+
     public struct DeletePrompt: Hashable, Sendable {
         public let date: LocalDate
         public let title: String
@@ -33,9 +40,11 @@ public final class HistoryModel {
     /// La sesión abierta en detalle; `nil` = la lista.
     public private(set) var selectedDate: LocalDate?
     public private(set) var openCards: Set<Int> = []
-    /// Copias en edición de las tarjetas abiertas, por posición.
-    private var drafts: [Int: ExerciseLog] = [:]
-    public private(set) var dirtyCards: Set<Int> = []
+    /// La copia de los ejercicios de la sesión mientras se edita; `nil` = solo lectura.
+    private var drafts: [ExerciseLog]?
+    /// Los errores que marcó el último «OK», por posición.
+    private var validationErrors: [Int: [LogValidationError]] = [:]
+    public private(set) var discardPrompt: DiscardPrompt?
     public private(set) var focusedSeries: (log: Int, series: Int)?
     public private(set) var deletePrompt: DeletePrompt?
     /// Lo tecleado en un campo de la sesión abierta que aún no se ha aplicado (`TypedValue`).
@@ -78,17 +87,25 @@ public final class HistoryModel {
         selectedDate = nil
     }
 
-    /// Tocar otra vez la pestaña: la lista (`renderHistorial`).
+    /// Tocar otra vez la pestaña: la lista (`renderHistorial`). Con cambios sin guardar, antes
+    /// pregunta.
     public func reselect() {
-        back()
+        commitTyping()
+        guard hasChanges else { return back() }
+        discardPrompt = DiscardPrompt(leavesDetail: true)
     }
 
     private func resetDetail() {
-        typed = nil
         openCards = []
-        drafts = [:]
-        dirtyCards = []
+        endEditing()
+    }
+
+    private func endEditing() {
+        typed = nil
+        drafts = nil
+        validationErrors = [:]
         focusedSeries = nil
+        discardPrompt = nil
     }
 
     // MARK: - Borrar
@@ -132,33 +149,106 @@ public final class HistoryModel {
     public var cards: [ExerciseCard] {
         guard let session else { return [] }
         return session.logs.enumerated().map { index, stored in
-            let log = drafts[index] ?? stored
-            let isDirty = dirtyCards.contains(index)
+            let log = drafts.flatMap { $0.indices.contains(index) ? $0[index] : nil } ?? stored
             return ExerciseCard(
-                log: log, data: data, isOpen: openCards.contains(index), isEditable: true, anchor: session.date,
+                log: log, data: data, isOpen: openCards.contains(index), isEditable: isEditing, anchor: session.date,
                 focusedSeries: focusedSeries?.log == index ? focusedSeries?.series : nil,
-                errors: isDirty ? log.validationErrors : [], showsRecords: false, isDirty: isDirty
+                errors: validationErrors[index] ?? [], showsRecords: false, isDirty: isChanged(index)
             )
         }
     }
 
-    /// Abrir una tarjeta crea su copia, con las series vacías rellenadas con el objetivo; cerrarla
-    /// sin guardar la descarta.
+    /// Abrir o cerrar una tarjeta solo cambia lo que se ve: no guarda ni descarta nada.
     public func toggleCard(_ index: Int) {
         guard let session, session.logs.indices.contains(index) else { return }
         if openCards.contains(index) {
             openCards.remove(index)
-            drafts[index] = nil
-            dirtyCards.remove(index)
-            focusedSeries = nil
+            if focusedSeries?.log == index { focusedSeries = nil }
         } else {
-            var log = session.logs[index]
-            log.actualReps = (0..<max(0, log.series)).map { series in
-                (series < log.actualReps.count ? log.actualReps[series] : nil) ?? log.targetReps
-            }
-            drafts[index] = log
             openCards.insert(index)
         }
+    }
+
+    // MARK: - Editar
+
+    public var isEditing: Bool { drafts != nil }
+
+    /// Algo cambiado respecto a lo guardado (lo tecleado sin aplicar cuenta al salir del campo).
+    public var hasChanges: Bool {
+        guard let drafts, let session else { return false }
+        return drafts.indices.contains { isChanged($0, drafts: drafts, stored: session.logs) }
+    }
+
+    private func isChanged(_ index: Int) -> Bool {
+        guard let drafts, let session else { return false }
+        return isChanged(index, drafts: drafts, stored: session.logs)
+    }
+
+    /// Rellenar las series vacías al editar no cuenta como cambio.
+    private func isChanged(_ index: Int, drafts: [ExerciseLog], stored: [ExerciseLog]) -> Bool {
+        guard drafts.indices.contains(index), stored.indices.contains(index) else { return false }
+        return drafts[index] != Self.prefilled(stored[index])
+    }
+
+    /// «Editar»: una copia de la sesión, con las series vacías rellenadas con el objetivo.
+    public func startEditing() {
+        guard let session else { return }
+        drafts = session.logs.map(Self.prefilled)
+        validationErrors = [:]
+        focusedSeries = nil
+    }
+
+    /// «Cancelar»: sin cambios sale al momento; con cambios, pregunta.
+    public func cancelEditing() {
+        commitTyping()
+        guard hasChanges else { return endEditing() }
+        discardPrompt = DiscardPrompt(leavesDetail: false)
+    }
+
+    public var isDiscardPromptPresented: Bool { discardPrompt != nil }
+
+    /// «Descartar cambios»: vuelve a lo guardado (y a la lista, si venía de tocar la pestaña).
+    /// Recibe el aviso que se confirma, no lo lee de `discardPrompt`: SwiftUI cierra el diálogo
+    /// (`keepEditing`) antes de ejecutar la acción del botón.
+    public func discardChanges(_ prompt: DiscardPrompt) {
+        if prompt.leavesDetail { back() } else { endEditing() }
+    }
+
+    /// «Seguir editando», o el diálogo que se cierra.
+    public func keepEditing() {
+        discardPrompt = nil
+    }
+
+    /// «OK»: si algo no vale, se marca, se abre la primera tarjeta con errores y no se guarda; si
+    /// vale, se guarda la sesión entera de una vez (sin cambios, no se escribe nada).
+    public func finishEditing() async {
+        commitTyping()
+        guard let drafts, let date = selectedDate else { return }
+        let errors = Dictionary(uniqueKeysWithValues: drafts.enumerated().compactMap { index, log in
+            log.validationErrors.isEmpty ? nil : (index, log.validationErrors)
+        })
+        guard errors.isEmpty else {
+            validationErrors = errors
+            if let first = errors.keys.min() { openCards.insert(first) }
+            app.notice = ValidationText.reviewMarked
+            return
+        }
+        let changed = hasChanges
+        endEditing()
+        guard changed else { return }
+        var data = data
+        guard let position = data.history.firstIndex(where: { $0.date == date }),
+              data.history[position].logs.count == drafts.count else { return }
+        data.history[position].logs = drafts
+        await app.update(data)
+    }
+
+    private static func prefilled(_ stored: ExerciseLog) -> ExerciseLog {
+        var log = stored
+        log.actualReps = (0..<max(0, log.series)).map { series in
+            (series < log.actualReps.count ? log.actualReps[series] : nil) ?? log.targetReps
+        }
+        return log
     }
 
     public func adjust(_ parameter: LogParameter, direction: Int, at index: Int) {
@@ -174,6 +264,7 @@ public final class HistoryModel {
 
     /// Lo que se va tecleando en un campo: se aplica al salir de él o antes de la siguiente acción.
     public func type(_ parameter: LogParameter, text: String, at index: Int) {
+        guard isEditing else { return }
         typed = TypedValue(parameter: parameter, text: text, index: index)
     }
 
@@ -185,6 +276,7 @@ public final class HistoryModel {
     }
 
     public func focusSeries(_ series: Int, at index: Int) {
+        guard isEditing else { return }
         if let focused = focusedSeries, focused.log == index, focused.series == series {
             focusedSeries = nil
         } else {
@@ -196,30 +288,13 @@ public final class HistoryModel {
         edit(index) { $0.setRep(at: series, to: value) }
     }
 
+    /// En solo lectura no hace nada.
     private func edit(_ index: Int, _ change: (inout ExerciseLog) -> Void) {
         commitTyping()
-        guard var log = drafts[index] else { return }
-        change(&log)
-        drafts[index] = log
-        dirtyCards.insert(index)
-    }
-
-    /// "Guardar": si hay errores se marcan y no se guarda.
-    public func save(_ index: Int) async {
-        commitTyping()
-        guard let date = selectedDate, let log = drafts[index] else { return }
-        guard log.validationErrors.isEmpty else {
-            app.notice = ValidationText.reviewMarked
-            return
-        }
-        var data = data
-        guard let position = data.history.firstIndex(where: { $0.date == date }), data.history[position].logs.indices.contains(index) else { return }
-        data.history[position].logs[index] = log
-        drafts[index] = nil
-        dirtyCards.remove(index)
-        openCards.remove(index)
-        focusedSeries = nil
-        await app.update(data)
+        guard var drafts, drafts.indices.contains(index) else { return }
+        change(&drafts[index])
+        self.drafts = drafts
+        validationErrors[index] = nil
     }
 
     /// "Completar entreno" de una sesión sin terminar: se da por terminada y se va a Rutinas.

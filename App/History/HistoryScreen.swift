@@ -84,16 +84,43 @@ private struct SessionDetail: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 ForEach(Array(model.cards.enumerated()), id: \.offset) { index, card in
-                    ExerciseCardView(card: card, toggle: { model.toggleCard(index) }, actions: actions(index), save: {
-                        Task { await model.save(index) }
-                    })
+                    // Sin acciones, solo lectura: los controles salen al tocar «Editar».
+                    ExerciseCardView(card: card, toggle: { model.toggleCard(index) }, actions: card.isEditable ? actions(index) : nil)
                 }
             }
             .padding()
         }
         .keyboardDismissal()
+        // Mientras se edita, «Cancelar» y «OK» sustituyen a la flecha; sin ella, iOS apaga también
+        // volver deslizando, y nada se pierde sin preguntar.
+        .navigationBarBackButtonHidden(model.isEditing)
+        .toolbar {
+            if model.isEditing {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(HistoryText.cancel) { model.cancelEditing() }
+                        .accessibilityIdentifier("session-cancel")
+                        // Colgado de «Cancelar»: en iOS 26 el diálogo sale como globo que apunta a
+                        // su vista. `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes.
+                        .confirmationDialog(HistoryText.discardTitle, isPresented: Binding(
+                            get: { model.discardPrompt != nil }, set: { if !$0 { model.keepEditing() } }
+                        ), titleVisibility: .visible, presenting: model.discardPrompt) { prompt in
+                            Button(HistoryText.discardConfirm, role: .destructive) { model.discardChanges(prompt) }
+                            Button(HistoryText.keepEditing, role: .cancel) { model.keepEditing() }
+                        }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(HistoryText.done) { Task { await model.finishEditing() } }
+                        .accessibilityIdentifier("session-done")
+                }
+            } else {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(HistoryText.edit) { model.startEditing() }
+                        .accessibilityIdentifier("session-edit")
+                }
+            }
+        }
         .safeAreaInset(edge: .bottom) {
-            if model.isIncomplete {
+            if model.isIncomplete && !model.isEditing {
                 BottomActions(primary: {
                     Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
                         .buttonStyle(.glassPill())

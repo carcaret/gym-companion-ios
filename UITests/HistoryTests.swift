@@ -90,4 +90,70 @@ final class HistoryTests: XCTestCase {
         let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: notice)
         wait(for: [gone], timeout: 5)
     }
+    /// El detalle es de solo lectura y se corrige con «Editar» (2026-10-27): mientras se edita no se
+    /// vuelve deslizando, y «Cancelar» con cambios pregunta y, al descartar, deja lo guardado.
+    @MainActor
+    func testEditarYCancelarDescarta() {
+        let app = openFirstSessionCard()
+        let value = app.descendants(matching: .any)["weight-value"].firstMatch
+        XCTAssertTrue(value.appears(timeout: 10))
+        let saved = value.value as? String
+        XCTAssertFalse(app.buttons["weight-plus"].exists, "Sin «Editar», la tarjeta no se puede cambiar")
+
+        app.buttons["session-edit"].tap()
+        let plus = app.buttons["weight-plus"].firstMatch
+        XCTAssertTrue(plus.appears(timeout: 5))
+        plus.tap()
+        XCTAssertNotEqual(app.textFields["weight-field"].firstMatch.value as? String, saved)
+
+        // Deslizar desde el borde no vuelve a la lista mientras se edita.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+        XCTAssertTrue(app.buttons["session-cancel"].appears(timeout: 5), "Editando no se vuelve deslizando")
+
+        app.buttons["session-cancel"].tap()
+        let discard = app.buttons["Descartar cambios"].firstMatch
+        XCTAssertTrue(discard.appears(timeout: 5))
+        discard.tap()
+        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 5))
+        XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
+    }
+
+    /// «OK» guarda y vuelve a solo lectura con lo cambiado.
+    @MainActor
+    func testEditarYOKGuarda() {
+        let app = openFirstSessionCard()
+        let value = app.descendants(matching: .any)["weight-value"].firstMatch
+        XCTAssertTrue(value.appears(timeout: 10))
+        let saved = value.value as? String
+
+        app.buttons["session-edit"].tap()
+        let plus = app.buttons["weight-plus"].firstMatch
+        XCTAssertTrue(plus.appears(timeout: 5))
+        plus.tap()
+        let edited = app.textFields["weight-field"].firstMatch.value as? String
+        app.buttons["session-done"].tap()
+
+        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 5))
+        let after = app.descendants(matching: .any)["weight-value"].firstMatch
+        XCTAssertTrue(after.appears(timeout: 5))
+        XCTAssertNotEqual(after.value as? String, saved)
+        XCTAssertEqual(after.value as? String, edited)
+    }
+
+    /// Abre la primera sesión del Historial y la tarjeta de press banca.
+    @MainActor
+    private func openFirstSessionCard() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Historial"].tap()
+        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        XCTAssertTrue(first.appears(timeout: 10))
+        first.tap()
+        let card = app.buttons["card-press_banca"].firstMatch
+        XCTAssertTrue(card.appears(timeout: 10))
+        card.tap()
+        return app
+    }
 }
