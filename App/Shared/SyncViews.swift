@@ -87,11 +87,12 @@ struct SyncPresentation: ViewModifier {
             // Arriba, sobre la barra de navegación y debajo de la Dynamic Island, como los avisos del
             // sistema: abajo tapaba las píldoras de acción, y casi todos los avisos hablan de la
             // sincronización, cuya nube está arriba (decisión del usuario, 2026-10-27). Los
-            // márgenes dejan libres los botones de la barra, también la nube.
+            // márgenes dejan libres los botones de la barra: la nube llega a 63 pt del borde
+            // (medido en el vídeo del CI), y un aviso largo no la tapa.
             .overlay(alignment: .top) {
                 if isActive, let notice = sync.notice {
                     NoticeView(notice: notice)
-                        .padding(.horizontal, 56)
+                        .padding(.horizontal, 68)
                         .padding(.top, 4)
                         // Hacia arriba se va en cuanto el dedo sube, como un aviso del sistema, sin
                         // esperar a soltar: un arrastre que acaba fuera de la pantalla no termina.
