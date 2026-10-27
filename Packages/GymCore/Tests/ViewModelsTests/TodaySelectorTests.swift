@@ -321,17 +321,36 @@ struct RoutineManagementTests {
         #expect(saved.catalog["press_arnold"] != nil)
     }
 
-    // Propio de la app (2026-10-27): la alerta sale con lo buscado, que es lo que no se encontró.
-    @Test("crear ejercicio desde la búsqueda rellena el nombre con lo buscado")
-    func createFromSearch() async {
+    // Propio de la app (2026-10-27): con algo buscado que no existe, una fila lo crea de un toque,
+    // sin alerta (con el teclado abierto, la alerta se perdía al cerrarse la búsqueda; probado en
+    // el iPhone).
+    @Test("lo buscado que no existe se crea de un toque, sin alerta, y entra en el entreno y la rutina")
+    func createFromSearch() async throws {
         let today = await TodayHarness.make()
         await today.start()
         today.model.openAddPicker()
+        #expect(today.model.picker?.searchCreateLabel == nil, "Sin búsqueda, la fila de siempre")
+        #expect(today.model.picker?.offersNewExercise == true)
         today.model.pickerQuery = "  Press Arnold "
-        today.model.openCreate()
-        #expect(today.model.isCreatePresented)
-        #expect(today.model.createName == "Press Arnold")
-        #expect(today.model.createMessage == nil)
+        #expect(today.model.picker?.searchCreateLabel == "Crear «Press Arnold»")
+        #expect(today.model.picker?.offersNewExercise == false)
+        await today.model.createFromSearch()
+        #expect(today.model.picker == nil)
+        #expect(!today.model.isCreatePresented)
+        let saved = try #require(await today.saved)
+        #expect(saved.catalog["press_arnold"]?.name == "Press Arnold")
+        #expect(saved.routines[0].exerciseIDs.last == "press_arnold")
+        #expect(saved.history.session(on: today.today)?.logs.last?.exerciseID == "press_arnold")
+    }
+
+    @Test("si lo buscado ya existe, no se ofrece crearlo")
+    func searchExisting() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        today.model.openAddPicker()
+        today.model.pickerQuery = "press banca"
+        #expect(today.model.picker?.searchCreateLabel == nil)
+        #expect(today.model.picker?.offersNewExercise == false)
     }
 
     @Test("crear ejercicio con nombre duplicado muestra warning y modal sigue abierto")

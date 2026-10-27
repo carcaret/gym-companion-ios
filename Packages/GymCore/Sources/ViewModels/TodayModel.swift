@@ -66,6 +66,11 @@ public final class TodayModel {
         public let isOneOff: Bool
         /// "Crear nuevo ejercicio" (al añadir, y no si es puntual: lo nuevo entra en la rutina).
         public let canCreate: Bool
+        /// "Crear «Press Arnold»": lo buscado, si no existe, se crea de un toque, sin alerta (con el
+        /// teclado abierto, la alerta se perdía al cerrarse la búsqueda; 2026-10-27).
+        public let searchCreateLabel: String?
+        /// "Crear nuevo ejercicio", con su alerta: solo sin nada buscado.
+        public let offersNewExercise: Bool
     }
 
     /// Una sección del selector; sin título cuando es la única.
@@ -381,9 +386,14 @@ public final class TodayModel {
             let routine = Set(data.routines.first { $0.id == session.routineID }?.exerciseIDs ?? [])
             let candidates = data.catalog.all.filter { !routine.contains($0.id) && !present.contains($0.id) }
                 .sorted { SpanishCollation.precedes($0.name, $1.name) }
+            let canCreate = !pickerOneOff
+            let typed = pickerQuery.trimmingWhitespace()
+            let creatable = canCreate && !typed.isEmpty && data.catalog[ExerciseID(ExerciseID.slug(from: typed))] == nil
             return Picker(purpose: purpose, title: TodayText.addTitle(name(of: session.routineID)), subtitle: nil,
                           sections: [section(nil, candidates, showsGroup: true)].compactMap(\.self),
-                          offersOneOff: true, isOneOff: pickerOneOff, canCreate: !pickerOneOff)
+                          offersOneOff: true, isOneOff: pickerOneOff, canCreate: canCreate,
+                          searchCreateLabel: creatable ? TodayText.createNamed(typed) : nil,
+                          offersNewExercise: canCreate && typed.isEmpty)
         case .swap(let index):
             let replaced = session.logs[index].exerciseID
             let candidates = data.catalog.swapCandidates(data.catalog.all.filter { !present.contains($0.id) }, replacing: replaced,
@@ -394,7 +404,8 @@ public final class TodayModel {
                  section(TodayText.otherGroupsSection, candidates.others, showsGroup: true)]
             } ?? [section(nil, candidates.others, showsGroup: true)]
             return Picker(purpose: purpose, title: TodayText.swapTitle, subtitle: TodayText.swapSubtitle(data.catalog.name(of: replaced)),
-                          sections: sections.compactMap(\.self), offersOneOff: false, isOneOff: false, canCreate: false)
+                          sections: sections.compactMap(\.self), offersOneOff: false, isOneOff: false, canCreate: false,
+                          searchCreateLabel: nil, offersNewExercise: false)
         }
     }
 
@@ -460,12 +471,19 @@ public final class TodayModel {
         return data
     }
 
-    /// "Crear nuevo ejercicio" desde el selector: la alerta sale con lo buscado (lo que no se
-    /// encontró) y sin mensaje de error.
+    /// "Crear nuevo ejercicio" desde el selector, sin nada buscado: la alerta, vacía y sin mensaje
+    /// de error.
     public func openCreate() {
-        createName = pickerQuery.trimmingWhitespace()
+        createName = ""
         createMessage = nil
         isCreatePresented = true
+    }
+
+    /// "Crear «Press Arnold»": lo buscado, de un toque.
+    public func createFromSearch() async {
+        guard picker?.searchCreateLabel != nil else { return }
+        createName = pickerQuery.trimmingWhitespace()
+        await createExercise()
     }
 
     /// "Crear": siempre entra en la rutina. Si ya existe, la alerta se vuelve a abrir con el nombre

@@ -130,9 +130,14 @@ struct ExercisePickerSheet: View {
                             if let title = section.title { Text(title) }
                         }
                     }
-                    if picker.canCreate {
+                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, con su alerta.
+                    // Con el teclado abierto, la alerta se perdía al cerrarse la búsqueda (2026-10-27).
+                    if let label = picker.searchCreateLabel {
+                        Button(label) { Task { await model.createFromSearch() } }
+                            .accessibilityIdentifier("create-from-search")
+                    } else if picker.offersNewExercise {
                         Button(TodayText.createExercise) { model.openCreate() }
-                        .accessibilityIdentifier("create-exercise")
+                            .accessibilityIdentifier("create-exercise")
                     }
                 }
             }

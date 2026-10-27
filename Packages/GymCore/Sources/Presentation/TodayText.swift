@@ -58,6 +58,7 @@ public enum TodayText {
     public static let oneOffToggle = "Solo esta sesión"
     public static let createExercise = "Crear nuevo ejercicio"
     public static let createTitle = "Crear nuevo ejercicio"
+    public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
     public static let createConfirm = "Crear y añadir"

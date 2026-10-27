@@ -86,21 +86,22 @@ final class WorkoutTests: XCTestCase {
         XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10), "Sustituir empieza el entreno nuevo")
     }
 
-    /// Si la búsqueda no encuentra el ejercicio, crearlo sale con lo buscado (2026-10-27).
+    /// Si la búsqueda no encuentra el ejercicio, se crea de un toque con el teclado abierto, sin
+    /// alerta (2026-10-27: con alerta, el primer toque solo cerraba el teclado; probado en el iPhone).
     @MainActor
-    func testCrearUnEjercicioSaleConLoBuscado() {
+    func testCrearLoBuscadoDeUnToque() {
         let app = startWorkout()
         app.buttons["add-exercise"].tap()
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.appears(timeout: 5))
         search.tap()
         search.typeText("Press Arnold")
-        let create = app.buttons["create-exercise"].firstMatch
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        let create = app.buttons["create-from-search"].firstMatch
         XCTAssertTrue(create.appears(timeout: 5))
+        XCTAssertEqual(create.label, "Crear «Press Arnold»")
         create.tap()
-        let name = app.alerts.firstMatch.textFields.firstMatch
-        XCTAssertTrue(name.appears(timeout: 5), app.debugDescription)
-        XCTAssertEqual(name.value as? String, "Press Arnold")
+        XCTAssertTrue(app.buttons["card-press_arnold"].firstMatch.appears(timeout: 5), "Un toque lo crea y lo añade al entreno")
     }
 
     @MainActor
