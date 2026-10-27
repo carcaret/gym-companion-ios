@@ -4,9 +4,10 @@ import SwiftUI
 // que comparte la app del reloj.
 
 extension View {
-    /// `.card` de la PWA: superficie, borde fino y radio 14. Con `stripe`, el filete de 3 px a la
-    /// izquierda del color del día.
-    func card(padding: CGFloat = 16, background: Color = Theme.surface, border: Color = Theme.border, stripe: Color? = nil) -> some View {
+    /// `.card` de la PWA con las esquinas de las listas de iOS 26 y sin borde, como las secciones
+    /// nativas. `border` solo cuando el borde dice algo (una sesión sin terminar). Con `stripe`, el
+    /// filete de 3 px a la izquierda del color del día.
+    func card(padding: CGFloat = 16, background: Color = Theme.surface, border: Color? = nil, stripe: Color? = nil) -> some View {
         self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(background)
@@ -14,7 +15,9 @@ extension View {
                 if let stripe { Rectangle().fill(stripe).frame(width: 3) }
             }
             .clipShape(.rect(cornerRadius: Theme.radius))
-            .overlay { RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(border) }
+            .overlay {
+                if let border { RoundedRectangle(cornerRadius: Theme.radius).strokeBorder(border) }
+            }
     }
 
     /// Una fila de `List` que es una tarjeta suelta: sin fondo ni separador, con 12 px entre

@@ -38,7 +38,9 @@ enum Theme {
     static let focus = Color(hex: 0xE8B84B)           // la serie que se está editando
 
     // Radios
-    static let radius: CGFloat = 14
+    /// Las tarjetas, con las esquinas de las secciones de lista de iOS 26 (la PWA usaba 14): así las
+    /// tarjetas y las listas nativas son de la misma familia (decisión del usuario, 2026-10-27).
+    static let radius: CGFloat = 26
     static let radiusSmall: CGFloat = 10
     static let radiusTag: CGFloat = 6
 

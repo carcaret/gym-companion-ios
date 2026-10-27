@@ -6,20 +6,16 @@ import ViewModels
 /// El catálogo, empujado con valor desde Progreso para que tocar otra vez la pestaña lo cierre.
 struct CatalogRoute: Hashable {}
 
-/// La entrada al catálogo al final de Progreso (`.catalog-card`): total y cuántos ejercicios no
-/// tienen grupo.
+/// La entrada al catálogo al final de Progreso (`.catalog-card`), una fila de su lista: total y
+/// cuántos ejercicios no tienen grupo. La flecha la pone la lista.
 struct CatalogCard: View {
     let model: CatalogModel
 
     var body: some View {
         NavigationLink(value: CatalogRoute()) {
-            HStack(spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(CatalogText.cardTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
-                        Spacer()
-                        Text(CatalogText.total(model.total)).scaledFont(11).foregroundStyle(Theme.textMuted)
-                    }
+                    Text(CatalogText.cardTitle).scaledFont(15, .medium).foregroundStyle(Theme.text)
                     HStack(spacing: 4) {
                         Text(CatalogText.cardSubtitle).foregroundStyle(Theme.textSecondary)
                         if model.withoutGroup > 0 {
@@ -28,12 +24,11 @@ struct CatalogCard: View {
                     }
                     .scaledFont(12)
                 }
-                Image(systemName: "chevron.right").scaledFont(13, .semibold).foregroundStyle(Theme.textMuted)
+                Spacer()
+                Text(CatalogText.total(model.total)).scaledFont(12).foregroundStyle(Theme.textMuted)
             }
-            .card()
-            .contentShape(.rect)
+            .padding(.vertical, 4)
         }
-        .buttonStyle(.plain)
         .accessibilityIdentifier("catalog-card")
     }
 }

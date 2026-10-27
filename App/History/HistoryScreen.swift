@@ -138,7 +138,7 @@ private struct HistoryRowView: View {
             Spacer(minLength: 0)
         }
         .card(background: row.isIncomplete ? Theme.accent.opacity(0.07) : Theme.surface,
-              border: row.isIncomplete ? Theme.accent.opacity(0.35) : Theme.border,
+              border: row.isIncomplete ? Theme.accent.opacity(0.35) : nil,
               stripe: Theme.color(row.tint))
         .contentShape(.rect)
     }
