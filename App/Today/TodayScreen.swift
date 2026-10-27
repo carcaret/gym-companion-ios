@@ -124,7 +124,7 @@ struct BottomActions<Secondary: View, Primary: View>: View {
     /// El margen de la barra de pestañas de iOS 26, para que los dos cristales tengan el mismo
     /// ancho (decisión del usuario, 2026-10-27). iOS no lo da: medido en el iPhone 17 Pro del CI
     /// (21 pt; las tarjetas van a 16). Si cambia con otra versión de iOS, se vuelve a medir.
-    private static let tabBarMargin: CGFloat = 21
+    private static var tabBarMargin: CGFloat { 21 }
 
     var body: some View {
         GlassEffectContainer(spacing: 12) {
