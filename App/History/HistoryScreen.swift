@@ -22,7 +22,10 @@ struct HistoryScreen: View {
                 // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
                 // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
                 SessionDetail(model: model, sync: sync, noticeDuration: noticeDuration)
-                    .syncToolbar()
+                    .syncToolbar {
+                        Button(HistoryText.edit) { model.startEditing() }
+                            .accessibilityIdentifier("session-edit")
+                    }
                     .navigationTitle(model.detailTitle)
                     .navigationSubtitle(model.detailSubtitle)
                     .navigationBarTitleDisplayMode(.inline)
@@ -98,12 +101,6 @@ private struct SessionDetail: View {
                 SessionCards(model: model)
             }
             .padding()
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(HistoryText.edit) { model.startEditing() }
-                    .accessibilityIdentifier("session-edit")
-            }
         }
         .safeAreaInset(edge: .bottom) {
             if model.isIncomplete {

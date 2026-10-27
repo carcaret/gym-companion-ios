@@ -99,6 +99,8 @@ final class HistoryTests: XCTestCase {
         XCTAssertTrue(value.appears(timeout: 10))
         let saved = value.value as? String
         XCTAssertFalse(app.buttons["weight-plus"].exists, "Sin «Editar», la tarjeta no se puede cambiar")
+        // «Editar», a la izquierda de la nube, que sigue en la esquina (2026-10-27).
+        XCTAssertLessThan(app.buttons["session-edit"].frame.maxX, app.buttons["sync-indicator"].firstMatch.frame.minX)
 
         app.buttons["session-edit"].tap()
         let plus = app.buttons["weight-plus"].firstMatch

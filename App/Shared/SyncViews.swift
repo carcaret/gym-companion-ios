@@ -57,15 +57,29 @@ extension View {
     /// donde se empuja la pantalla, no dentro de ella: Gráficas es la entrada de su pestaña y
     /// también se empuja desde Progreso. El modelo llega por el entorno (`RootView`).
     func syncToolbar() -> some View {
-        modifier(SyncToolbar())
+        modifier(SyncToolbar(action: EmptyView()))
+    }
+
+    /// Con una acción de la pantalla a la izquierda de la nube, en su propia cápsula (iOS 26 junta
+    /// en una lo que va seguido en la barra, y la nube no tiene que ver con la acción). La nube
+    /// sigue en la esquina, como en todas las pantallas (decisión del usuario, 2026-10-27). En el
+    /// mismo bloque de la barra para que el orden sea fijo.
+    func syncToolbar(@ViewBuilder action: () -> some View) -> some View {
+        modifier(SyncToolbar(action: action(), hasAction: true))
     }
 }
 
-private struct SyncToolbar: ViewModifier {
+private struct SyncToolbar<Action: View>: ViewModifier {
     @Environment(SyncModel.self) private var sync
+    let action: Action
+    var hasAction = false
 
     func body(content: Content) -> some View {
         content.toolbar {
+            if hasAction {
+                ToolbarItem(placement: .topBarTrailing) { action }
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 SyncIndicator(sync: sync)
             }
