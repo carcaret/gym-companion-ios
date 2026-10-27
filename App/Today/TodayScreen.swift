@@ -21,6 +21,7 @@ struct TodayScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: Binding(get: { isPreviewing }, set: { if !$0 { model.backToSelector() } })) {
             preview
+                .overlay(alignment: .topLeading) { AnimationProbe(id: "s0", top: 300) }
                 .navigationTitle(model.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .screenBackground()
