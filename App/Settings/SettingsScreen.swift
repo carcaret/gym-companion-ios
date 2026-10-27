@@ -36,7 +36,7 @@ struct SettingsScreen: View {
                 }
             }
             .listRowBackground(Theme.surface)
-            Section(SettingsText.advancedSection) {
+            Section {
                 field(SettingsText.branch, .branch) {
                     TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
                         .accessibilityIdentifier("settings-branch")
@@ -61,6 +61,8 @@ struct SettingsScreen: View {
                 } message: {
                     Text(SyncText.downloadWarning)
                 }
+            } header: {
+                Text(SettingsText.advancedSection)
             } footer: {
                 Text(model.versionLabel)
                     .frame(maxWidth: .infinity)
