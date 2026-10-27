@@ -95,35 +95,13 @@ struct TrainingRepositoryTests {
         let harness = SyncHarness()
         let repository = harness.repositoryWithoutTimer()
         _ = try await repository.start()
-        try await repository.update(F.finishedWorkout())
-        async let first = repository.forceUpload()
-        async let second = repository.forceUpload()
-        #expect(await [first, second] == [.uploaded, .uploaded])
+        async let first = repository.saveAndUpload(F.finishedWorkout())
+        async let second = repository.saveAndUpload(F.adding(Exercise(id: "dominadas", name: "Dominadas")))
+        #expect(try await [first, second] == [.uploaded, .uploaded])
         #expect(await repository.status == SyncStatus(state: .ok, conflict: false))
     }
 
     // MARK: - Botones de Ajustes y del conflicto
-
-    @Test("Subir a GitHub sin configurar no toca la red")
-    func forceUploadNotConfigured() async throws {
-        let harness = SyncHarness(configured: false)
-        let repository = harness.repository()
-        _ = try await repository.start()
-        #expect(await repository.forceUpload() == .notConfigured)
-        #expect(await harness.remote.pushAttempts == 0)
-    }
-
-    @Test("Subir a GitHub con un conflicto abierto no sube: hay que resolverlo")
-    func forceUploadWithConflict() async throws {
-        let harness = SyncHarness()
-        await harness.remote.fail(push: .conflict)
-        let repository = harness.repository()
-        _ = try await repository.start()
-        _ = try await repository.saveAndUpload(F.finishedWorkout())
-        let attempts = await harness.remote.pushAttempts
-        #expect(await repository.forceUpload() == .conflict)
-        #expect(await harness.remote.pushAttempts == attempts)
-    }
 
     @Test("conflicto → Subir local: baja el sha actual y machaca GitHub con lo local")
     func keepLocal() async throws {

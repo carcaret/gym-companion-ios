@@ -240,14 +240,6 @@ public actor TrainingRepository {
 
     // MARK: - Subir
 
-    /// Botón "Subir a GitHub".
-    public func forceUpload() async -> UploadResult {
-        guard target != nil else { return .notConfigured }
-        guard !status.conflict else { return .conflict }
-        cancelScheduledUpload()
-        return await upload()
-    }
-
     /// Conflicto → "Subir local → GitHub": se pregunta la versión actual y se sube encima.
     public func keepLocal() async -> UploadResult {
         guard let target else { return .notConfigured }
