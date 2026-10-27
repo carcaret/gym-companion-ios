@@ -119,6 +119,25 @@ final class HistoryTests: XCTestCase {
         XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
     }
 
+    /// Con cambios, tocar otra vez la pestaña pregunta antes de tirarlos y no sale del detalle
+    /// (revisión del 2026-10-27: si iOS sacaba el detalle por su cuenta, se perdían sin preguntar).
+    @MainActor
+    func testTocarLaPestanaConCambiosPregunta() {
+        let app = openFirstSessionCard()
+        app.buttons["session-edit"].tap()
+        let plus = app.buttons["weight-plus"].firstMatch
+        XCTAssertTrue(plus.appears(timeout: 5))
+        plus.tap()
+        let edited = app.textFields["weight-field"].firstMatch.value as? String
+
+        app.tabBars.buttons["Historial"].tap()
+        let keep = app.buttons["Seguir editando"].firstMatch
+        XCTAssertTrue(keep.appears(timeout: 5), "Tiene que preguntar antes de tirar los cambios")
+        keep.tap()
+        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 5), "Seguir editando deja la edición")
+        XCTAssertEqual(app.textFields["weight-field"].firstMatch.value as? String, edited)
+    }
+
     /// «OK» guarda y vuelve a solo lectura con lo cambiado.
     @MainActor
     func testEditarYOKGuarda() {

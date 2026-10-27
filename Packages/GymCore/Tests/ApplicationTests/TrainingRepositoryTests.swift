@@ -285,4 +285,37 @@ struct TrainingRepositoryTests {
         #expect(await repository.synchronize() == .nothing)
         #expect(await harness.remote.pushAttempts == 0)
     }
+
+    // Revisión del 2026-10-27: con lo guardado ilegible, `start()` lanzaba pero dejaba los datos
+    // vacíos, y al sincronizar se subían a GitHub encima de los de verdad.
+    @Test("con lo guardado ilegible no sincroniza: ni sube lo vacío ni pisa el fichero")
+    func unreadableDoesNotSync() async throws {
+        let harness = SyncHarness(remote: F.finishedWorkout(), pending: true)
+        await harness.local.fail(loading: true)
+        let repository = harness.repository()
+        await #expect(throws: (any Error).self) { try await repository.start() }
+        #expect(await repository.synchronize() == .nothing)
+        await repository.flush()
+        #expect(await harness.remote.pushAttempts == 0)
+        #expect(await harness.remote.data == F.finishedWorkout())
+        // Sin nada pendiente, tampoco sustituye el fichero por lo remoto sin que se pida.
+        let clean = SyncHarness(remote: F.finishedWorkout())
+        await clean.local.fail(loading: true)
+        let cleanRepository = clean.repository()
+        _ = try? await cleanRepository.start()
+        #expect(await cleanRepository.synchronize() == .nothing)
+        #expect(await clean.local.saves == 0)
+    }
+
+    @Test("con lo guardado ilegible, descargar de GitHub lo recupera y vuelve a sincronizar")
+    func unreadableRecovers() async throws {
+        let harness = SyncHarness(remote: F.finishedWorkout())
+        await harness.local.fail(loading: true)
+        let repository = harness.repository()
+        _ = try? await repository.start()
+        #expect(await repository.download() == .applied(F.finishedWorkout()))
+        try await repository.update(F.adding(Exercise(id: "dominadas", name: "Dominadas")))
+        await repository.flush()
+        #expect(await harness.remote.pushes.count == 1)
+    }
 }

@@ -7,8 +7,6 @@ import ViewModels
 struct HistoryScreen: View {
     @Bindable var model: HistoryModel
     let sync: SyncModel
-    /// Cada tirón que llega a sincronizar: su vibración (decisión del usuario, 2026-10-27).
-    @State private var refreshes = 0
 
     var body: some View {
         list
@@ -58,12 +56,8 @@ struct HistoryScreen: View {
             // se estire aunque quepa en la pantalla (con pocas sesiones); con esto se ha visto
             // funcionar en el simulador, sin esto no se ha probado.
             .scrollBounceBehavior(.always)
-            .refreshable {
-                refreshes += 1
-                await sync.pullToRefresh()
-            }
-            // Un golpe suave al soltar pasado el umbral, como al actualizar en las apps de Apple.
-            .sensoryFeedback(.impact(weight: .light), trigger: refreshes)
+            // La vibración al pasar el umbral ya la pone iOS (comprobado en el iPhone, 2026-10-27).
+            .refreshable { await sync.pullToRefresh() }
             // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
             // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
             // cierra la alerta (y la descarta) antes de ejecutarla.

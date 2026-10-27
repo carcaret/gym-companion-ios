@@ -130,8 +130,3 @@ del simulador del Series 10 de 46 mm). Falta lo que necesita el NAS o el reloj e
       el reloj se pone al día; al terminar el entreno, dice "Sin entreno en curso". Nadie documenta
       si WatchConnectivity empareja una app del reloj que no instaló el iPhone: si no, la salida es
       que el reloj lea el `db.json` de GitHub él mismo (otro adaptador del mismo `WatchModel`).
-
-### Remanentes de la PWA (2026-10-27)
-
-- [ ] **La vibración al tirar para actualizar en Historial**: XCUITest no la ve. Con el iPhone en la
-      mano, tirar de la lista hasta que salga la ruedita y soltar: un golpe suave.

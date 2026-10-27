@@ -586,6 +586,51 @@ struct HistoryEditingTests {
         #expect(logs?.map(\.weight) == [41, 12])
     }
 
+    // Revisión del 2026-10-27: «OK» escribía el relleno de las series vacías en todas las
+    // tarjetas, también en las que no se tocaron.
+    @Test("OK guarda solo las tarjetas cambiadas: las demás conservan sus series vacías")
+    func savesOnlyChanged() async throws {
+        let date = LocalDate(iso: "2026-10-20")!
+        let data = TrainingData(
+            catalog: Catalog([Exercise(id: "press_banca", name: "Press Banca"), Exercise(id: "remo", name: "Remo")]),
+            routines: [Routine(id: "DIA1", name: "Día 1", exerciseIDs: ["press_banca", "remo"])],
+            history: [Session(date: date, routineID: "DIA1", completed: false, logs: [
+                ExerciseLog(exerciseID: "press_banca", series: 3, targetReps: 10, actualReps: [10, 9, nil], weight: 60),
+                ExerciseLog(exerciseID: "remo", series: 3, targetReps: 12, actualReps: [nil, nil, nil], weight: 40),
+            ])]
+        )
+        let history = await HistoryHarness.make(data)
+        history.model.open(date)
+        history.model.startEditing()
+        history.model.set(.weight, text: "62,5", at: 0)
+        await history.model.finishEditing()
+        let logs = try #require(await history.saved?.history.session(on: date)?.logs)
+        #expect(logs[0].weight == 62.5)
+        #expect(logs[0].actualReps == [10, 9, 10], "La tarjeta cambiada se guarda como se veía al editarla")
+        #expect(logs[1].actualReps == [nil, nil, nil], "La que no se tocó, tal cual")
+    }
+
+    // Revisión del 2026-10-27: si la sesión cambia mientras se edita (el entreno en curso, otra
+    // rutina hoy, lo bajado de GitHub), «OK» la machacaba con la copia vieja.
+    @Test("si la sesión cambia mientras se edita, OK no la pisa y lo dice")
+    func changedWhileEditing() async throws {
+        let history = await HistoryHarness.make()
+        let date = history.model.rows[0].date
+        history.model.open(date)
+        history.model.startEditing()
+        history.model.set(.weight, text: "99", at: 0)
+        var data = try #require(history.app.data)
+        let position = try #require(data.history.firstIndex { $0.date == date })
+        data.history[position].logs[0].actualReps = [12, 12, 12]
+        await history.app.update(data)
+        await history.model.finishEditing()
+        #expect(!history.model.isEditing)
+        #expect(history.app.notice == HistoryText.changedWhileEditing)
+        let log = try #require(await history.saved?.history.session(on: date)?.logs[0])
+        #expect(log.actualReps == [12, 12, 12])
+        #expect(log.weight != 99)
+    }
+
     @Test("OK sin cambios no escribe nada")
     func okClean() async {
         let history = await HistoryHarness.make()
