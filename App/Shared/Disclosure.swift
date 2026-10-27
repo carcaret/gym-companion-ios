@@ -22,7 +22,9 @@ struct CardDisclosure<Label: View, Content: View>: View {
                 label
             }
             if isExpanded {
-                if animatesHeight {
+                if Variant.current == "sin-offset" || Variant.current == "por-valor" {
+                    content.transition(.opacity)
+                } else if animatesHeight {
                     content.transition(.opacity.combined(with: .offset(y: -8)))
                 } else {
                     // Con su propia animación: solo la opacidad, la fila cambia de golpe.
@@ -41,6 +43,15 @@ extension EnvironmentValues {
     @Entry var disclosureAnimatesHeight = true
 }
 
+/// Prueba visual: la variante que pide el test (`-variante`).
+enum Variant {
+    static let current: String = {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-variante"), index + 1 < arguments.count else { return "pr" }
+        return arguments[index + 1]
+    }()
+}
+
 /// La cabecera de `CardDisclosure`, también suelta para lo que al abrirse enseña más de lo mismo
 /// en vez de algo escondido (la lista de ejercicios de Progreso).
 struct DisclosureHeader<Label: View>: View {
@@ -56,7 +67,9 @@ struct DisclosureHeader<Label: View>: View {
         // Con animación, la tarjeta crece con el muelle de iOS y la flecha gira a la vez. En una
         // `List` (`disclosureAnimatesHeight`), la fila cambia de golpe y solo gira la flecha.
         let button = Button {
-            if animatesHeight {
+            if Variant.current == "por-valor" {
+                toggle()
+            } else if animatesHeight {
                 withAnimation(reduceMotion ? nil : .snappy) { toggle() }
             } else {
                 toggle()

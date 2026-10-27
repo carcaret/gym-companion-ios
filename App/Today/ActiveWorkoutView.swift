@@ -13,6 +13,7 @@ struct ActiveWorkoutView: View {
         List {
             ForEach(Array(model.activeCards.enumerated()), id: \.element.id) { index, card in
                 ExerciseCardView(card: card, toggle: { model.toggleCard(card.exerciseID) }, actions: actions(index))
+                    .animation(Variant.current == "por-valor" ? .snappy : nil, value: card.isOpen)
                     .cardRow()
                     // A la izquierda, quitar, como borrar en el historial. Sin `role: .destructive`:
                     // con ese rol la lista quita la fila antes de que se confirme.
@@ -48,7 +49,7 @@ struct ActiveWorkoutView: View {
             }
         }
         .listStyle(.plain)
-        .environment(\.disclosureAnimatesHeight, false)
+        .environment(\.disclosureAnimatesHeight, Variant.current != "pr")
         .screenBackground()
         .keyboardDismissal()
         // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un
