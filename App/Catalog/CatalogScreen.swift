@@ -136,7 +136,10 @@ private struct CatalogEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(CatalogText.cancel) { model.cancelEditing() } }
-                ToolbarItem(placement: .confirmationAction) { Button(CatalogText.save) { Task { await model.save() } } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(CatalogText.save) { Task { await model.save() } }
+                        .disabled(!model.canSave)
+                }
             }
         }
     }

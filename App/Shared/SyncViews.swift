@@ -77,20 +77,29 @@ private struct SyncToolbar: ViewModifier {
 /// también avisan y pueden abrir el conflicto, y lo que cuelga de la raíz queda debajo de la hoja).
 struct SyncPresentation: ViewModifier {
     @Bindable var sync: SyncModel
-    /// Lo que dura el aviso de abajo (`CompositionRoot.noticeDuration`).
+    /// Lo que dura el aviso (`CompositionRoot.noticeDuration`).
     let noticeDuration: Duration
-    /// Hueco bajo el aviso: en la raíz, por encima de la barra de pestañas.
-    let bottomInset: CGFloat
     /// El de la raíz se apaga mientras la hoja de los ajustes está abierta: lo pinta la hoja.
     let isActive: Bool
 
     func body(content: Content) -> some View {
         content
-            .overlay(alignment: .bottom) {
+            // Arriba, sobre la barra de navegación y debajo de la Dynamic Island, como los avisos del
+            // sistema: abajo tapaba las píldoras de acción, y casi todos los avisos hablan de la
+            // sincronización, cuya nube está arriba (decisión del usuario, 2026-10-27). Los
+            // márgenes dejan libres los botones de la barra: la nube llega a 63 pt del borde
+            // (medido en el vídeo del CI), y un aviso largo no la tapa.
+            .overlay(alignment: .top) {
                 if isActive, let notice = sync.notice {
                     NoticeView(notice: notice)
-                        .padding(.bottom, bottomInset)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.horizontal, 68)
+                        .padding(.top, 4)
+                        // Hacia arriba se va en cuanto el dedo sube, como un aviso del sistema, sin
+                        // esperar a soltar: un arrastre que acaba fuera de la pantalla no termina.
+                        .gesture(DragGesture(minimumDistance: 10).onChanged { drag in
+                            if drag.translation.height < -10 { sync.notice = nil }
+                        })
+                        .transition(.move(edge: .top).combined(with: .opacity))
                         .task(id: notice) {
                             try? await Task.sleep(for: noticeDuration)
                             if sync.notice == notice { sync.notice = nil }
@@ -120,22 +129,20 @@ struct SyncPresentation: ViewModifier {
 }
 
 extension View {
-    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration, bottomInset: CGFloat = 96, isActive: Bool = true) -> some View {
-        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration, bottomInset: bottomInset, isActive: isActive))
+    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration, isActive: Bool = true) -> some View {
+        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration, isActive: isActive))
     }
 }
 
 /// El toast de la PWA, de cristal: flota sobre el contenido, como la barra de pestañas y los
-/// botones de abajo (2026-10-27).
+/// botones de abajo (2026-10-27). Un texto largo pasa a dos líneas.
 struct NoticeView: View {
     let notice: Notice
 
     var body: some View {
-        Label {
-            Text(notice.text).foregroundStyle(Theme.text)
-        } icon: {
-            Image(systemName: symbol).foregroundStyle(color)
-        }
+        NoticeLabel(notice: notice)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
             .scaledFont(13, .medium)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
@@ -148,12 +155,25 @@ struct NoticeView: View {
             .accessibilityIdentifier("notice")
             .onAppear { AccessibilityNotification.Announcement(notice.text).post() }
     }
+}
+
+/// El icono y el texto de un aviso, con el color de su tipo: en el aviso que flota y, en los
+/// ajustes, debajo de «Probar conexión».
+struct NoticeLabel: View {
+    let notice: Notice
+
+    var body: some View {
+        Label {
+            Text(notice.text).foregroundStyle(Theme.text)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(color)
+        }
+    }
 
     private var color: Color {
         switch notice.kind {
         case .info: Theme.textSecondary
         case .success: Theme.green
-        case .saved: Theme.textMuted
         case .warning: Theme.gold
         case .error: Theme.red
         }
@@ -163,7 +183,6 @@ struct NoticeView: View {
         switch notice.kind {
         case .info: "info.circle"
         case .success: "checkmark.circle"
-        case .saved: "square.and.arrow.down"
         case .warning: "exclamationmark.triangle"
         case .error: "xmark.octagon"
         }

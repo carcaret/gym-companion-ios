@@ -57,6 +57,23 @@ struct WorkoutSwapTests {
         #expect(!routine.contains("sentadilla"))
     }
 
+    // Antes avisaba «No hay más ejercicios disponibles» al tocarlo (2026-10-27, con la aprobación
+    // del usuario): sin candidatos, la acción no se ofrece.
+    @Test("con todo el catálogo en el entreno no se ofrece cambiar por otro")
+    func noSwapCandidates() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        #expect(today.model.canSwap)
+        var data = today.app.data!
+        let inWorkout = Set(data.history.session(on: today.today)!.logs.map(\.exerciseID))
+        data.catalog = Catalog(data.catalog.all.filter { inWorkout.contains($0.id) })
+        await today.app.update(data)
+        #expect(!today.model.canSwap)
+        today.model.openSwapPicker(at: 0)
+        #expect(today.model.picker == nil)
+        #expect(today.app.notice == nil)
+    }
+
     @Test("5 — modal de swap excluye los ejercicios ya presentes en el entreno")
     func excludesPresent() async throws {
         let today = await TodayHarness.make()
@@ -609,7 +626,9 @@ struct FinishValidationTests {
 
         await today.finish()
         #expect(today.model.stage == .active)
-        #expect(today.app.notice == TodayText.incomplete)
+        // Antes «Completa todos los campos antes de finalizar» (2026-10-27, con la aprobación del
+        // usuario): el mismo texto que al guardar en el historial.
+        #expect(today.app.notice == ValidationText.reviewMarked)
         #expect(today.model.activeCards[1].errors == [.missingRep(index: 3)])
         #expect(today.model.activeCards[1].cells[3].hasError)
         #expect(today.model.activeCards.map(\.isOpen) == [false, true, false])

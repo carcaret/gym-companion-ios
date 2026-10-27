@@ -130,9 +130,13 @@ struct CatalogTests {
         let catalog = await CatalogHarness.make()
         catalog.model.edit("jalon")
         catalog.model.editor?.name = "   "
+        // «Guardar» desactivado, sin aviso (2026-10-27, con la aprobación del usuario).
+        #expect(!catalog.model.canSave)
         await catalog.model.save()
         #expect(catalog.model.editor != nil)
-        #expect(catalog.app.notice?.text == "El nombre no puede estar vacío")
+        #expect(catalog.app.notice == nil)
+        catalog.model.editor?.name = "Jalón"
+        #expect(catalog.model.canSave)
         catalog.model.cancelEditing()
         #expect(catalog.rows.contains { $0.name == "Jalón al Pecho" })
     }

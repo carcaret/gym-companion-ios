@@ -329,7 +329,10 @@ struct RoutineManagementTests {
         today.model.isCreatePresented = true
         today.model.createName = "Press Banca"
         await today.model.createExercise()
-        #expect(today.app.notice?.text.contains("Ya existe") == true)
+        // Cambiado con la aprobación del usuario (2026-10-27): el aviso va en el mensaje de la
+        // alerta, que se vuelve a abrir (un aviso quedaba debajo de ella).
+        #expect(today.model.createMessage == TodayText.alreadyExists)
+        #expect(today.app.notice == nil)
         #expect(today.model.isCreatePresented)
         #expect(today.model.createName == "Press Banca")
     }

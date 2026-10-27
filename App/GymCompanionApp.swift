@@ -16,7 +16,7 @@ struct GymCompanionApp: App {
                 .task { await root.sync.observe() }
                 .task {
                     for await _ in root.reconnections() {
-                        await root.sync.synchronize(afterReconnect: true)
+                        await root.sync.synchronize()
                     }
                 }
         }

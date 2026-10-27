@@ -39,13 +39,22 @@ struct SettingsScreen: View {
             }
             .listRowBackground(Theme.surface)
             Section {
-                Button(SettingsText.save) { Task { await model.save() } }
-                Button(SettingsText.testConnection) { Task { await model.testConnection() } }
+                action(SettingsText.save, .saving) { Task { await model.save() } }
+                    .disabled(!model.canSave)
+                action(SettingsText.testConnection, .testing) { Task { await model.testConnection() } }
+                    .disabled(!model.canTestConnection)
+                // El resultado de la prueba, debajo de su botón (en la PWA, un aviso).
+                if let result = model.connectionResult {
+                    NoticeLabel(notice: result)
+                        .accessibilityIdentifier("settings-connection-result")
+                }
             }
             .listRowBackground(Theme.surface)
             Section {
-                Button(SettingsText.upload) { Task { await model.upload() } }
-                Button(SettingsText.download, role: .destructive) { model.requestDownload() }
+                action(SettingsText.upload, .uploading) { Task { await model.upload() } }
+                    .disabled(!model.canTransfer)
+                action(SettingsText.download, .downloading, role: .destructive) { model.requestDownload() }
+                    .disabled(!model.canTransfer)
                     // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
                                         titleVisibility: .visible) {
@@ -74,6 +83,19 @@ struct SettingsScreen: View {
         .screenBackground()
         .keyboardDismissal()
         .task { await model.load() }
+    }
+
+    /// Un botón del formulario; mientras hace lo suyo, una ruedita a la derecha (en la PWA, un aviso
+    /// «Probando conexión...», «Subiendo...»).
+    private func action(_ title: String, _ activity: SettingsModel.Activity, role: ButtonRole? = nil,
+                        perform: @escaping () -> Void) -> some View {
+        Button(role: role, action: perform) {
+            HStack {
+                Text(title)
+                Spacer()
+                if model.activity == activity { ProgressView() }
+            }
+        }
     }
 
     /// Una fila del formulario: el nombre a la izquierda y lo escrito a la derecha, como en los

@@ -41,20 +41,26 @@ struct SettingsTests {
         #expect(await settings.harness.credentials.token == "ghp_plaintext123")
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, auditoría de los avisos): en vez de
+    // avisar al tocarlo, «Guardar» está desactivado, como en los formularios de iOS.
     @Test("guardar configuración GitHub sin PAT muestra error")
     func noToken() async {
         let settings = await SettingsHarness.make()
         settings.model.repository = "user/repo"
-        await settings.model.save()
-        #expect(settings.app.notice?.text.contains("requeridos") == true)
+        #expect(!settings.model.canSave)
+        settings.model.token = "  "
+        #expect(!settings.model.canSave)
+        settings.model.token = "ghp"
+        #expect(settings.model.canSave)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27), como el anterior.
     @Test("guardar sin repo muestra error")
     func noRepository() async {
         let settings = await SettingsHarness.make()
         settings.model.token = "ghp_token"
-        await settings.model.save()
-        #expect(settings.app.notice?.text.contains("requeridos") == true)
+        #expect(!settings.model.canSave)
+        #expect(!settings.model.canTestConnection)
     }
 
     @Test("al abrir ajustes con PAT guardado, se muestra en el campo")
@@ -70,27 +76,36 @@ struct SettingsTests {
     func testDoesNotModify() async {
         let settings = await SettingsHarness.make(configured: true, remote: TrainingData(catalog: Catalog([Exercise(id: "sentadilla", name: "Sentadilla")])))
         await settings.model.testConnection()
-        #expect(settings.app.notice != nil)
+        #expect(settings.model.connectionResult != nil)
         #expect(settings.app.data == PWATestDB.data)
         #expect(await settings.harness.savedLocally == PWATestDB.data)
     }
 }
 
+// Cambiados con la aprobación del usuario (2026-10-27, auditoría de los avisos): el resultado va
+// debajo del botón, en el formulario (`connectionResult`), no en un aviso; y se prueba lo escrito,
+// sin tener que guardarlo antes.
 @MainActor
 @Suite("probar conexión — respuestas de red")
 struct SettingsConnectionTests {
     @Test("probar conexión sin config guardada → toast de aviso")
     func notSaved() async {
         let settings = await SettingsHarness.make()
+        #expect(!settings.model.canTestConnection)
+        settings.model.repository = "u/r"
+        settings.model.token = "ghp_sin_guardar"
+        #expect(settings.model.canTestConnection)
         await settings.model.testConnection()
-        #expect(settings.app.notice?.text == "Guarda la configuración primero")
+        #expect(settings.model.connectionResult == SyncText.connected)
+        #expect(await settings.harness.credentials.token == nil)
     }
 
     @Test("probar conexión con respuesta 200 → toast de éxito")
     func ok() async {
         let settings = await SettingsHarness.make(configured: true)
         await settings.model.testConnection()
-        #expect(settings.app.notice?.text == "Conexión exitosa")
+        #expect(settings.model.connectionResult?.text == "Conexión exitosa")
+        #expect(settings.app.notice == nil)
     }
 
     @Test("probar conexión con 401 → toast de error con código")
@@ -98,7 +113,8 @@ struct SettingsConnectionTests {
         let settings = await SettingsHarness.make(configured: true)
         await settings.harness.remote.fail(fetch: .status(401))
         await settings.model.testConnection()
-        #expect(settings.app.notice?.text.contains("401") == true)
+        #expect(settings.model.connectionResult?.text.contains("401") == true)
+        #expect(settings.model.connectionResult?.kind == .error)
     }
 
     @Test("probar conexión con fallo de red → toast de error genérico")
@@ -106,7 +122,32 @@ struct SettingsConnectionTests {
         let settings = await SettingsHarness.make(configured: true)
         await settings.harness.remote.fail(fetch: .unreachable)
         await settings.model.testConnection()
-        #expect(settings.app.notice?.text.contains("No se pudo conectar") == true)
+        #expect(settings.model.connectionResult == SyncText.offline)
+    }
+
+    @Test("al cambiar un campo, el resultado de la prueba anterior se va")
+    func resultClears() async {
+        let settings = await SettingsHarness.make(configured: true)
+        await settings.model.testConnection()
+        #expect(settings.model.connectionResult != nil)
+        settings.model.branch = "otra"
+        #expect(settings.model.connectionResult == nil)
+    }
+
+    @Test("mientras prueba, la fila lo dice y los botones esperan")
+    func activity() async {
+        let settings = await SettingsHarness.make(configured: true)
+        await settings.harness.remote.holdFetches()
+        let testing = Task { await settings.model.testConnection() }
+        await settings.harness.remote.waitForHeldFetch()
+        #expect(settings.model.activity == .testing)
+        #expect(!settings.model.canSave)
+        #expect(!settings.model.canTestConnection)
+        #expect(!settings.model.canTransfer)
+        await settings.harness.remote.releaseFetches()
+        await testing.value
+        #expect(settings.model.activity == nil)
+        #expect(settings.model.canTransfer)
     }
 }
 
@@ -178,7 +219,7 @@ struct SettingsModelTests {
         await settings.model.confirmDownload()
         #expect(!settings.model.isDownloadConfirmationPresented)
         #expect(settings.app.data == SyncFixtures.base)
-        #expect(settings.app.notice == SyncText.downloaded)
+        #expect(settings.app.notice == SyncText.remoteApplied)
     }
 
     @Test("subir a GitHub sube lo local")

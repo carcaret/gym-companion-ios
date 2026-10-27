@@ -104,6 +104,8 @@ public final class TodayModel {
     public private(set) var pickerOneOff = false
     public var isCreatePresented = false
     public var createName = ""
+    /// El mensaje de la alerta de crear: por qué se ha vuelto a abrir (`TodayText.alreadyExists`).
+    public private(set) var createMessage: String?
     public private(set) var removalPrompt: RemovalPrompt?
     /// Lo tecleado en un campo del entreno que aún no se ha aplicado (`TypedValue`).
     public private(set) var typed: TypedValue?
@@ -307,7 +309,7 @@ public final class TodayModel {
         guard validation.isValid else {
             validationErrors = validation.errorsByLog
             if let first = validation.errorsByLog.keys.min() { openExercise = session.logs[first].exerciseID }
-            app.notice = TodayText.incomplete
+            app.notice = ValidationText.reviewMarked
             return
         }
         validationErrors = [:]
@@ -371,13 +373,16 @@ public final class TodayModel {
         openPicker(.add)
     }
 
+    /// Hay algún ejercicio del catálogo fuera del entreno: si no, «Cambiar por otro» no se ofrece.
+    public var canSwap: Bool {
+        guard let session = activeSession else { return false }
+        let present = Set(session.logs.map(\.exerciseID))
+        return data.catalog.ids.contains { !present.contains($0) }
+    }
+
     /// "Cambiar por otro".
     public func openSwapPicker(at index: Int) {
-        guard let session = activeSession, session.logs.indices.contains(index) else { return }
-        guard session.logs.count < data.catalog.ids.count else {
-            app.notice = TodayText.noMoreExercises
-            return
-        }
+        guard canSwap, let session = activeSession, session.logs.indices.contains(index) else { return }
         openPicker(.swap(index: index))
     }
 
@@ -424,7 +429,15 @@ public final class TodayModel {
         return data
     }
 
-    /// "Crear nuevo ejercicio": siempre entra en la rutina. Si ya existe, se avisa y sigue abierto.
+    /// "Crear nuevo ejercicio" desde el selector: la alerta se abre vacía y sin mensaje de error.
+    public func openCreate() {
+        createName = ""
+        createMessage = nil
+        isCreatePresented = true
+    }
+
+    /// "Crear": siempre entra en la rutina. Si ya existe, la alerta se vuelve a abrir con el nombre
+    /// y lo dice en su mensaje.
     public func createExercise() async {
         let name = createName.trimmingWhitespace()
         guard !name.isEmpty else {
@@ -433,11 +446,12 @@ public final class TodayModel {
         }
         let id = ExerciseID(ExerciseID.slug(from: name))
         guard data.catalog[id] == nil else {
-            app.notice = TodayText.alreadyExists
+            createMessage = TodayText.alreadyExists
             // La alerta de la vista se cierra sola al pulsar: se vuelve a abrir con el nombre.
             isCreatePresented = true
             return
         }
+        createMessage = nil
         isCreatePresented = false
         pickerPurpose = nil
         createName = ""
@@ -453,10 +467,8 @@ public final class TodayModel {
         let swapped: ExerciseLog
         do {
             swapped = try session.swapExercise(at: index, to: exercise, seed: data.history.bestRecentSeed(for: exercise, today: today))
-        } catch .duplicate {
-            app.notice = TodayText.duplicateInWorkout
-            return
         } catch {
+            // `.duplicate` no llega: el selector ya quita los ejercicios del entreno.
             return
         }
         var data = data

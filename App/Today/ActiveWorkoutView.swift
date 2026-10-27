@@ -20,10 +20,13 @@ struct ActiveWorkoutView: View {
                         Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
                             .tint(Theme.red)
                     }
-                    // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna.
+                    // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna. Sin otro
+                    // ejercicio en el catálogo, cambiar no se ofrece.
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
-                            .tint(Theme.accent)
+                        if model.canSwap {
+                            Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
+                                .tint(Theme.accent)
+                        }
                         Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
                             Task { await model.toggleSkip(at: index) }
                         }
@@ -128,10 +131,7 @@ struct ExercisePickerSheet: View {
                         }
                     }
                     if picker.canCreate {
-                        Button(TodayText.createExercise) {
-                            model.createName = ""
-                            model.isCreatePresented = true
-                        }
+                        Button(TodayText.createExercise) { model.openCreate() }
                         .accessibilityIdentifier("create-exercise")
                     }
                 }
@@ -149,7 +149,7 @@ struct ExercisePickerSheet: View {
                 Button(TodayText.cancel, role: .cancel) {}
                 Button(TodayText.createConfirm) { Task { await model.createExercise() } }
             } message: {
-                Text(TodayText.createNameLabel)
+                Text(model.createMessage ?? TodayText.createNameLabel)
             }
         }
         .presentationDetents([.medium, .large])

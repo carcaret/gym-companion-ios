@@ -52,7 +52,7 @@ struct RootView: View {
         .syncPresentation(root.sync, noticeDuration: root.noticeDuration, isActive: !root.sync.isSettingsPresented)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
             NavigationStack { SettingsScreen(model: root.settings) }
-                .syncPresentation(root.sync, noticeDuration: root.noticeDuration, bottomInset: 16)
+                .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
         }
         // Para la nube de cada pantalla (`syncToolbar`).
         .environment(root.sync)

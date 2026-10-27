@@ -209,7 +209,7 @@ public final class HistoryModel {
         commitTyping()
         guard let date = selectedDate, let log = drafts[index] else { return }
         guard log.validationErrors.isEmpty else {
-            app.notice = HistoryText.fixBeforeSaving
+            app.notice = ValidationText.reviewMarked
             return
         }
         var data = data
