@@ -21,7 +21,9 @@ struct ExerciseCardView: View {
     }
 
     var body: some View {
-        CardDisclosure(isExpanded: card.isOpen, toggle: toggle) {
+        // El identificador, en el botón de la cabecera: puesto en toda la tarjeta pisaba el de cada
+        // control de dentro (`weight-plus`, `series-0`…; `.xcresult` del CI, 2026-10-27).
+        CardDisclosure(isExpanded: card.isOpen, identifier: "card-\(card.exerciseID.rawValue)", toggle: toggle) {
             header
         } content: {
             content
@@ -31,7 +33,6 @@ struct ExerciseCardView: View {
                 .opacity(card.isSkipped ? 0.7 : 1)
         }
         .card(background: card.isSkipped ? Theme.skipTint : Theme.surface)
-        .accessibilityIdentifier("card-\(card.exerciseID.rawValue)")
     }
 
     private var header: some View {

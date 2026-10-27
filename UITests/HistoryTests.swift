@@ -131,10 +131,11 @@ final class HistoryTests: XCTestCase {
         let edited = app.textFields["weight-field"].firstMatch.value as? String
 
         app.tabBars.buttons["Historial"].tap()
-        let keep = app.buttons["Seguir editando"].firstMatch
-        XCTAssertTrue(keep.appears(timeout: 5), "Tiene que preguntar antes de tirar los cambios")
-        keep.tap()
-        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 5), "Seguir editando deja la edición")
+        let discard = app.buttons["Descartar cambios"].firstMatch
+        XCTAssertTrue(discard.appears(timeout: 5), "Tiene que preguntar antes de tirar los cambios")
+        // En iOS 26 el diálogo es un globo sin «Seguir editando»: tocar fuera sigue editando.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 5), "Cerrar el diálogo deja la edición")
         XCTAssertEqual(app.textFields["weight-field"].firstMatch.value as? String, edited)
     }
 

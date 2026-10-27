@@ -74,7 +74,8 @@ final class WorkoutTests: XCTestCase {
         start.tap()
         let replace = app.buttons["Sustituir"].firstMatch
         XCTAssertTrue(replace.appears(timeout: 5), "Tiene que preguntar antes de sustituir el entreno de hoy")
-        app.buttons["Cancelar"].firstMatch.tap()
+        // En iOS 26 el diálogo es un globo sin «Cancelar»: se cierra tocando fuera.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: replace)
         wait(for: [closed], timeout: 5)
         XCTAssertFalse(app.buttons["finish-workout"].exists, "Cancelar no empieza nada")
@@ -98,7 +99,7 @@ final class WorkoutTests: XCTestCase {
         XCTAssertTrue(create.appears(timeout: 5))
         create.tap()
         let name = app.alerts.firstMatch.textFields.firstMatch
-        XCTAssertTrue(name.appears(timeout: 5))
+        XCTAssertTrue(name.appears(timeout: 5), app.debugDescription)
         XCTAssertEqual(name.value as? String, "Press Arnold")
     }
 
