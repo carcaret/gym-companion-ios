@@ -34,7 +34,7 @@ final class VideoTarjetasTests: XCTestCase {
         app.buttons["sonda-animacion"].tap()
         pause(3)
 
-        for id in ["s4", "s3", "s2", "s1"] {
+        for id in ["s6", "s4", "s3", "s2", "s1"] {
             mark("sonda \(id)")
             app.buttons["sonda-\(id)"].firstMatch.tap()
             pause(2.5)
@@ -48,6 +48,9 @@ final class VideoTarjetasTests: XCTestCase {
 
         mark("sonda s0")
         app.buttons["sonda-s0"].firstMatch.tap()
+        pause(2.5)
+        mark("sonda s5")
+        app.buttons["sonda-s5"].firstMatch.tap()
         pause(2.5)
         mark("vista previa: abrir tarjeta")
         card.tap()

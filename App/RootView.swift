@@ -61,6 +61,7 @@ struct RootView: View {
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
         .environment(\.locale, Locale(identifier: "es_ES"))
         .overlay(alignment: .topLeading) { AnimationProbe(id: "s4", top: 260) }
+        .overlay(alignment: .topLeading) { ModelProbe(top: 380) }
         // Letra grande del iPhone (Dynamic Type) hasta el primer tamaño de accesibilidad: más allá
         // las filas de las tarjetas ya no caben en el ancho de un iPhone.
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -119,6 +120,31 @@ struct AnimationProbe: View {
             .background(.orange)
         }
         .accessibilityIdentifier("sonda-\(id)")
+        .padding(.top, top)
+        .padding(.leading, 8)
+    }
+}
+
+@Observable
+final class ProbeModel {
+    var wide = false
+}
+
+/// Como `AnimationProbe`, pero el estado está en un modelo `@Observable`.
+struct ModelProbe: View {
+    let top: CGFloat
+    @State private var model = ProbeModel()
+
+    var body: some View {
+        Button { withAnimation(.linear(duration: 2)) { model.wide.toggle() } } label: {
+            HStack(spacing: 4) {
+                Text("s6").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)
+                Rectangle().fill(.black).frame(width: model.wide ? 260 : 20, height: 14)
+            }
+            .padding(2)
+            .background(.green)
+        }
+        .accessibilityIdentifier("sonda-s6")
         .padding(.top, top)
         .padding(.leading, 8)
     }

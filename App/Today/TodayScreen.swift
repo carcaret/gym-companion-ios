@@ -68,6 +68,7 @@ struct TodayScreen: View {
     private var preview: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
+                AnimationProbe(id: "s5", top: 0).frame(maxWidth: .infinity, alignment: .leading)
                 ForEach(Array(model.previewCards.enumerated()), id: \.offset) { index, card in
                     ExerciseCardView(card: card, toggle: { model.togglePreviewCard(index) })
                 }
