@@ -65,8 +65,9 @@ struct DisclosureHeader<Label: View>: View {
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .scaledFont(chevronSize, .semibold)
-                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                    .animation(animates || reduceMotion ? nil : .snappy, value: isExpanded)
+                    // Solo el giro: con `.animation(_:value:)` también se animaba su posición, y en
+                    // la `List` la flecha se quedaba a medio camino, lejos de la cabecera.
+                    .animation(animates || reduceMotion ? nil : .snappy) { $0.rotationEffect(.degrees(isExpanded ? 90 : 0)) }
                     .foregroundStyle(Theme.textMuted)
             }
             .contentShape(.rect)
