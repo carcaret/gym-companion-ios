@@ -18,6 +18,39 @@ struct RootView: View {
     }
 
     var body: some View {
+        // Si los datos no se pueden leer, la app no sale vacía como si no hubiera nada: en lugar de
+        // las pestañas, lo dice y ofrece reintentar o descargarlos de GitHub (2026-10-27).
+        Group {
+            if root.model.loadError != nil {
+                DataLoadErrorView(model: root.model, sync: root.sync)
+            } else {
+                tabs
+            }
+        }
+        .alert(DataErrorText.saveTitle, isPresented: Bindable(root.model).isSaveErrorPresented) {
+            Button(DataErrorText.understood) {}
+        } message: {
+            Text(DataErrorText.saveMessage)
+        }
+        .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
+                          isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
+        .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
+            NavigationStack { SettingsScreen(model: root.settings) }
+                .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
+        }
+        // Para la nube de cada pantalla (`syncToolbar`).
+        .environment(root.sync)
+        .tint(Theme.accentLight)
+        .preferredColorScheme(.dark)
+        // La app está solo en español: selectores de fecha y ejes de las gráficas también.
+        .environment(\.locale, Locale(identifier: "es_ES"))
+        // Letra grande del iPhone (Dynamic Type) hasta el primer tamaño de accesibilidad: más allá
+        // las filas de las tarjetas ya no caben en el ancho de un iPhone.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    }
+
+    /// Las pestañas, cada una con su pila.
+    private var tabs: some View {
         // Por `select`, que distingue tocar otra pestaña de volver a tocar la activa.
         TabView(selection: Binding(get: { navigation.selectedTab }, set: { navigation.select($0) })) {
             Tab("Rutinas", systemImage: "dumbbell", value: AppTab.routines) {
@@ -59,33 +92,6 @@ struct RootView: View {
             case .charts: break
             }
         }
-        // Si los datos no se pueden leer, la app no sale vacía como si no hubiera nada: lo dice,
-        // encima de todo, y ofrece reintentar o descargarlos de GitHub (2026-10-27).
-        .overlay {
-            if root.model.loadError != nil {
-                DataLoadErrorView(model: root.model, sync: root.sync)
-            }
-        }
-        .alert(DataErrorText.saveTitle, isPresented: Bindable(root.model).isSaveErrorPresented) {
-            Button(DataErrorText.understood) {}
-        } message: {
-            Text(DataErrorText.saveMessage)
-        }
-        .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
-                          isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
-        .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
-            NavigationStack { SettingsScreen(model: root.settings) }
-                .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
-        }
-        // Para la nube de cada pantalla (`syncToolbar`).
-        .environment(root.sync)
-        .tint(Theme.accentLight)
-        .preferredColorScheme(.dark)
-        // La app está solo en español: selectores de fecha y ejes de las gráficas también.
-        .environment(\.locale, Locale(identifier: "es_ES"))
-        // Letra grande del iPhone (Dynamic Type) hasta el primer tamaño de accesibilidad: más allá
-        // las filas de las tarjetas ya no caben en el ancho de un iPhone.
-        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
     private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
