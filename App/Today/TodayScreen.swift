@@ -107,7 +107,7 @@ private struct RoutinePreview: View {
         .safeAreaInset(edge: .bottom) {
             BottomActions(primary: {
                 Button { Task { await model.start() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
-                    .buttonStyle(.pill())
+                    .buttonStyle(.glassPill())
                     .accessibilityIdentifier("start-workout")
             })
         }
@@ -115,19 +115,26 @@ private struct RoutinePreview: View {
 }
 
 /// La fila de botones fija abajo, encima de la barra de pestañas: uno secundario a su tamaño y el
-/// principal con el resto del ancho, o solo el principal a todo el ancho.
+/// principal con el resto del ancho, o solo el principal a todo el ancho. Píldoras de cristal
+/// (`.glassPill`) sin fondo detrás: las tarjetas pasan por debajo al desplazarse.
 struct BottomActions<Secondary: View, Primary: View>: View {
     @ViewBuilder let secondary: Secondary
     @ViewBuilder let primary: Primary
 
+    /// El margen de la barra de pestañas de iOS 26, para que los dos cristales tengan el mismo
+    /// ancho (decisión del usuario, 2026-10-27). iOS no lo da: medido en el iPhone 17 Pro del CI
+    /// (21 pt; las tarjetas van a 16). Si cambia con otra versión de iOS, se vuelve a medir.
+    private static var tabBarMargin: CGFloat { 21 }
+
     var body: some View {
-        HStack(spacing: 12) {
-            secondary
-            primary
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                secondary
+                primary
+            }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, Self.tabBarMargin)
         .padding(.vertical, 8)
-        .background(Theme.background)
     }
 }
 

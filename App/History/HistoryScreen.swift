@@ -95,7 +95,7 @@ private struct SessionDetail: View {
             if model.isIncomplete {
                 BottomActions(primary: {
                     Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
-                        .buttonStyle(.pill())
+                        .buttonStyle(.glassPill())
                 })
             }
         }

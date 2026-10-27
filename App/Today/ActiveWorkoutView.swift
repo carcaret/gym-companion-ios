@@ -61,12 +61,12 @@ struct ActiveWorkoutView: View {
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.openAddPicker() } label: { Label(TodayText.addExercise, systemImage: "plus") }
-                    .buttonStyle(.pill(.subtle))
+                    .buttonStyle(.glassPill(.secondary))
                     .fixedSize()
                     .accessibilityIdentifier("add-exercise")
             } primary: {
                 Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
-                    .buttonStyle(.pill())
+                    .buttonStyle(.glassPill())
                     .accessibilityIdentifier("finish-workout")
             }
         }
