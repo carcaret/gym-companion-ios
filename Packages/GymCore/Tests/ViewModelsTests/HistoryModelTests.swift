@@ -10,17 +10,13 @@ import ViewModels
 struct HistoryHarness {
     let harness: SyncHarness
     let app: AppModel
-    let navigation: NavigationModel
     let model: HistoryModel
 
     static func make(_ data: TrainingData = PWATestDB.data) async -> HistoryHarness {
         let harness = SyncHarness(local: data, configured: false)
         let app = AppModel(repository: harness.repository())
         await app.start()
-        let navigation = NavigationModel()
-        navigation.select(.history)
-        return HistoryHarness(harness: harness, app: app, navigation: navigation,
-                              model: HistoryModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today)))
+        return HistoryHarness(harness: harness, app: app, model: HistoryModel(app: app, clock: FixedClock(SyncFixtures.today)))
     }
 
     var saved: TrainingData? {
@@ -411,12 +407,15 @@ struct HistoryIncompleteTests {
         #expect(history.model.selectedDate == nil)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27): en iOS una acción no cambia de pestaña
+    // sola; se queda en el detalle, ya terminado (sin la etiqueta ni el botón).
     @Test("botón \"Completar entreno\" navega al tab Hoy")
     func navigatesToToday() async {
         let history = await make()
         history.model.open(Self.incompleteDate)
         await history.model.completeWorkout()
-        #expect(history.navigation.selectedTab == .routines)
+        #expect(history.model.selectedDate == Self.incompleteDate)
+        #expect(!history.model.isIncomplete)
     }
 
     @Test("botón \"Completar entreno\" marca el entreno como completado en DB")

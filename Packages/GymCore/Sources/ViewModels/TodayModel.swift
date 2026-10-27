@@ -460,9 +460,10 @@ public final class TodayModel {
         return data
     }
 
-    /// "Crear nuevo ejercicio" desde el selector: la alerta se abre vacía y sin mensaje de error.
+    /// "Crear nuevo ejercicio" desde el selector: la alerta sale con lo buscado (lo que no se
+    /// encontró) y sin mensaje de error.
     public func openCreate() {
-        createName = ""
+        createName = pickerQuery.trimmingWhitespace()
         createMessage = nil
         isCreatePresented = true
     }

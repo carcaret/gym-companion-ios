@@ -59,12 +59,4 @@ struct NavigationModelTests {
         navigation.select(.routines)
         #expect(navigation.reselection == nil)
     }
-
-    @Test("Historial → Rutinas (al marcar como completada una sesión de hoy)")
-    func historyToRoutines() {
-        let navigation = NavigationModel()
-        navigation.select(.history)
-        navigation.showRoutines()
-        #expect(navigation.selectedTab == .routines)
-    }
 }

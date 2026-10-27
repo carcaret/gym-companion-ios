@@ -321,6 +321,19 @@ struct RoutineManagementTests {
         #expect(saved.catalog["press_arnold"] != nil)
     }
 
+    // Propio de la app (2026-10-27): la alerta sale con lo buscado, que es lo que no se encontró.
+    @Test("crear ejercicio desde la búsqueda rellena el nombre con lo buscado")
+    func createFromSearch() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        today.model.openAddPicker()
+        today.model.pickerQuery = "  Press Arnold "
+        today.model.openCreate()
+        #expect(today.model.isCreatePresented)
+        #expect(today.model.createName == "Press Arnold")
+        #expect(today.model.createMessage == nil)
+    }
+
     @Test("crear ejercicio con nombre duplicado muestra warning y modal sigue abierto")
     func duplicate() async {
         let today = await TodayHarness.make()

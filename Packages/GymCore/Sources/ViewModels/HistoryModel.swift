@@ -58,12 +58,10 @@ public final class HistoryModel {
     public private(set) var typed: TypedValue?
 
     private let app: AppModel
-    private let navigation: NavigationModel
     private let clock: any Clock
 
-    public init(app: AppModel, navigation: NavigationModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock) {
         self.app = app
-        self.navigation = navigation
         self.clock = clock
     }
 
@@ -318,15 +316,15 @@ public final class HistoryModel {
         validationErrors[index] = nil
     }
 
-    /// "Completar entreno" de una sesión sin terminar: se da por terminada y se va a Rutinas.
+    /// "Completar entreno" de una sesión sin terminar: se da por terminada y el detalle se queda,
+    /// ya sin la etiqueta ni el botón (2026-10-27; la PWA saltaba a Hoy, y en iOS una acción no
+    /// cambia de pestaña sola).
     public func completeWorkout() async {
         guard let date = selectedDate else { return }
         var data = data
         guard let position = data.history.firstIndex(where: { $0.date == date }) else { return }
         data.history[position].completed = true
-        back()
         await app.update(data)
-        navigation.showRoutines()
     }
 
     private func routineName(_ id: RoutineID) -> String {

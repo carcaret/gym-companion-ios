@@ -30,6 +30,15 @@ struct RootView: View {
                 stack(.progress) {
                     ProgressScreen(model: root.progress, footer: AnyView(CatalogCard(model: root.catalog)))
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
+                        // El catálogo, siempre a la vista en la barra; la tarjeta del final, además,
+                        // dice cuántos hay y cuántos sin grupo (2026-10-27).
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
+                                    .accessibilityLabel(CatalogText.cardTitle)
+                                    .accessibilityIdentifier("catalog-button")
+                            }
+                        }
                 }
             }
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {

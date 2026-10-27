@@ -180,6 +180,19 @@ final class NavigationTests: XCTestCase {
         assertSyncIndicator(app, "en el catálogo")
     }
 
+    /// El catálogo, en la barra de Progreso, sin bajar hasta el final (2026-10-27).
+    @MainActor
+    func testElCatalogoSeAbreDesdeLaBarraDeProgreso() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo"]
+        app.launch()
+        app.tabBars.buttons["Progreso"].tap()
+        let button = app.buttons["catalog-button"]
+        XCTAssertTrue(button.appears(timeout: 10))
+        button.tap()
+        XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
+    }
+
     @MainActor
     private func assertSyncIndicator(_ app: XCUIApplication, _ place: String) {
         let indicator = app.buttons["sync-indicator"]

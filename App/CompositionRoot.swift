@@ -47,7 +47,7 @@ struct CompositionRoot {
         let navigation = NavigationModel()
         self.navigation = navigation
         today = TodayModel(app: model, clock: SystemClock())
-        history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
+        history = HistoryModel(app: model, clock: SystemClock())
         charts = ChartsModel(app: model, clock: SystemClock())
         progress = ProgressModel(app: model, clock: SystemClock())
         catalog = CatalogModel(app: model)

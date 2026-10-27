@@ -85,6 +85,23 @@ final class WorkoutTests: XCTestCase {
         XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10), "Sustituir empieza el entreno nuevo")
     }
 
+    /// Si la búsqueda no encuentra el ejercicio, crearlo sale con lo buscado (2026-10-27).
+    @MainActor
+    func testCrearUnEjercicioSaleConLoBuscado() {
+        let app = startWorkout()
+        app.buttons["add-exercise"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.appears(timeout: 5))
+        search.tap()
+        search.typeText("Press Arnold")
+        let create = app.buttons["create-exercise"].firstMatch
+        XCTAssertTrue(create.appears(timeout: 5))
+        create.tap()
+        let name = app.alerts.firstMatch.textFields.firstMatch
+        XCTAssertTrue(name.appears(timeout: 5))
+        XCTAssertEqual(name.value as? String, "Press Arnold")
+    }
+
     @MainActor
     private func startWorkout() -> XCUIApplication {
         let app = XCUIApplication()
