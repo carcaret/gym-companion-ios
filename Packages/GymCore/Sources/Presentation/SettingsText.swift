@@ -17,7 +17,6 @@ public enum SettingsText {
     public static let upload = "Subir a GitHub"
     public static let download = "Descargar de GitHub"
     public static let status = "Estado"
-    public static let aboutSection = "Acerca de"
 
     public static func status(_ state: String) -> String { state }
 }

@@ -1,26 +1,7 @@
-import Domain
-
-/// Mensajes de error para la interfaz.
+/// Mensajes de error para la interfaz. Los de cada regla («Peso debe ser >= 0»…) eran los de la
+/// PWA y ya no salen: la interfaz no deja llegar a esos errores (borrados el 2026-10-27).
 public enum ValidationText {
     /// Al terminar el entreno o guardar una sesión del historial con campos sin rellenar o mal: los
     /// campos ya salen marcados, el aviso dice por qué no ha pasado nada.
     public static let reviewMarked = Notice("Revisa los campos marcados", .warning)
-
-    public static func message(_ error: LogValidationError) -> String {
-        switch error {
-        case .negativeWeight: "Peso debe ser >= 0"
-        case .invalidSeries: "Series debe ser >= 1"
-        case .invalidTargetReps: "Reps objetivo debe ser >= 1"
-        case .missingRep(let index): "Serie \(index + 1) no completada"
-        case .invalidRep(let index): "Serie \(index + 1) inválida"
-        }
-    }
-
-    public static func message(_ error: CatalogError) -> String {
-        switch error {
-        case .notFound: "El ejercicio no existe"
-        case .emptyName: "El nombre no puede estar vacío"
-        case .invalidGroup: "Grupo no válido"
-        }
-    }
 }

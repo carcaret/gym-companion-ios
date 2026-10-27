@@ -93,9 +93,10 @@ struct SyncPresentation: ViewModifier {
                     NoticeView(notice: notice)
                         .padding(.horizontal, 56)
                         .padding(.top, 4)
-                        // Hacia arriba se va, como un aviso del sistema.
-                        .gesture(DragGesture(minimumDistance: 10).onEnded { drag in
-                            if drag.translation.height < 0 { sync.notice = nil }
+                        // Hacia arriba se va en cuanto el dedo sube, como un aviso del sistema, sin
+                        // esperar a soltar: un arrastre que acaba fuera de la pantalla no termina.
+                        .gesture(DragGesture(minimumDistance: 10).onChanged { drag in
+                            if drag.translation.height < -10 { sync.notice = nil }
                         })
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .task(id: notice) {
