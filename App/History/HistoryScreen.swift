@@ -17,7 +17,9 @@ struct HistoryScreen: View {
             .navigationDestination(isPresented: Binding(
                 get: { model.selectedDate != nil }, set: { if !$0 { model.back() } }
             )) {
-                detail
+                // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
+                // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
+                SessionDetail(model: model)
                     .navigationTitle(model.detailTitle)
                     .navigationBarTitleDisplayMode(.inline)
                     .screenBackground()
@@ -61,10 +63,15 @@ struct HistoryScreen: View {
             }
         }
     }
+}
 
-    private var detail: some View {
+/// El detalle de una sesión, empujado sobre la lista.
+private struct SessionDetail: View {
+    @Bindable var model: HistoryModel
+
+    var body: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            VStack(spacing: 12) {
                 if model.isIncomplete {
                     Label(HistoryText.incomplete, systemImage: "pause.fill")
                         .scaledFont(11, .bold)
