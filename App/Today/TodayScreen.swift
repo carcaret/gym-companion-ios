@@ -66,7 +66,7 @@ struct TodayScreen: View {
 
     private var preview: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            VStack(spacing: 12) {
                 ForEach(Array(model.previewCards.enumerated()), id: \.offset) { index, card in
                     ExerciseCardView(card: card, toggle: { model.togglePreviewCard(index) })
                 }
