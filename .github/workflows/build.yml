@@ -50,7 +50,7 @@ jobs:
     # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
     # Linux, con la misma imagen que en el NAS.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: ubuntu-latest
     container: swift:6.3.3
     steps:
@@ -69,7 +69,7 @@ jobs:
     # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
     # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: [1, 2, 3]
+        part: [1]
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
       # Medido el 2026-10-26: unos 230-250 s de tests en cada parte. Cada parte corre sus clases por
@@ -171,14 +171,13 @@ jobs:
         run: scripts/ci-simulator.sh wait
 
       - name: Tests de la app en el simulador
-        if: env.TESTED != 'true'
         run: |
-          selection=()
-          case "${{ matrix.part }}" in
-            1) for class in $PART_1; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
-            2) for class in $PART_2; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
-            3) for class in $PART_1 $PART_2; do selection+=("-skip-testing:GymCompanionUITests/$class"); done ;;
-          esac
+          selection=("-only-testing:GymCompanionUITests/VideoTarjetasTests")
+          mkdir -p diagnostico
+          xcrun simctl io "$SIM_UDID" recordVideo --codec=h264 --force diagnostico/video.mp4 > diagnostico/video.log 2>&1 &
+          echo $! > "$RUNNER_TEMP/video.pid"
+          sleep 2
+          echo "VIDEO EMPIEZA $(perl -MTime::HiRes=time -MPOSIX -e '$t=time; print strftime("%H:%M:%S", localtime($t)), sprintf(".%03d", ($t-int($t))*1000)')"
           scripts/ci-timeline.sh mark "tests: empiezan"
           xcodebuild test-without-building \
             -project GymCompanion.xcodeproj \
@@ -186,11 +185,13 @@ jobs:
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
-            -retry-tests-on-failure -test-iterations 2 \
             "${selection[@]}" \
             2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
             | tee diagnostico/test.log | tail -n 60
           status=${PIPESTATUS[0]}
+          kill -INT "$(cat "$RUNNER_TEMP/video.pid")"; sleep 3
+          grep MARCA diagnostico/test.log | sed 's/.*MARCA/MARCA/' || true
+          ls -la diagnostico
           scripts/ci-timeline.sh mark "tests: terminan"
           test "$status" -eq 0
 
@@ -242,7 +243,7 @@ jobs:
     # tests del paquete en macOS: este job acaba mucho antes que los del iPhone, y así no hacen
     # falta más de 5 máquinas a la vez.
     needs: gate
-    if: ${{ !cancelled() }}
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: macos-26
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
@@ -381,7 +382,7 @@ jobs:
   capturas:
     # Las capturas de las tres partes y del reloj, juntas en un solo artefacto "capturas".
     needs: [app, watch]
-    if: always()
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: ubuntu-latest
     steps:
       - uses: actions/upload-artifact/merge@v4
@@ -394,6 +395,7 @@ jobs:
   release-build:
     # La release se compila a la vez que corren los tests (también en las PR: así se sabe que
     # compila en Release) y solo se publica, en el job publish, si todo pasa en master.
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -447,7 +449,7 @@ jobs:
 
   publish:
     needs: [gate, core-linux, pwa-tests, app, watch, release-build]
-    if: github.event_name == 'push' && needs.gate.outputs.tested != 'true'
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -462,7 +464,7 @@ jobs:
   # Lo mismo, sin esperar a los jobs de tests, cuando el gate dice que ya pasaron en la PR.
   publish-tested:
     needs: [gate, release-build]
-    if: github.event_name == 'push' && needs.gate.outputs.tested == 'true'
+    if: false   # rama de prueba visual: solo el vídeo del iPhone
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
