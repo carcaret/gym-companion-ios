@@ -125,7 +125,8 @@ extension View {
     }
 }
 
-/// El toast de la PWA.
+/// El toast de la PWA, de cristal: flota sobre el contenido, como la barra de pestañas y los
+/// botones de abajo (2026-10-27).
 struct NoticeView: View {
     let notice: Notice
 
@@ -138,9 +139,7 @@ struct NoticeView: View {
             .scaledFont(13, .medium)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
-            .background(Theme.surface2, in: .rect(cornerRadius: Theme.radiusSmall))
-            .overlay { RoundedRectangle(cornerRadius: Theme.radiusSmall).strokeBorder(Theme.border) }
-            .shadow(color: .black.opacity(0.45), radius: 15, y: 8)
+            .glassEffect(.regular, in: .capsule)
             // Un solo elemento con su texto: si no, no aparecía en el árbol de accesibilidad
             // (ni VoiceOver lo podía leer al tocarlo ni los tests lo encontraban).
             .accessibilityElement(children: .ignore)
