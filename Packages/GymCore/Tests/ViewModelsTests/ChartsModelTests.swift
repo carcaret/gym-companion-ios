@@ -218,8 +218,10 @@ struct ChartsModelTests {
 
     @Test("el detalle de un punto dice la serie y el valor, y si se saltó")
     func pointLabel() {
-        #expect(ChartsText.pointLabel("e1RM", value: 84, carriedForward: false) == "e1RM: 84")
-        #expect(ChartsText.pointLabel("Peso", value: 52.5, carriedForward: true) == "Peso: 52.5 · saltado (mantiene)")
+        // Con coma decimal y la unidad, como en el resto de la app (antes "52.5", sin unidad;
+        // cambio aprobado por el usuario, 2026-10-27).
+        #expect(ChartsText.pointLabel("e1RM", value: 84, carriedForward: false) == "e1RM: 84 kg")
+        #expect(ChartsText.pointLabel("Peso", value: 52.5, carriedForward: true) == "Peso: 52,5 kg · saltado (mantiene)")
     }
 }
 
