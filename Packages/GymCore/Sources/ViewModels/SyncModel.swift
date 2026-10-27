@@ -53,16 +53,12 @@ public final class SyncModel {
         status = await repository.status
     }
 
-    /// Al arrancar, al volver a la app o al volver la red.
-    public func synchronize(afterReconnect: Bool = false) async {
-        switch await repository.synchronize() {
-        case .remoteApplied(let remote):
+    /// Al arrancar, al volver a la app o al volver la red. Solo avisa si los datos han cambiado: lo
+    /// subido lo dice el indicador.
+    public func synchronize() async {
+        if case .remoteApplied(let remote) = await repository.synchronize() {
             app.replace(with: remote)
             notice = SyncText.remoteApplied
-        case .uploaded where afterReconnect:
-            notice = SyncText.savedAfterReconnect
-        case .uploaded, .nothing, .failed:
-            break
         }
         await refresh()
     }
@@ -79,14 +75,26 @@ public final class SyncModel {
         await refresh()
         if status.conflict {
             isConflictPresented = true
-        } else {
-            notice = statusNotice
+            return
+        }
+        notice = switch status.state {
+        case .pending where status.waitingForWorkout: SyncText.waitingForWorkout
+        // Se ha pedido subir y no se ha podido.
+        case .pending: SyncText.uploadFailed
+        case .ok: SyncText.synced
+        case .disabled: SyncText.notConfigured
         }
     }
 
     /// El estado, en el menú del indicador y en los ajustes.
     public var statusText: String {
-        status.conflict ? SyncText.conflictTitle : statusNotice.text
+        if status.conflict { return SyncText.conflictTitle }
+        return switch status.state {
+        case .pending where status.waitingForWorkout: SyncText.waitingForWorkout.text
+        case .pending: SyncText.pendingStatus
+        case .ok: SyncText.synced.text
+        case .disabled: SyncText.notConfigured.text
+        }
     }
 
     public var menuAction: MenuAction {
@@ -117,15 +125,6 @@ public final class SyncModel {
         status.state == .pending && !status.waitingForWorkout
     }
 
-    private var statusNotice: Notice {
-        switch status.state {
-        case .pending where status.waitingForWorkout: SyncText.waitingForWorkout
-        case .pending: SyncText.pendingChanges
-        case .ok: SyncText.synced
-        case .disabled: SyncText.notConfigured
-        }
-    }
-
     /// Tras terminar un entreno: si había GitHub y no se pudo subir, se avisa.
     public func workoutFinished(_ result: UploadResult) {
         switch result {
@@ -136,57 +135,52 @@ public final class SyncModel {
 
     // MARK: - Botones
 
-    /// "Subir a GitHub".
+    /// "Subir a GitHub". Lo que está en marcha lo dice la fila del botón (`SettingsModel.activity`).
     public func forceUpload() async {
-        notice = SyncText.uploading
         switch await repository.forceUpload() {
         case .uploaded: notice = SyncText.uploaded
-        case .notConfigured: notice = SyncText.notConfiguredWarning
-        case .conflict:
-            notice = nil
-            isConflictPresented = true
-        case .unreachable, .failed: notice = SyncText.uploadFailed
+        case .notConfigured: notice = SyncText.notConfigured
+        case .conflict: isConflictPresented = true
+        case .unreachable: notice = SyncText.offline
+        case .failed: notice = SyncText.uploadFailed
         }
         await refresh()
     }
 
     /// "Descargar de GitHub", ya confirmado.
     public func download() async {
-        notice = SyncText.downloading
+        await applyRemote()
+        await refresh()
+    }
+
+    /// Conflicto → "Subir local → GitHub". La alerta se cierra siempre (SwiftUI ya la ha cerrado
+    /// al tocar): si falla, sale el error y el indicador sigue ofreciendo resolverlo.
+    public func keepLocal() async {
+        isConflictPresented = false
+        switch await repository.keepLocal() {
+        case .uploaded: notice = SyncText.uploaded
+        case .unreachable: notice = SyncText.offline
+        case .notConfigured: notice = SyncText.notConfigured
+        case .conflict, .failed: notice = SyncText.uploadFailed
+        }
+        await refresh()
+    }
+
+    /// Conflicto → "Bajar GitHub → local", como `keepLocal`.
+    public func keepRemote() async {
+        isConflictPresented = false
+        await applyRemote()
+        await refresh()
+    }
+
+    private func applyRemote() async {
         switch await repository.download() {
         case .applied(let remote):
             app.replace(with: remote)
-            notice = SyncText.downloaded
-        case .notConfigured: notice = SyncText.notConfiguredWarning
+            notice = SyncText.remoteApplied
+        case .notConfigured: notice = SyncText.notConfigured
         case .failed: notice = SyncText.downloadFailed
         }
-        await refresh()
-    }
-
-    /// Conflicto → "Subir local → GitHub". Si falla, el diálogo sigue abierto.
-    public func keepLocal() async {
-        switch await repository.keepLocal() {
-        case .uploaded:
-            isConflictPresented = false
-            notice = SyncText.keptLocal
-        case .unreachable: notice = SyncText.cannotConnect
-        case .notConfigured: notice = SyncText.notConfiguredWarning
-        case .conflict, .failed: notice = SyncText.keepLocalFailed
-        }
-        await refresh()
-    }
-
-    /// Conflicto → "Bajar GitHub → local". Si falla, el diálogo sigue abierto.
-    public func keepRemote() async {
-        switch await repository.download() {
-        case .applied(let remote):
-            app.replace(with: remote)
-            isConflictPresented = false
-            notice = SyncText.keptRemote
-        case .notConfigured: notice = SyncText.notConfiguredWarning
-        case .failed: notice = SyncText.keepRemoteFailed
-        }
-        await refresh()
     }
 
     public func cancelConflict() {
@@ -195,40 +189,40 @@ public final class SyncModel {
 
     // MARK: - Configuración
 
-    /// "Probar conexión" con lo que hay escrito, sin guardar nada.
-    public func testConnection(repository name: String, branch: String, path: String, token: String) async {
-        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else {
-            notice = SyncText.repoAndTokenRequired
-            return
-        }
-        notice = SyncText.testing
-        switch await repository.testConnection(location, token: token) {
-        case .connected: notice = SyncText.connected
-        case .status(let code): notice = SyncText.connectionError(status: code)
-        case .unreachable: notice = SyncText.cannotConnectAtAll
-        case .invalidContent: notice = SyncText.invalidRemoteContent
+    /// "Probar conexión" con lo que hay escrito, sin guardar nada. El resultado no es un aviso: va
+    /// debajo del botón. Sin repo o sin token no hay nada que probar (el botón está desactivado).
+    public func testConnection(repository name: String, branch: String, path: String, token: String) async -> Notice? {
+        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return nil }
+        return switch await repository.testConnection(location, token: token) {
+        case .connected: SyncText.connected
+        case .status(let code): SyncText.connectionError(status: code)
+        case .unreachable: SyncText.offline
+        case .invalidContent: SyncText.invalidRemoteContent
         }
     }
 
-    /// "Guardar": rama y ruta vacías toman las de siempre (`master`, `db.json`).
+    /// "Guardar": rama y ruta vacías toman las de siempre (`master`, `db.json`). Sin repo o sin
+    /// token no guarda (el botón está desactivado).
     public func configure(repository name: String, branch: String, path: String, token: String) async {
-        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else {
-            notice = SyncText.repoAndTokenRequired
-            return
-        }
-        notice = SyncText.configSaved
+        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return }
         do {
             switch try await repository.configure(location, token: token) {
             case .downloaded(let remote):
                 app.replace(with: remote)
-                notice = SyncText.downloaded
+                notice = SyncText.remoteApplied
             case .downloadFailed: notice = SyncText.downloadFailed
+            // Lo que pase con la subida lo dice el indicador.
             case .uploading: break
             }
         } catch {
-            notice = Notice(String(describing: error), .error)
+            notice = SyncText.configureFailed
         }
         await refresh()
+    }
+
+    /// Repo y token escritos, sin contar los espacios: lo mínimo para guardar o probar.
+    public static func isComplete(repository name: String, token: String) -> Bool {
+        trimmed(name) != nil && trimmed(token) != nil
     }
 
     private static func location(_ name: String, _ branch: String, _ path: String) -> SyncLocation? {

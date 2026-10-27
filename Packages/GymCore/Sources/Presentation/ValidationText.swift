@@ -2,6 +2,10 @@ import Domain
 
 /// Mensajes de error para la interfaz.
 public enum ValidationText {
+    /// Al terminar el entreno o guardar una sesión del historial con campos sin rellenar o mal: los
+    /// campos ya salen marcados, el aviso dice por qué no ha pasado nada.
+    public static let reviewMarked = Notice("Revisa los campos marcados", .warning)
+
     public static func message(_ error: LogValidationError) -> String {
         switch error {
         case .negativeWeight: "Peso debe ser >= 0"

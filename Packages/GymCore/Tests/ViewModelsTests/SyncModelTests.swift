@@ -72,7 +72,7 @@ struct SyncUITests {
         let harness = SyncHarness(configured: false)
         let (_, sync) = await models(harness)
         await sync.forceUpload()
-        #expect(sync.notice == SyncText.notConfiguredWarning)
+        #expect(sync.notice == SyncText.notConfigured)
         #expect(await harness.remote.pushAttempts == 0)
     }
 
@@ -88,12 +88,14 @@ struct SyncUITests {
         #expect(sync.isConflictPresented)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, auditoría de los avisos): el resultado no es un
+    // aviso: lo devuelve para enseñarlo debajo del botón.
     @Test("probar conexión NO sobrescribe la DB local")
     func testConnection() async {
         let harness = SyncHarness(remote: TrainingData(catalog: Catalog([Exercise(id: "sentadilla", name: "Sentadilla")])))
         let (app, sync) = await models(harness)
-        await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "ghp_test")
-        #expect(sync.notice == SyncText.connected)
+        #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "ghp_test") == SyncText.connected)
+        #expect(sync.notice == nil)
         #expect(app.data == F.base)
         #expect(await harness.savedLocally == F.base)
     }
@@ -117,7 +119,9 @@ struct SyncModelTests {
         let remote = F.adding(Exercise(id: "dominadas", name: "Dominadas"))
         let (app, sync) = await models(SyncHarness(remote: remote))
         await sync.download()
-        #expect(sync.notice == SyncText.downloaded)
+        // Cambiado con la aprobación del usuario (2026-10-27, auditoría de los avisos): un solo texto
+        // para «los datos del iPhone han cambiado».
+        #expect(sync.notice == SyncText.remoteApplied)
         #expect(app.data == remote)
     }
 
@@ -168,7 +172,7 @@ struct SyncModelTests {
     @Test("con algo pendiente, el menú del indicador dice que falta subir y ofrece sincronizar")
     func pendingMenu() async {
         let (_, sync) = await models(SyncHarness(pending: true))
-        #expect(sync.statusText == SyncText.pendingChanges.text)
+        #expect(sync.statusText == SyncText.pendingStatus)
         #expect(sync.menuAction == .syncNow)
     }
 
@@ -228,12 +232,14 @@ struct SyncModelTests {
         #expect(sync.menuAction == .resolveConflict)
     }
 
-    @Test("al volver la red, lo pendiente se sube y se avisa")
+    // Antes avisaba «Guardado en GitHub (recuperado tras reconexión)», como la PWA (quitado con la
+    // aprobación del usuario, 2026-10-27): lo dice el indicador, como en la subida diferida.
+    @Test("al volver la red, lo pendiente se sube sin avisar: lo dice el indicador")
     func reconnect() async {
         let harness = SyncHarness(pending: true)
         let (_, sync) = await models(harness)
-        await sync.synchronize(afterReconnect: true)
-        #expect(sync.notice == SyncText.savedAfterReconnect)
+        await sync.synchronize()
+        #expect(sync.notice == nil)
         #expect(sync.status.state == .ok)
     }
 
@@ -247,12 +253,14 @@ struct SyncModelTests {
         await sync.refresh()
         sync.resolveConflict()
         await sync.keepLocal()
-        #expect(sync.notice == SyncText.keptLocal)
+        #expect(sync.notice == SyncText.uploaded)
         #expect(!sync.isConflictPresented)
         #expect(sync.status == SyncStatus(state: .ok, conflict: false))
     }
 
-    @Test("conflicto → Subir local sin red: avisa y el conflicto sigue abierto")
+    // Antes la alerta seguía abierta y tapaba el aviso (cambiado con la aprobación del usuario,
+    // 2026-10-27): se cierra, sale el error y el indicador sigue ofreciendo resolverlo.
+    @Test("conflicto → Subir local sin red: avisa, cierra la alerta y el conflicto sigue pendiente")
     func keepLocalOffline() async {
         let harness = SyncHarness()
         await harness.remote.fail(push: .conflict)
@@ -262,8 +270,10 @@ struct SyncModelTests {
         await sync.refresh()
         sync.resolveConflict()
         await sync.keepLocal()
-        #expect(sync.notice == SyncText.cannotConnect)
-        #expect(sync.isConflictPresented)
+        #expect(sync.notice == SyncText.offline)
+        #expect(!sync.isConflictPresented)
+        #expect(sync.status.conflict)
+        #expect(sync.menuAction == .resolveConflict)
     }
 
     @Test("conflicto → Bajar GitHub: lo remoto se ve al momento")
@@ -276,7 +286,7 @@ struct SyncModelTests {
         sync.resolveConflict()
         #expect(sync.isConflictPresented)
         await sync.keepRemote()
-        #expect(sync.notice == SyncText.keptRemote)
+        #expect(sync.notice == SyncText.remoteApplied)
         #expect(app.data == F.base)
         #expect(!sync.isConflictPresented)
     }
@@ -298,14 +308,14 @@ struct SyncModelTests {
         observing.cancel()
     }
 
+    // Sin aviso (2026-10-27): el botón ya está desactivado (`SettingsModel.canSave`).
     @Test("configurar sin repo o sin token no guarda nada")
     func configureRequiresFields() async {
         let harness = SyncHarness(configured: false)
         let (_, sync) = await models(harness)
         await sync.configure(repository: "  ", branch: "main", path: "db.json", token: "ghp")
-        #expect(sync.notice == SyncText.repoAndTokenRequired)
         await sync.configure(repository: "u/r", branch: "main", path: "db.json", token: " ")
-        #expect(sync.notice == SyncText.repoAndTokenRequired)
+        #expect(sync.notice == nil)
         #expect(await harness.credentials.token == nil)
     }
 
@@ -315,8 +325,18 @@ struct SyncModelTests {
         let (app, sync) = await models(harness)
         await sync.configure(repository: " u/r ", branch: "main", path: "db.json", token: " ghp_x ")
         #expect(app.data == F.finishedWorkout())
-        #expect(sync.notice == SyncText.downloaded)
+        #expect(sync.notice == SyncText.remoteApplied)
         #expect(await harness.credentials.token == "ghp_x")
+    }
+
+    // Antes enseñaba el texto interno del error (2026-10-27).
+    @Test("configurar sin poder guardar (el Llavero) lo dice con palabras de la app")
+    func configureFails() async {
+        let harness = SyncHarness(configured: false)
+        await harness.credentials.failSaving()
+        let (_, sync) = await models(harness)
+        await sync.configure(repository: "u/r", branch: "main", path: "db.json", token: "ghp_x")
+        #expect(sync.notice == SyncText.configureFailed)
     }
 
     @Test("probar conexión: el código de error y la falta de red")
@@ -324,11 +344,24 @@ struct SyncModelTests {
         let harness = SyncHarness()
         let (_, sync) = await models(harness)
         await harness.remote.fail(fetch: .status(404))
-        await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t")
-        #expect(sync.notice == SyncText.connectionError(status: 404))
+        #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t") == SyncText.connectionError(status: 404))
         await harness.remote.fail(fetch: .unreachable)
-        await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t")
-        #expect(sync.notice == SyncText.cannotConnectAtAll)
+        #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t") == SyncText.offline)
+    }
+
+    @Test("conflicto → Bajar GitHub sin red: avisa, cierra la alerta y el conflicto sigue pendiente")
+    func keepRemoteOffline() async {
+        let harness = SyncHarness()
+        await harness.remote.fail(push: .conflict)
+        let (app, sync) = await models(harness)
+        _ = await app.finishWorkout(F.finishedWorkout())
+        await harness.remote.fail(fetch: .unreachable, push: .unreachable)
+        await sync.refresh()
+        sync.resolveConflict()
+        await sync.keepRemote()
+        #expect(sync.notice == SyncText.downloadFailed)
+        #expect(!sync.isConflictPresented)
+        #expect(sync.status.conflict)
     }
 
     @Test("terminar un entreno sin poder subirlo avisa de que queda guardado en el iPhone")
@@ -367,6 +400,14 @@ struct SyncPullToRefreshTests {
         #expect(sync.notice == SyncText.remoteApplied)
     }
 
+    @Test("durante el entreno dice que se subirá al terminarlo")
+    func waitingForWorkout() async {
+        let (app, sync) = await models(SyncHarness())
+        await app.update(F.activeWorkout())
+        await sync.pullToRefresh()
+        #expect(sync.notice == SyncText.waitingForWorkout)
+    }
+
     @Test("con todo igual dice que está sincronizado")
     func synced() async {
         let (_, sync) = await models(SyncHarness())
@@ -388,6 +429,7 @@ struct SyncPullToRefreshTests {
         await harness.remote.fail(fetch: .unreachable)
         let (_, sync) = await models(harness)
         await sync.pullToRefresh()
-        #expect(sync.notice == SyncText.pendingChanges)
+        // Antes «Hay cambios pendientes…» (2026-10-27): se pidió subir y no se pudo, es un error.
+        #expect(sync.notice == SyncText.uploadFailed)
     }
 }

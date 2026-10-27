@@ -80,5 +80,12 @@ final class HistoryTests: XCTestCase {
         let notice = app.staticTexts.matching(identifier: "notice").firstMatch
         XCTAssertTrue(notice.appears(timeout: 10))
         XCTAssertEqual(notice.label, "GitHub no configurado")
+
+        // Sale arriba, lejos de las píldoras y de la barra de pestañas (2026-10-27), y se va
+        // deslizándolo hacia arriba.
+        XCTAssertLessThan(notice.frame.maxY, app.frame.height / 3)
+        notice.swipeUp()
+        let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: notice)
+        wait(for: [gone], timeout: 5)
     }
 }

@@ -79,10 +79,10 @@ public enum TodayText {
     public static let yes = "Sí"
     public static let no = "No"
 
+    /// En el mensaje de la alerta de crear, que se vuelve a abrir con el nombre: un aviso quedaría
+    /// debajo de la alerta.
+    public static let alreadyExists = "Ya existe ese ejercicio"
+
     // Avisos
-    public static let incomplete = Notice("Completa todos los campos antes de finalizar", .warning)
-    public static let alreadyExists = Notice("Ya existe ese ejercicio", .warning)
-    public static let duplicateInWorkout = Notice("Ese ejercicio ya está en el entreno", .warning)
-    public static let noMoreExercises = Notice("No hay más ejercicios disponibles", .warning)
     public static func reciprocalScheduled(_ routine: String) -> Notice { Notice("Se aplicará en \(routine) la próxima vez", .success) }
 }

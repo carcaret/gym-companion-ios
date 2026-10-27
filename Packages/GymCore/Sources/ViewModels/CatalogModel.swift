@@ -104,15 +104,17 @@ public final class CatalogModel {
         }
     }
 
-    /// "Guardar". Si no vale (nombre vacío…), avisa y el editor sigue abierto.
+    /// Con el nombre vacío, «Guardar» está desactivado.
+    public var canSave: Bool { !(editor?.name.trimmingWhitespace().isEmpty ?? true) }
+
+    /// "Guardar". Si no vale, el editor sigue abierto (la interfaz no deja llegar a eso).
     public func save() async {
-        guard let editor else { return }
+        guard let editor, canSave else { return }
         var data = data
         let secondaries = MuscleGroup.all.filter(editor.secondaries.contains)
         do {
             try data.catalog.update(editor.exerciseID, name: editor.name, group: editor.group, secondaryGroups: secondaries)
         } catch {
-            app.notice = Notice(ValidationText.message(error), .warning)
             return
         }
         self.editor = nil
