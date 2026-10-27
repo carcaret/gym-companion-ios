@@ -48,6 +48,7 @@ struct ActiveWorkoutView: View {
             }
         }
         .listStyle(.plain)
+        .environment(\.disclosureAnimatesHeight, false)
         .screenBackground()
         .keyboardDismissal()
         // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un

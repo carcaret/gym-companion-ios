@@ -22,6 +22,7 @@ struct ProgressScreen: View {
                     .listRowBackground(Theme.surface)
             }
         }
+        .environment(\.disclosureAnimatesHeight, false)
         .navigationTitle(StatsText.title)
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
         .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {
