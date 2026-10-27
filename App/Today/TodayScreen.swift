@@ -11,27 +11,36 @@ struct TodayScreen: View {
     var body: some View {
         Group {
             switch model.stage {
-            // La vista previa entra empujada sobre el selector: se vuelve con la flecha de la
-            // barra o deslizando desde el borde, como en cualquier app de iOS.
-            case .selector, .preview: selector.navigationTitle(TodayText.selectorTitle)
+            // La vista previa y el entreno terminado entran empujados sobre el selector: se vuelve
+            // con la flecha de la barra o deslizando desde el borde, como en cualquier app de iOS.
+            case .selector, .preview, .completed: selector.navigationTitle(TodayText.selectorTitle)
             case .active: ActiveWorkoutView(model: model).navigationTitle(model.title)
-            case .completed: completed.navigationTitle(model.title)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(isPresented: Binding(get: { isPreviewing }, set: { if !$0 { model.backToSelector() } })) {
+        .navigationDestination(isPresented: Binding(get: { isPushed }, set: { if !$0 { model.backToSelector() } })) {
             // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
             // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
-            RoutinePreview(model: model)
-                .syncToolbar()
-                .navigationTitle(model.title)
-                .navigationBarTitleDisplayMode(.inline)
-                .screenBackground()
+            Group {
+                if model.stage == .completed {
+                    WorkoutSummary(model: model)
+                } else {
+                    RoutinePreview(model: model)
+                }
+            }
+            .syncToolbar()
+            .navigationTitle(model.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .screenBackground()
         }
     }
 
-    private var isPreviewing: Bool {
-        if case .preview = model.stage { true } else { false }
+    /// La vista previa o el entreno terminado, empujados sobre el selector.
+    private var isPushed: Bool {
+        switch model.stage {
+        case .preview, .completed: true
+        case .selector, .active: false
+        }
     }
 
     /// Una `List` de iOS con las tarjetas de la PWA como filas (`cardRow`).
@@ -66,8 +75,15 @@ struct TodayScreen: View {
         .listStyle(.plain)
         .screenBackground()
     }
+}
 
-    private var completed: some View {
+/// El entreno terminado, empujado sobre el selector: se vuelve a las rutinas con la flecha de la
+/// barra, deslizando desde el borde o tocando otra vez la pestaña (decisión del usuario,
+/// 2026-10-27; antes no tenía ninguna forma de salir salvo la pestaña).
+private struct WorkoutSummary: View {
+    @Bindable var model: TodayModel
+
+    var body: some View {
         ScrollView {
             VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
@@ -86,8 +102,6 @@ struct TodayScreen: View {
             }
             .padding(16)
         }
-        // Sin botón para salir: arriba solo va la nube, que ya dice si se ha subido (decisión del
-        // usuario, 2026-10-26). Se vuelve a las rutinas tocando otra vez la pestaña (`reselect`).
     }
 }
 
