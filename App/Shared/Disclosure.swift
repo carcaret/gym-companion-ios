@@ -7,6 +7,7 @@ import SwiftUI
 /// del CI, 2026-10-26).
 struct CardDisclosure<Label: View, Content: View>: View {
     @Environment(\.disclosureAnimatesHeight) private var animatesHeight
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let isExpanded: Bool
     var chevronSize: CGFloat = 13
     /// Para los tests: va en el botón de la cabecera.
@@ -24,7 +25,8 @@ struct CardDisclosure<Label: View, Content: View>: View {
                 if animatesHeight {
                     content.transition(.opacity.combined(with: .offset(y: -8)))
                 } else {
-                    FadeIn { content }
+                    // Con su propia animación: solo la opacidad, la fila cambia de golpe.
+                    content.transition(reduceMotion ? .identity : .opacity.animation(.easeOut(duration: 0.2)))
                 }
             }
         }
@@ -35,22 +37,8 @@ extension EnvironmentValues {
     /// Si abrir y cerrar anima la altura. En una fila de `List` no: la lista coloca el contenido
     /// de la fila más abajo mientras la hace crecer, y la cabecera pasaba por encima de él (en el
     /// simulador se quedaba así varios segundos; vídeo del CI, 2026-10-27). Ahí la fila cambia de
-    /// golpe y el contenido entra con un fundido (`FadeIn`). Lo apagan el entreno y Progreso.
+    /// golpe y el contenido entra con un fundido. Lo apagan el entreno y Progreso.
     @Entry var disclosureAnimatesHeight = true
-}
-
-/// El contenido que se despliega dentro de una `List`: aparece con un fundido, que solo cambia la
-/// opacidad y no la altura de la fila.
-private struct FadeIn<Content: View>: View {
-    @ViewBuilder let content: Content
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isVisible = false
-
-    var body: some View {
-        content
-            .opacity(isVisible ? 1 : 0)
-            .onAppear { withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { isVisible = true } }
-    }
 }
 
 /// La cabecera de `CardDisclosure`, también suelta para lo que al abrirse enseña más de lo mismo
