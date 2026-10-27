@@ -137,7 +137,8 @@ final class HistoryTests: XCTestCase {
         let after = app.descendants(matching: .any)["weight-value"].firstMatch
         XCTAssertTrue(after.appears(timeout: 5))
         XCTAssertNotEqual(after.value as? String, saved)
-        XCTAssertEqual(after.value as? String, edited)
+        // El número: el campo y el valor de solo lectura pueden decir o no los kilos.
+        XCTAssertEqual((after.value as? String)?.split(separator: " ").first, edited?.split(separator: " ").first)
     }
 
     /// Abre la primera sesión del Historial y la tarjeta de press banca.
