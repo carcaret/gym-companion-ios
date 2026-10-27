@@ -48,6 +48,8 @@ struct ActiveWorkoutView: View {
             }
         }
         .listStyle(.plain)
+        // Las tarjetas se abren sin animación: en una `List` la animación las descuadraba.
+        .environment(\.disclosureAnimates, false)
         .screenBackground()
         .keyboardDismissal()
         // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un

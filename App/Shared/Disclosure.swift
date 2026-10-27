@@ -6,6 +6,7 @@ import SwiftUI
 /// `List` (el entreno en curso) la cabecera y el contenido se pintaban uno encima de otro (captura
 /// del CI, 2026-10-26).
 struct CardDisclosure<Label: View, Content: View>: View {
+    @Environment(\.disclosureAnimates) private var animates
     let isExpanded: Bool
     var chevronSize: CGFloat = 13
     /// Para los tests: va en el botón de la cabecera.
@@ -20,14 +21,22 @@ struct CardDisclosure<Label: View, Content: View>: View {
                 label
             }
             if isExpanded {
-                // Solo opacidad, sin desplazarlo: en una fila de `List` (el entreno), entrar con
-                // `.offset` hacía que la lista bajara el contenido y la cabecera pasara por encima
-                // (vídeo del CI, 2026-10-27). Sin él, en un `VStack` la tarjeta crece con
-                // animación y en la `List` la fila cambia de golpe, limpia.
-                content.transition(.opacity)
+                if animates {
+                    content.transition(.opacity)
+                } else {
+                    content
+                }
             }
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Si abrir y cerrar se anima. En una fila de `List` (el entreno) no: con animación, la lista
+    /// daba a la fila su altura nueva pero seguía pintando la tarjeta a su tamaño de antes, centrada,
+    /// con la cabecera encima del contenido (captura y vídeos del CI, 2026-10-27). Ahí se abre y se
+    /// cierra de golpe, y solo gira la flecha.
+    @Entry var disclosureAnimates = true
 }
 
 /// La cabecera de `CardDisclosure`, también suelta para lo que al abrirse enseña más de lo mismo
@@ -39,17 +48,25 @@ struct DisclosureHeader<Label: View>: View {
     let toggle: () -> Void
     @ViewBuilder let label: Label
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.disclosureAnimates) private var animates
 
     var body: some View {
-        // Con animación, la tarjeta (o la fila de la lista) crece con el muelle de iOS y la flecha
-        // gira a la vez.
-        let button = Button { withAnimation(reduceMotion ? nil : .snappy) { toggle() } } label: {
+        // Con animación, la tarjeta crece con el muelle de iOS y la flecha gira a la vez. Sin ella
+        // (`disclosureAnimates`, en una `List`), solo gira la flecha.
+        let button = Button {
+            if animates {
+                withAnimation(reduceMotion ? nil : .snappy) { toggle() }
+            } else {
+                toggle()
+            }
+        } label: {
             HStack(spacing: 10) {
                 label
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .scaledFont(chevronSize, .semibold)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .animation(animates || reduceMotion ? nil : .snappy, value: isExpanded)
                     .foregroundStyle(Theme.textMuted)
             }
             .contentShape(.rect)
