@@ -39,6 +39,8 @@ struct ProgressScreen: View {
             DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises", toggle: model.toggleExpanded) {
                 Text(model.exercisesSubtitle).scaledFont(13).foregroundStyle(Theme.textSecondary)
             }
+            // Esta añade y quita filas, que la lista sí anima bien (lo que falla es hacer crecer una).
+            .environment(\.disclosureAnimatesHeight, true)
             ForEach(model.visibleRows) { row in
                 ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
             }
