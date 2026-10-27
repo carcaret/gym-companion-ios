@@ -45,6 +45,12 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["card-press_banca"].firstMatch.tap()
         capture(app, "13-hoy-tarjeta")
 
+        // Un toque en la penúltima barra de «Últimas sesiones»: su bocadillo.
+        let strip = app.descendants(matching: .any)["history-strip"].firstMatch
+        XCTAssertTrue(strip.appears(timeout: 10))
+        strip.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.4)).tap()
+        capture(app, "15-hoy-tira-bocadillo")
+
         app.buttons["finish-workout"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
         capture(app, "14-hoy-terminado")

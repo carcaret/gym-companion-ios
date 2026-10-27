@@ -3,13 +3,16 @@ import Presentation
 import SwiftUI
 
 /// La tira "Últimas sesiones" de un ejercicio: seis columnas, la de hoy la última, en una gráfica
-/// de barras de Swift Charts. Tocar una barra o pasar el dedo por encima enseña su detalle (el
-/// tooltip de la PWA), que se queda al soltar.
+/// de barras de Swift Charts. Un toque en una barra enseña su detalle (el tooltip de la PWA) en un
+/// bocadillo encima, como las gráficas de Salud, y apaga las demás; se va solo a los pocos
+/// segundos o con otro toque en la misma (decisión del usuario, 2026-10-27). Con la selección por
+/// arrastre de Swift Charts, dentro de una lista que se desplaza había que mantener el dedo.
 struct HistoryStripView: View {
     let strip: HistoryStripContent
     @State private var selected: Int?
-    /// La columna bajo el dedo mientras toca (`chartXSelection`); al soltar, `nil`.
-    @State private var touched: String?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let bubbleDuration: Duration = .seconds(3)
 
     /// El alto de las barras, en puntos: los 44 de la tira de la PWA menos la fecha. Las vacías,
     /// las saltadas y las muy bajas tienen 3.
@@ -28,15 +31,11 @@ struct HistoryStripView: View {
                 }
             }
             chart
-            if let selected, case .session(_, _, _, let tooltip) = strip.bars[selected].kind, !tooltip.isEmpty {
-                Text(tooltip.replacingOccurrences(of: "\n", with: " · "))
-                    .scaledFont(11, .medium)
-                    .foregroundStyle(Theme.text)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Theme.cardSolid, in: .rect(cornerRadius: 4))
-                    .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.border, lineWidth: 0.5) }
-            }
+        }
+        .task(id: selected) {
+            guard selected != nil else { return }
+            try? await Task.sleep(for: Self.bubbleDuration)
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selected = nil }
         }
         .accessibilityElement(children: .contain)
     }
@@ -50,8 +49,12 @@ struct HistoryStripView: View {
                 BarMark(x: .value("Sesión", Self.key(index)), yStart: .value("Altura", 0.0), yEnd: .value("Altura", height(bar)),
                         width: .inset(2))
                     .foregroundStyle(color(bar))
+                    .opacity(selected == nil || selected == index ? 1 : 0.4)
                     .cornerRadius(2)
                     .accessibilityLabel(tooltip(bar))
+                    .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        if selected == index { bubble(bar) }
+                    }
             }
         }
         .chartXScale(domain: keys)
@@ -68,16 +71,20 @@ struct HistoryStripView: View {
             }
         }
         .chartLegend(.hidden)
+        .accessibilityIdentifier("history-strip")
         .chartPlotStyle { $0.frame(height: Self.plotHeight) }
-        .chartXSelection(value: $touched)
-        .onChange(of: touched) { previous, key in touch(key, continuing: previous != nil) }
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 if let anchor = proxy.plotFrame {
-                    currentOutline(proxy, geometry[anchor])
+                    let plot = geometry[anchor]
+                    currentOutline(proxy, plot)
+                        .allowsHitTesting(false)
+                    // Un toque normal: no compite con el desplazamiento de la lista.
+                    Rectangle().fill(.clear).contentShape(.rect)
+                        .onTapGesture { location in tap(proxy.value(atX: location.x - plot.minX, as: String.self)) }
+                        .accessibilityHidden(true)
                 }
             }
-            .allowsHitTesting(false)
         }
     }
 
@@ -93,11 +100,32 @@ struct HistoryStripView: View {
         }
     }
 
-    /// Solo las sesiones tienen detalle. Al arrastrar, el de la que hay debajo; un toque nuevo en
-    /// la que ya se ve lo cierra.
-    private func touch(_ key: String?, continuing: Bool) {
+    /// Solo las sesiones tienen detalle. Un toque en la que ya se ve lo cierra.
+    private func tap(_ key: String?) {
         guard let key, let index = Int(key), case .session = strip.bars[index].kind else { return }
-        selected = !continuing && selected == index ? nil : index
+        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selected = selected == index ? nil : index }
+    }
+
+    /// El detalle de una sesión: el peso y las reps destacados, y debajo la fecha y el e1RM (las
+    /// dos líneas del tooltip de la PWA, al revés).
+    @ViewBuilder
+    private func bubble(_ bar: StripBar) -> some View {
+        if case .session(_, _, _, let tooltip) = bar.kind, !tooltip.isEmpty {
+            let lines = tooltip.split(separator: "\n").map(String.init)
+            let main = lines.count > 1 ? lines[1] : lines[0]
+            let secondary = ([bar.dateLabel] + (lines.count > 1 ? [lines[0]] : [])).joined(separator: " · ")
+            VStack(alignment: .leading, spacing: 2) {
+                Text(main).scaledFont(12, .semibold).foregroundStyle(Theme.text)
+                Text(secondary).scaledFont(11).foregroundStyle(Theme.textSecondary)
+            }
+            .monospacedDigit()
+            .fixedSize()
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Theme.surface2, in: .rect(cornerRadius: 10))
+            .shadow(color: .black.opacity(0.45), radius: 9, y: 4)
+            .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
+        }
     }
 
     private static func key(_ index: Int) -> String { "\(index)" }
