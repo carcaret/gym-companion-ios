@@ -4,21 +4,23 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Progreso: la tarjeta de ejercicios (estancados primero) y la de grupos musculares.
+/// La pestaña Progreso: una lista de iOS con la sección de ejercicios (estancados primero), la de
+/// grupos musculares y la entrada al catálogo. Antes eran tarjetas de la PWA; con secciones de
+/// lista encaja con el catálogo y Gráficas, a los que lleva (decisión del usuario, 2026-10-27).
 /// Solo pinta `ProgressModel`.
 struct ProgressScreen: View {
     let model: ProgressModel
-    /// Lo que hay debajo (la entrada al catálogo, #13).
+    /// Lo que hay debajo (la entrada al catálogo, #13): una sección más.
     var footer: AnyView?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                exercises
-                groups
-                if let footer { footer }
+        List {
+            exercises
+            groups
+            if let footer {
+                Section { footer }
+                    .listRowBackground(Theme.surface)
             }
-            .padding(16)
         }
         .navigationTitle(StatsText.title)
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
@@ -29,39 +31,30 @@ struct ProgressScreen: View {
         }
     }
 
-    /// Plegada enseña solo los estancados (`visibleRows`); desplegada, todos.
+    /// Plegada enseña solo los estancados (`visibleRows`); desplegada, todos. La primera fila, con
+    /// el resumen, es la que pliega y despliega.
     private var exercises: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        Section {
             DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises", toggle: model.toggleExpanded) {
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(StatsText.exercisesTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
-                        Spacer()
-                        Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
-                    }
-                    Text(model.exercisesSubtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
-                }
+                Text(model.exercisesSubtitle).scaledFont(13).foregroundStyle(Theme.textSecondary)
             }
-            VStack(spacing: 2) {
-                ForEach(model.visibleRows) { row in
-                    ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
-                }
+            ForEach(model.visibleRows) { row in
+                ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
             }
+        } header: {
+            header(StatsText.exercisesTitle)
         }
-        .card()
+        .listRowBackground(Theme.surface)
     }
 
     private var groups: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(StatsText.groupsTitle).scaledFont(15, .semibold).foregroundStyle(Theme.text)
-                Spacer()
-                Text(StatsText.window(weeks: ProgressModel.weeks)).sectionLabelStyle()
-            }
-            .padding(.bottom, 2)
+        Section {
             ForEach(model.groups) { group in
                 GroupBarRow(group: group, scale: model.scale, band: model.referenceBand) { model.toggleGroup(group.name) }
             }
+        } header: {
+            header(StatsText.groupsTitle)
+        } footer: {
             HStack(spacing: 14) {
                 legend(StatsText.direct, Theme.accent)
                 legend(StatsText.indirect, Theme.accent.opacity(0.32))
@@ -69,12 +62,17 @@ struct ProgressScreen: View {
             }
             .scaledFont(11)
             .foregroundStyle(Theme.textMuted)
-            .padding(.top, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .top) { Rectangle().fill(Theme.borderLight).frame(height: 1) }
-            .padding(.top, 4)
         }
-        .card()
+        .listRowBackground(Theme.surface)
+    }
+
+    /// La cabecera de una sección: el título y, a la derecha, la ventana de semanas.
+    private func header(_ title: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+            Spacer()
+            Text(StatsText.window(weeks: ProgressModel.weeks)).fontWeight(.regular).foregroundStyle(Theme.textMuted)
+        }
     }
 
     private func legend(_ text: String, _ color: Color, border: Color = .clear) -> some View {
@@ -86,26 +84,36 @@ struct ProgressScreen: View {
     }
 }
 
-/// Un ejercicio (`.stats-row`): el filete de la izquierda es el código de color (azul progresa,
-/// dorado estancado, gris sin recorrido; el verde no, que en la tira significa quedarse corto).
+/// Un ejercicio (`.stats-row`), una fila de la lista: a la izquierda, el icono de su estado (como
+/// los de Ajustes): azul y flecha si progresa, dorado e igual si está estancado, gris sin recorrido.
+/// Al abrirla, sus últimas sesiones y «Ver en Gráficas».
 private struct ExerciseProgressRow: View {
     let row: ProgressModel.ExerciseRow
     let toggle: () -> Void
     let openCharts: () -> Void
+    @ScaledMetric(relativeTo: .subheadline) private var iconSide: CGFloat = 28
 
     var body: some View {
         CardDisclosure(isExpanded: row.isOpen, chevronSize: 12, identifier: "stats-row-\(row.exerciseID.rawValue)", toggle: toggle) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(row.name).scaledFont(14, .semibold).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
-                    Spacer()
-                    if let weight = row.weight {
-                        Text(weight).scaledFont(13, .semibold).foregroundStyle(Theme.accentLight)
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .scaledFont(13, .bold)
+                    .foregroundStyle(noTrack ? Theme.text : Theme.background)
+                    .frame(width: iconSide, height: iconSide)
+                    .background(color, in: .rect(cornerRadius: 7))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(row.name).scaledFont(15, .medium).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                        Spacer()
+                        if let weight = row.weight {
+                            Text(weight).scaledFont(14, .semibold).foregroundStyle(Theme.accentLight)
+                        }
                     }
+                    Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
                 }
-                Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, 4)
         } content: {
             VStack(alignment: .leading, spacing: 6) {
                 Text(StatsText.recentSessions).sectionLabelStyle()
@@ -113,19 +121,30 @@ private struct ExerciseProgressRow: View {
                     .scaledFont(13).monospacedDigit()
                     .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                 if row.canOpenCharts {
-                    Button(StatsText.openCharts, action: openCharts).buttonStyle(.pill(.subtle)).padding(.top, 6)
+                    Button(StatsText.openCharts, action: openCharts)
+                        .scaledFont(15)
+                        .foregroundStyle(Theme.accentLight)
+                        .buttonStyle(.plain)
+                        .frame(minHeight: 44)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.bottom, 14)
+            .padding(.leading, iconSide + 12)
+            .padding(.top, 8)
         }
-        .padding(.leading, 10)
-        .overlay(alignment: .leading) { Rectangle().fill(stripe).frame(width: 3) }
     }
 
     private var noTrack: Bool { row.status == .noTrack }
 
-    private var stripe: Color {
+    private var symbol: String {
+        switch row.status {
+        case .progressing: "arrow.up.right"
+        case .stalled: "equal"
+        case .noTrack: "minus"
+        }
+    }
+
+    private var color: Color {
         switch row.status {
         case .progressing: Theme.accent
         case .stalled: Theme.gold
