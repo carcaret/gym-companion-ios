@@ -46,9 +46,6 @@ final class VideoTarjetasTests: XCTestCase {
         XCTAssertTrue(card.appears(timeout: 10))
         pause()
 
-        mark("sonda s0")
-        app.buttons["sonda-s0"].firstMatch.tap()
-        pause(2.5)
         mark("vista previa: abrir tarjeta")
         card.tap()
         pause()
