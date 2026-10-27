@@ -90,6 +90,30 @@ extension ButtonStyle where Self == PillButtonStyle {
     static func pill(_ kind: PillButtonStyle.Kind = .primary) -> PillButtonStyle { PillButtonStyle(kind: kind) }
 }
 
+/// Las píldoras que flotan sobre el contenido (los botones fijos de abajo, `BottomActions`): de
+/// cristal, como la barra de pestañas que tienen debajo, con los colores de la PWA. La principal,
+/// teñida de azul y con el texto oscuro (el blanco que pone iOS no gustaba, decisión del usuario,
+/// 2026-10-27); la secundaria, cristal sin teñir con el texto en azul claro. `interactive()`: al
+/// tocarla reacciona como los botones de cristal de iOS.
+struct GlassPillButtonStyle: ButtonStyle {
+    enum Kind { case primary, secondary }
+    var kind: Kind = .primary
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaledFont(15, .semibold)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .foregroundStyle(kind == .primary ? Color(hex: 0x08121C) : Theme.accentLight)
+            .contentShape(.capsule)
+            .glassEffect(kind == .primary ? .regular.tint(Theme.accent).interactive() : .regular.interactive(), in: .capsule)
+    }
+}
+
+extension ButtonStyle where Self == GlassPillButtonStyle {
+    static func glassPill(_ kind: GlassPillButtonStyle.Kind = .primary) -> GlassPillButtonStyle { GlassPillButtonStyle(kind: kind) }
+}
+
 extension View {
     /// La letra del sistema al tamaño de la PWA, que crece y mengua con la letra del iPhone
     /// (Dynamic Type). Con el tamaño normal mide lo mismo que `.font(.system(size:))`, que no
