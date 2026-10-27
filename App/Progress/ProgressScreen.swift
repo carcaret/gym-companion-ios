@@ -71,7 +71,8 @@ struct ProgressScreen: View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
             Spacer()
-            Text(StatsText.window(weeks: ProgressModel.weeks)).fontWeight(.regular).foregroundStyle(Theme.textMuted)
+            // Más pequeña que el título: es un dato de la sección, no otro título.
+            Text(StatsText.window(weeks: ProgressModel.weeks)).font(.footnote).fontWeight(.regular).foregroundStyle(Theme.textMuted)
         }
     }
 
