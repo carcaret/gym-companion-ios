@@ -72,12 +72,21 @@ struct DisclosureHeader<Label: View>: View {
             }
             .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StillButtonStyle())
         .accessibilityValue(isExpanded ? Text("Desplegado") : Text("Plegado"))
         if let identifier {
             button.accessibilityIdentifier(identifier)
         } else {
             button
         }
+    }
+}
+
+/// Un botón que no cambia al pulsarlo. Con `.plain`, el texto de la cabecera bajaba un 20 % de
+/// brillo al tocarla y volvía con un fundido: un parpadeo en cada toque (medido en el vídeo del CI,
+/// 2026-10-27). El giro de la flecha y lo que se abre ya responden al toque.
+private struct StillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
     }
 }
