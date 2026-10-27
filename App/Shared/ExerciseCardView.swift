@@ -164,7 +164,7 @@ private struct ParameterRow: View {
                     // VoiceOver: «Peso, 60 kg», y deslizar arriba o abajo lo cambia, como un
                     // Stepper; tocar dos veces lo edita con el teclado.
                     .accessibilityLabel(CardAccessibilityText.name(parameter))
-                    .accessibilityValue(CardAccessibilityText.value(value, hasError: hasError))
+                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
                     .accessibilityAdjustableAction { direction in
                         switch direction {
                         case .increment: adjust(1)
@@ -184,7 +184,7 @@ private struct ParameterRow: View {
                     .background(Theme.input, in: .rect(cornerRadius: 7))
                     .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
                     .accessibilityLabel(CardAccessibilityText.name(parameter))
-                    .accessibilityValue(CardAccessibilityText.value(value, hasError: hasError))
+                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
                     .accessibilityIdentifier("\(identifier)-value")
             }
         }

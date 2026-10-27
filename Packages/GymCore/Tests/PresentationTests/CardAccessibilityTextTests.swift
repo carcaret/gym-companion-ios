@@ -15,10 +15,11 @@ struct CardAccessibilityTextTests {
         #expect(CardAccessibilityText.decrease(.targetReps) == "Bajar repeticiones objetivo")
     }
 
-    @Test("el valor de un parámetro con error lo dice")
-    func parameterError() {
-        #expect(CardAccessibilityText.value("60 kg", hasError: false) == "60 kg")
-        #expect(CardAccessibilityText.value("-5 kg", hasError: true) == "-5 kg, con error")
+    @Test("el peso dice sus kilos, y el valor de un parámetro con error lo dice")
+    func parameterValue() {
+        #expect(CardAccessibilityText.value(.weight, "62,5", hasError: false) == "62,5 kilos")
+        #expect(CardAccessibilityText.value(.series, "3", hasError: false) == "3")
+        #expect(CardAccessibilityText.value(.targetReps, "0", hasError: true) == "0, con error")
     }
 
     @Test("cada serie dice su número, sus repeticiones y si llega al objetivo")

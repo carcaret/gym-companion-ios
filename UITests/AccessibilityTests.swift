@@ -25,7 +25,7 @@ final class AccessibilityTests: XCTestCase {
         XCTAssertEqual(app.buttons["target-reps-plus"].firstMatch.label, "Subir repeticiones objetivo")
         let weight = app.textFields["weight-field"].firstMatch
         XCTAssertEqual(weight.label, "Peso")
-        XCTAssertTrue((weight.value as? String)?.contains("kg") == true)
+        XCTAssertTrue((weight.value as? String)?.hasSuffix("kilos") == true, "\(weight.value ?? "")")
 
         let series = app.descendants(matching: .any)["series-0"].firstMatch
         XCTAssertTrue(series.appears(timeout: 5))

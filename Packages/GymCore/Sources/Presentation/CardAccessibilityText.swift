@@ -14,7 +14,12 @@ public enum CardAccessibilityText {
     public static func increase(_ parameter: LogParameter) -> String { "Subir \(name(parameter).lowercased())" }
     public static func decrease(_ parameter: LogParameter) -> String { "Bajar \(name(parameter).lowercased())" }
 
-    public static func value(_ text: String, hasError: Bool) -> String {
+    /// «62,5 kilos»: el peso con su unidad, que en la tarjeta dice la etiqueta «Peso (kg)».
+    public static func value(_ parameter: LogParameter, _ text: String, hasError: Bool) -> String {
+        value(parameter == .weight ? "\(text) kilos" : text, hasError: hasError)
+    }
+
+    static func value(_ text: String, hasError: Bool) -> String {
         hasError ? "\(text), con error" : text
     }
 
