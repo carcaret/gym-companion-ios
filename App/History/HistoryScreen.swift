@@ -64,7 +64,7 @@ struct HistoryScreen: View {
 
     private var detail: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            VStack(spacing: 12) {
                 if model.isIncomplete {
                     Label(HistoryText.incomplete, systemImage: "pause.fill")
                         .scaledFont(11, .bold)

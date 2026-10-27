@@ -36,9 +36,7 @@ enum Keyboard {
     private static let tapOutside = TapOutside()
 
     /// Pone en la ventana un reconocedor de toques que cierra el teclado. No se queda con el toque
-    /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto. Sin teclado no hace
-    /// nada: `endEditing` en cada toque dejaba sin animar lo que cambiaba con ese toque (abrir una
-    /// tarjeta, el círculo al tocar una rutina; vídeo del CI, 2026-10-27).
+    /// (los botones siguen funcionando) ni actúa al tocar otro campo de texto.
     static func dismissOnTapOutside(in window: UIWindow) {
         guard !(window.gestureRecognizers ?? []).contains(where: { $0.delegate === tapOutside }) else { return }
         let recognizer = UITapGestureRecognizer(target: tapOutside, action: #selector(TapOutside.tap(_:)))
@@ -48,22 +46,6 @@ enum Keyboard {
     }
 
     private final class TapOutside: NSObject, UIGestureRecognizerDelegate {
-        private var isKeyboardVisible = false
-
-        override init() {
-            super.init()
-            let center = NotificationCenter.default
-            center.addObserver(self, selector: #selector(keyboardShown), name: UIResponder.keyboardWillShowNotification, object: nil)
-            center.addObserver(self, selector: #selector(keyboardHidden), name: UIResponder.keyboardWillHideNotification, object: nil)
-        }
-
-        @objc private func keyboardShown() { isKeyboardVisible = true }
-        @objc private func keyboardHidden() { isKeyboardVisible = false }
-
-        func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
-            isKeyboardVisible
-        }
-
         @objc func tap(_ recognizer: UITapGestureRecognizer) {
             recognizer.view?.endEditing(true)
         }
