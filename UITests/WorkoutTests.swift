@@ -57,6 +57,53 @@ final class WorkoutTests: XCTestCase {
         wait(for: [gone], timeout: 5)
     }
 
+    /// Con el entreno de hoy terminado, empezar otra rutina pregunta antes de sustituirlo
+    /// (2026-10-27; la PWA lo borraba sin decir nada). «Cancelar» lo deja y «Sustituir» empieza.
+    @MainActor
+    func testEmpezarOtraRutinaElMismoDiaPregunta() {
+        let app = startWorkout()
+        app.buttons["finish-workout"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+        // Tocar otra vez la pestaña vuelve a las rutinas.
+        app.tabBars.buttons["Rutinas"].tap()
+        XCTAssertTrue(app.buttons["routine-DIA2"].appears(timeout: 10))
+        app.buttons["routine-DIA2"].tap()
+        let start = app.buttons["start-workout"]
+        XCTAssertTrue(start.appears(timeout: 10))
+
+        start.tap()
+        let replace = app.buttons["Sustituir"].firstMatch
+        XCTAssertTrue(replace.appears(timeout: 5), "Tiene que preguntar antes de sustituir el entreno de hoy")
+        // En iOS 26 el diálogo es un globo sin «Cancelar»: se cierra tocando fuera.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: replace)
+        wait(for: [closed], timeout: 5)
+        XCTAssertFalse(app.buttons["finish-workout"].exists, "Cancelar no empieza nada")
+
+        start.tap()
+        XCTAssertTrue(replace.appears(timeout: 5))
+        replace.tap()
+        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10), "Sustituir empieza el entreno nuevo")
+    }
+
+    /// Si la búsqueda no encuentra el ejercicio, se crea de un toque con el teclado abierto, sin
+    /// alerta (2026-10-27: con alerta, el primer toque solo cerraba el teclado; probado en el iPhone).
+    @MainActor
+    func testCrearLoBuscadoDeUnToque() {
+        let app = startWorkout()
+        app.buttons["add-exercise"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.appears(timeout: 5))
+        search.tap()
+        search.typeText("Press Arnold")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        let create = app.buttons["create-from-search"].firstMatch
+        XCTAssertTrue(create.appears(timeout: 5))
+        XCTAssertEqual(create.label, "Crear «Press Arnold»")
+        create.tap()
+        XCTAssertTrue(app.buttons["card-press_arnold"].firstMatch.appears(timeout: 5), "Un toque lo crea y lo añade al entreno")
+    }
+
     @MainActor
     private func startWorkout() -> XCUIApplication {
         let app = XCUIApplication()

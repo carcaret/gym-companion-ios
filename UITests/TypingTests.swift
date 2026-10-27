@@ -22,7 +22,7 @@ final class TypingTests: XCTestCase {
         XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
 
-        let weight = app.textFields["Peso (kg)"].firstMatch
+        let weight = app.textFields["weight-field"].firstMatch
         XCTAssertTrue(weight.appears(timeout: 10))
         // Al final del texto, para que los borrados se lleven el valor entero.
         weight.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()

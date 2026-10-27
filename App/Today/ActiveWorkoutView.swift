@@ -81,8 +81,8 @@ struct ActiveWorkoutView: View {
         .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(
             get: { model.reciprocalOffer != nil }, set: { if !$0 { model.declineReciprocal() } }
         ), presenting: model.reciprocalOffer) { offer in
-            Button(TodayText.no, role: .cancel) { model.declineReciprocal() }
-            Button(TodayText.yes) { Task { await model.acceptReciprocal(offer) } }
+            Button(TodayText.reciprocalDecline, role: .cancel) { model.declineReciprocal() }
+            Button(offer.acceptLabel) { Task { await model.acceptReciprocal(offer) } }
         } message: { offer in
             Text(offer.message)
         }
@@ -130,9 +130,14 @@ struct ExercisePickerSheet: View {
                             if let title = section.title { Text(title) }
                         }
                     }
-                    if picker.canCreate {
+                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, con su alerta.
+                    // Con el teclado abierto, la alerta se perdía al cerrarse la búsqueda (2026-10-27).
+                    if let label = picker.searchCreateLabel {
+                        Button(label) { Task { await model.createFromSearch() } }
+                            .accessibilityIdentifier("create-from-search")
+                    } else if picker.offersNewExercise {
                         Button(TodayText.createExercise) { model.openCreate() }
-                        .accessibilityIdentifier("create-exercise")
+                            .accessibilityIdentifier("create-exercise")
                     }
                 }
             }
@@ -152,6 +157,7 @@ struct ExercisePickerSheet: View {
                 Text(model.createMessage ?? TodayText.createNameLabel)
             }
         }
-        .presentationDetents([.medium, .large])
+        // Siempre grande: a media altura, al cerrarse el teclado la hoja se encogía, la fila se
+        // movía bajo el dedo e iOS cancelaba el toque (vídeo del CI y el iPhone, 2026-10-27).
     }
 }

@@ -16,6 +16,13 @@ public final class TodayModel {
         case completed
     }
 
+    /// Empezar con el entreno de hoy ya terminado: el `db.json` guarda uno por día, así que el
+    /// nuevo lo sustituye. Se confirma antes.
+    public struct ReplacePrompt: Hashable, Sendable {
+        public let title: String
+        public let message: String
+    }
+
     public struct RoutineRow: Hashable, Sendable {
         public let id: RoutineID
         public let title: String
@@ -59,6 +66,11 @@ public final class TodayModel {
         public let isOneOff: Bool
         /// "Crear nuevo ejercicio" (al añadir, y no si es puntual: lo nuevo entra en la rutina).
         public let canCreate: Bool
+        /// "Crear «Press Arnold»": lo buscado, si no existe, se crea de un toque, sin alerta (con el
+        /// teclado abierto, la alerta se perdía al cerrarse la búsqueda; 2026-10-27).
+        public let searchCreateLabel: String?
+        /// "Crear nuevo ejercicio", con su alerta: solo sin nada buscado.
+        public let offersNewExercise: Bool
     }
 
     /// Una sección del selector; sin título cuando es la única.
@@ -86,6 +98,7 @@ public final class TodayModel {
         public let swap: PendingSwap
         public let title: String
         public let message: String
+        public let acceptLabel: String
     }
 
     // MARK: - Estado
@@ -112,12 +125,10 @@ public final class TodayModel {
     public private(set) var reciprocalOffer: ReciprocalOffer?
 
     private let app: AppModel
-    private let sync: SyncModel
     private let clock: any Clock
 
-    public init(app: AppModel, sync: SyncModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock) {
         self.app = app
-        self.sync = sync
         self.clock = clock
     }
 
@@ -200,6 +211,31 @@ public final class TodayModel {
         if openPreviewCards.contains(index) { openPreviewCards.remove(index) } else { openPreviewCards.insert(index) }
     }
 
+    public private(set) var replacePrompt: ReplacePrompt?
+
+    /// «Iniciar entreno»: si hoy ya hay uno terminado, antes pregunta.
+    public func requestStart() async {
+        guard case .preview(let routine) = storedStage else { return }
+        if let done = todaySession, done.completed {
+            replacePrompt = ReplacePrompt(title: TodayText.replaceTitle(name(of: done.routineID)),
+                                          message: TodayText.replaceMessage(name(of: routine)))
+            return
+        }
+        await start()
+    }
+
+    /// «Sustituir». Recibe el aviso que se confirma, no lo lee de `replacePrompt`: SwiftUI cierra
+    /// el diálogo (`cancelReplace`) antes de ejecutar la acción del botón.
+    public func confirmReplace(_ prompt: ReplacePrompt) async {
+        replacePrompt = nil
+        await start()
+    }
+
+    public func cancelReplace() {
+        replacePrompt = nil
+    }
+
+    /// Empieza sin preguntar: el entreno de hoy, si lo hay, se sustituye.
     public func start() async {
         guard case .preview(let routine) = storedStage else { return }
         let weekStart = today.weekStart
@@ -319,8 +355,8 @@ public final class TodayModel {
         replaceSession(session, in: &data)
         storedStage = .completed
         openExercise = nil
-        let result = await app.finishWorkout(data)
-        sync.workoutFinished(result)
+        // Si no se puede subir, no se interrumpe: la nube se queda pendiente y se sube sola.
+        _ = await app.finishWorkout(data)
     }
 
     // MARK: - Entreno terminado
@@ -350,9 +386,14 @@ public final class TodayModel {
             let routine = Set(data.routines.first { $0.id == session.routineID }?.exerciseIDs ?? [])
             let candidates = data.catalog.all.filter { !routine.contains($0.id) && !present.contains($0.id) }
                 .sorted { SpanishCollation.precedes($0.name, $1.name) }
+            let canCreate = !pickerOneOff
+            let typed = pickerQuery.trimmingWhitespace()
+            let creatable = canCreate && !typed.isEmpty && data.catalog[ExerciseID(ExerciseID.slug(from: typed))] == nil
             return Picker(purpose: purpose, title: TodayText.addTitle(name(of: session.routineID)), subtitle: nil,
                           sections: [section(nil, candidates, showsGroup: true)].compactMap(\.self),
-                          offersOneOff: true, isOneOff: pickerOneOff, canCreate: !pickerOneOff)
+                          offersOneOff: true, isOneOff: pickerOneOff, canCreate: canCreate,
+                          searchCreateLabel: creatable ? TodayText.createNamed(typed) : nil,
+                          offersNewExercise: canCreate && typed.isEmpty)
         case .swap(let index):
             let replaced = session.logs[index].exerciseID
             let candidates = data.catalog.swapCandidates(data.catalog.all.filter { !present.contains($0.id) }, replacing: replaced,
@@ -363,7 +404,8 @@ public final class TodayModel {
                  section(TodayText.otherGroupsSection, candidates.others, showsGroup: true)]
             } ?? [section(nil, candidates.others, showsGroup: true)]
             return Picker(purpose: purpose, title: TodayText.swapTitle, subtitle: TodayText.swapSubtitle(data.catalog.name(of: replaced)),
-                          sections: sections.compactMap(\.self), offersOneOff: false, isOneOff: false, canCreate: false)
+                          sections: sections.compactMap(\.self), offersOneOff: false, isOneOff: false, canCreate: false,
+                          searchCreateLabel: nil, offersNewExercise: false)
         }
     }
 
@@ -429,11 +471,19 @@ public final class TodayModel {
         return data
     }
 
-    /// "Crear nuevo ejercicio" desde el selector: la alerta se abre vacía y sin mensaje de error.
+    /// "Crear nuevo ejercicio" desde el selector, sin nada buscado: la alerta, vacía y sin mensaje
+    /// de error.
     public func openCreate() {
         createName = ""
         createMessage = nil
         isCreatePresented = true
+    }
+
+    /// "Crear «Press Arnold»": lo buscado, de un toque.
+    public func createFromSearch() async {
+        guard picker?.searchCreateLabel != nil else { return }
+        createName = pickerQuery.trimmingWhitespace()
+        await createExercise()
     }
 
     /// "Crear": siempre entra en la rutina. Si ya existe, la alerta se vuelve a abrir con el nombre
@@ -490,7 +540,8 @@ public final class TodayModel {
         else { return }
         reciprocalOffer = ReciprocalOffer(
             routine: target, swap: swap, title: TodayText.reciprocalTitle,
-            message: TodayText.reciprocalMessage(new: data.catalog.name(of: new), outgoing: data.catalog.name(of: outgoing), routine: name(of: target))
+            message: TodayText.reciprocalMessage(new: data.catalog.name(of: new), outgoing: data.catalog.name(of: outgoing), routine: name(of: target)),
+            acceptLabel: TodayText.reciprocalAccept(name(of: target))
         )
     }
 

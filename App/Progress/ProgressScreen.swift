@@ -4,23 +4,18 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La pestaña Progreso: la sección de ejercicios (estancados primero), la de grupos musculares y
-/// la entrada al catálogo, con el aspecto de las secciones de lista de iOS 26 (decisión del usuario,
+/// La pestaña Progreso: la sección de ejercicios (estancados primero) y la de grupos musculares
+/// (el catálogo, en la barra), con el aspecto de las secciones de lista de iOS 26 (decisión del usuario,
 /// 2026-10-27). Un `VStack` y no una `List`: no necesita sus gestos, y en una `List` las filas que
 /// se abren no animan bien (la cabecera pasaba por encima del contenido). Solo pinta `ProgressModel`.
 struct ProgressScreen: View {
     let model: ProgressModel
-    /// Lo que hay debajo (la entrada al catálogo, #13): una sección más.
-    var footer: AnyView?
 
     var body: some View {
         ScrollView {
             VStack(spacing: 28) {
                 exercises
                 groups
-                if let footer {
-                    ListSection { footer.padding(.horizontal, 16).padding(.vertical, 12) }
-                }
             }
             .padding(16)
         }

@@ -17,13 +17,14 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(repository.appears(timeout: 10))
 
         repository.tap()
+        // En el orden en que se ven: repositorio y token arriba; rama y ruta en «Avanzado».
         repository.typeText("usuario/repo\n")
-        XCTAssertTrue(hasFocus(app.textFields["settings-branch"]), "Retorno en Repositorio pasa a Rama")
+        XCTAssertTrue(hasFocus(app.secureTextFields["settings-token"]), "Retorno en Repositorio pasa al token")
+        app.secureTextFields["settings-token"].typeText("\n")
+        XCTAssertTrue(hasFocus(app.textFields["settings-branch"]), "Retorno en el token pasa a Rama")
         app.textFields["settings-branch"].typeText("\n")
         XCTAssertTrue(hasFocus(app.textFields["settings-path"]), "Retorno en Rama pasa a Ruta")
         app.textFields["settings-path"].typeText("\n")
-        XCTAssertTrue(hasFocus(app.secureTextFields["settings-token"]), "Retorno en Ruta pasa al token")
-        app.secureTextFields["settings-token"].typeText("\n")
 
         let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.keyboards.firstMatch)
         wait(for: [closed], timeout: 5)

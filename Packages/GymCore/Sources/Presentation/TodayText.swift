@@ -13,9 +13,9 @@ public enum TodayText {
     public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 
-    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo..." (los tres primeros).
+    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros).
     public static func routineSummary(_ names: [String]) -> String {
-        let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "..." : "")
+        let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "…" : "")
         return "\(names.count) ejercicios · \(preview)"
     }
 
@@ -54,10 +54,11 @@ public enum TodayText {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     public static func addTitle(_ routine: String) -> String { "Añadir a \(routine)" }
-    public static let searchPlaceholder = "Buscar ejercicio..."
+    public static let searchPlaceholder = "Buscar ejercicio…"
     public static let oneOffToggle = "Solo esta sesión"
     public static let createExercise = "Crear nuevo ejercicio"
     public static let createTitle = "Crear nuevo ejercicio"
+    public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
     public static let createConfirm = "Crear y añadir"
@@ -76,8 +77,13 @@ public enum TodayText {
     public static func reciprocalMessage(new: String, outgoing: String, routine: String) -> String {
         "\(new) pertenece a \(routine). ¿Poner \(outgoing) en su lugar la próxima vez que hagas \(routine) (esta semana)?"
     }
-    public static let yes = "Sí"
-    public static let no = "No"
+    // Empezar con el entreno de hoy ya terminado
+    public static func replaceTitle(_ done: String) -> String { "Ya has entrenado hoy (\(done))" }
+    public static func replaceMessage(_ routine: String) -> String { "Si empiezas \(routine), sustituye al entreno de hoy." }
+    public static let replaceConfirm = "Sustituir"
+    /// Botones con verbo, no «Sí» y «No» (2026-10-27).
+    public static func reciprocalAccept(_ routine: String) -> String { "Cambiar también en \(routine)" }
+    public static let reciprocalDecline = "Ahora no"
 
     /// En el mensaje de la alerta de crear, que se vuelve a abrir con el nombre: un aviso quedaría
     /// debajo de la alerta.

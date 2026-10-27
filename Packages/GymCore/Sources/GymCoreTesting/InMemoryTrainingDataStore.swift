@@ -7,16 +7,32 @@ public final class InMemoryTrainingDataStore: TrainingDataStore {
     public actor Storage {
         public private(set) var data: TrainingData?
         public private(set) var saves = 0
+        /// Leer o guardar falla, como un fichero estropeado o un disco lleno.
+        public private(set) var failsToLoad = false
+        public private(set) var failsToSave = false
 
         public init(_ data: TrainingData? = nil) {
             self.data = data
         }
 
-        func save(_ data: TrainingData) {
+        public func fail(loading: Bool = false, saving: Bool = false) {
+            failsToLoad = loading
+            failsToSave = saving
+        }
+
+        func load() throws -> TrainingData? {
+            if failsToLoad { throw Failure() }
+            return data
+        }
+
+        func save(_ data: TrainingData) throws {
+            if failsToSave { throw Failure() }
             self.data = data
             saves += 1
         }
     }
+
+    public struct Failure: Error {}
 
     public let storage: Storage
 
@@ -25,10 +41,10 @@ public final class InMemoryTrainingDataStore: TrainingDataStore {
     }
 
     public func load() async throws -> TrainingData? {
-        await storage.data
+        try await storage.load()
     }
 
     public func save(_ data: TrainingData) async throws {
-        await storage.save(data)
+        try await storage.save(data)
     }
 }

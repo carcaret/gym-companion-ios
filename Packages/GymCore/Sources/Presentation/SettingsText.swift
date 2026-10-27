@@ -10,12 +10,16 @@ public enum SettingsText {
     public static let branchPlaceholder = "master"
     public static let path = "Ruta del fichero"
     public static let pathPlaceholder = "db.json"
-    public static let token = "Token (PAT)"
-    public static let tokenPlaceholder = "ghp_..."
+    /// Rama y ruta casi nunca cambian: van aparte (2026-10-27).
+    public static let advancedSection = "Avanzado"
+    public static let token = "Token de acceso"
+    public static let tokenPlaceholder = "ghp_…"
     public static let save = "Guardar"
-    public static let testConnection = "Probar conexión"
-    public static let upload = "Subir a GitHub"
-    public static let download = "Descargar de GitHub"
+    public static let discardTitle = "Los cambios sin guardar se perderán."
+    public static let discardConfirm = "Descartar cambios"
+    /// Para recuperar los datos de GitHub (la subida es automática; «Subir a GitHub» se quitó el
+    /// 2026-10-27).
+    public static let download = "Sustituir por los datos de GitHub"
     public static let status = "Estado"
 
     public static func status(_ state: String) -> String { state }

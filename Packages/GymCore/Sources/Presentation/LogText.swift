@@ -2,7 +2,7 @@ import Domain
 
 /// Resúmenes de lo hecho con un ejercicio.
 public enum LogText {
-    /// "60 kg · 3×10 · 10-10-8": el peso si lo hay, series × objetivo y, si alguna serie no fue al
+    /// "60 kg · 3×10 · 10·10·8": el peso si lo hay, series × objetivo y, si alguna serie no fue al
     /// objetivo, las reps de cada serie.
     public static func summary(_ log: ExerciseLog) -> String {
         var parts: [String] = []
@@ -12,13 +12,19 @@ public enum LogText {
         return parts.joined(separator: " · ")
     }
 
-    /// Las reps de cada serie ("10-8-10", con "-" en las vacías), o `nil` si no hay ninguna
-    /// rellenada o todas las series fueron justo al objetivo. (`formatRepsInteligente`.)
+    /// Las reps de cada serie ("10·8·10"), o `nil` si no hay ninguna rellenada o todas las series
+    /// fueron justo al objetivo. (`formatRepsInteligente`.)
     public static func repsDetail(_ actual: [Int?], series: Int, target: Int) -> String? {
         let filled = actual.compactMap { $0 }
         guard !filled.isEmpty else { return nil }
         if filled.count == series && filled.allSatisfy({ $0 == target }) { return nil }
-        return actual.map { $0.map(String.init) ?? "-" }.joined(separator: "-")
+        return reps(actual)
+    }
+
+    /// "10·8·10", y la serie vacía, "—": en todas partes igual (2026-10-27; la PWA separaba con
+    /// "-", que con una serie vacía daba "10---8").
+    public static func reps(_ reps: [Int?]) -> String {
+        reps.map { $0.map(String.init) ?? TodayText.emptyRep }.joined(separator: "·")
     }
 
     /// Kilos con coma decimal y sin ceros de sobra, a 0,01 kg: "60", "52,5", "18,25".

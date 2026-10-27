@@ -6,7 +6,15 @@ public enum HistoryText {
     public static let empty = "No hay sesiones registradas"
     public static let incomplete = "Incompleto"
     public static let completeWorkout = "Completar entreno"
-    public static let save = "Guardar"
+    // Editar una sesión (2026-10-27)
+    public static let edit = "Editar"
+    public static let done = "OK"
+    public static let discardTitle = "Los cambios en esta sesión se perderán."
+    public static let discardConfirm = "Descartar cambios"
+    public static let keepEditing = "Seguir editando"
+    /// La sesión cambió por otro lado mientras se editaba (el entreno en curso, otra rutina hoy,
+    /// lo bajado de GitHub): «OK» no la pisa.
+    public static let changedWhileEditing = Notice("La sesión ha cambiado mientras la editabas. Vuelve a editarla.", .warning)
 
     /// "3 ejercicios · Press Banca · Curl Bíceps · Remo +2" (los tres primeros).
     public static func sessionSummary(_ names: [String]) -> String {

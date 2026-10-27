@@ -3,15 +3,13 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// Una tarjeta de ejercicio. En la vista previa es de solo lectura; en el entreno y el historial,
-/// `actions` trae lo que se puede editar en ella (cambiarla, saltarla y quitarla son gestos de la
-/// lista del entreno).
+/// Una tarjeta de ejercicio. En la vista previa y en el historial sin editar es de solo lectura;
+/// en el entreno y al editar el historial, `actions` trae lo que se puede editar en ella
+/// (cambiarla, saltarla y quitarla son gestos de la lista del entreno).
 struct ExerciseCardView: View {
     let card: ExerciseCard
     let toggle: () -> Void
     var actions: CardActions?
-    /// Historial: "Guardar" cuando hay cambios.
-    var save: (() -> Void)?
 
     struct CardActions {
         let adjust: (LogParameter, Int) -> Void
@@ -23,20 +21,18 @@ struct ExerciseCardView: View {
     }
 
     var body: some View {
-        CardDisclosure(isExpanded: card.isOpen, toggle: toggle) {
+        // El identificador, en el botón de la cabecera: puesto en toda la tarjeta pisaba el de cada
+        // control de dentro (`weight-plus`, `series-0`…; `.xcresult` del CI, 2026-10-27).
+        CardDisclosure(isExpanded: card.isOpen, identifier: "card-\(card.exerciseID.rawValue)", toggle: toggle) {
             header
         } content: {
-            VStack(alignment: .leading, spacing: 0) {
-                content
-                    .padding(.top, 14)
-                    // Saltada: el contenido se apaga para no competir (`.card.is-skipped` de la PWA).
-                    .saturation(card.isSkipped ? 0.15 : 1)
-                    .opacity(card.isSkipped ? 0.7 : 1)
-                footer
-            }
+            content
+                .padding(.top, 14)
+                // Saltada: el contenido se apaga para no competir (`.card.is-skipped` de la PWA).
+                .saturation(card.isSkipped ? 0.15 : 1)
+                .opacity(card.isSkipped ? 0.7 : 1)
         }
         .card(background: card.isSkipped ? Theme.skipTint : Theme.surface)
-        .accessibilityIdentifier("card-\(card.exerciseID.rawValue)")
     }
 
     private var header: some View {
@@ -48,9 +44,10 @@ struct ExerciseCardView: View {
                 if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
                 if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
             }
+            // Lo cambiado al editar el historial, en amarillo, hasta «OK» o «Cancelar».
             Text(card.subtitle)
                 .scaledFont(12)
-                .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.textSecondary)
+                .foregroundStyle(card.isDirty ? Theme.focus : card.isSkipped ? Theme.textMuted : Theme.textSecondary)
                 .lineLimit(2)
         }
     }
@@ -73,7 +70,8 @@ struct ExerciseCardView: View {
                 Text(TodayText.seriesSectionLabel).sectionLabelStyle()
                 HStack(spacing: 6) {
                     ForEach(Array(card.cells.enumerated()), id: \.offset) { series, cell in
-                        SeriesCellView(cell: cell, onTap: actions.map { a in { a.focusSeries(series) } })
+                        SeriesCellView(cell: cell, index: series, targetReps: card.targetReps,
+                                       onTap: actions.map { a in { a.focusSeries(series) } })
                     }
                 }
                 if !card.chips.isEmpty, let actions, let focused = card.cells.firstIndex(where: \.isFocused) {
@@ -94,20 +92,10 @@ struct ExerciseCardView: View {
     }
 
     private func parameterRow(_ parameter: LogParameter, _ label: String, _ value: String, decimal: Bool, hasError: Bool) -> some View {
-        ParameterRow(label: label, value: value, decimal: decimal, hasError: hasError,
+        ParameterRow(parameter: parameter, label: label, value: value, decimal: decimal, hasError: hasError,
                      adjust: actions.map { a in { a.adjust(parameter, $0) } },
                      type: actions.map { a in { a.type(parameter, $0) } },
                      commit: actions?.commit)
-    }
-
-    @ViewBuilder
-    private var footer: some View {
-        if card.isDirty, let save {
-            Button(action: save) { Text(HistoryText.save).frame(maxWidth: .infinity) }
-                .buttonStyle(.pill())
-                .accessibilityIdentifier("history-save")
-                .padding(.top, 14)
-        }
     }
 
     private var divider: some View {
@@ -132,6 +120,7 @@ private struct RecordBadge: View {
 /// Peso, series u objetivo: −/+ redondos y el valor, que se puede teclear (en la vista previa,
 /// solo el valor).
 private struct ParameterRow: View {
+    let parameter: LogParameter
     let label: String
     let value: String
     let decimal: Bool
@@ -152,6 +141,8 @@ private struct ParameterRow: View {
             Spacer()
             if let adjust, let type, let commit {
                 RoundIconButton(systemImage: "minus") { adjust(-1) }
+                    .accessibilityLabel(CardAccessibilityText.decrease(parameter))
+                    .accessibilityIdentifier("\(identifier)-minus")
                 TextField(label, text: $text)
                     .keyboardType(decimal ? .decimalPad : .numberPad)
                     .multilineTextAlignment(.center)
@@ -170,7 +161,21 @@ private struct ParameterRow: View {
                     .onChange(of: text) { _, new in if focused, new != value { type(new) } }
                     .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
                     .onDisappear { if focused { commit() } }
+                    // VoiceOver: «Peso, 60 kg», y deslizar arriba o abajo lo cambia, como un
+                    // Stepper; tocar dos veces lo edita con el teclado.
+                    .accessibilityLabel(CardAccessibilityText.name(parameter))
+                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
+                    .accessibilityAdjustableAction { direction in
+                        switch direction {
+                        case .increment: adjust(1)
+                        case .decrement: adjust(-1)
+                        @unknown default: break
+                        }
+                    }
+                    .accessibilityIdentifier("\(identifier)-field")
                 RoundIconButton(systemImage: "plus") { adjust(1) }
+                    .accessibilityLabel(CardAccessibilityText.increase(parameter))
+                    .accessibilityIdentifier("\(identifier)-plus")
             } else {
                 Text(value)
                     .scaledFont(15, .semibold)
@@ -178,7 +183,19 @@ private struct ParameterRow: View {
                     .frame(width: boxWidth, height: boxHeight)
                     .background(Theme.input, in: .rect(cornerRadius: 7))
                     .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
+                    .accessibilityLabel(CardAccessibilityText.name(parameter))
+                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
+                    .accessibilityIdentifier("\(identifier)-value")
             }
+        }
+    }
+
+    /// Para los tests de UI: `weight-plus`, `series-field`…
+    private var identifier: String {
+        switch parameter {
+        case .weight: "weight"
+        case .series: "series"
+        case .targetReps: "target-reps"
         }
     }
 }
@@ -206,11 +223,13 @@ private struct RoundIconButton: View {
 /// y roja con error (`.series-cell-chip`).
 private struct SeriesCellView: View {
     let cell: ExerciseCard.SeriesCell
+    let index: Int
+    let targetReps: Int
     let onTap: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(cell.label).scaledFont(10).foregroundStyle(Theme.textMuted)
+            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textMuted)
             if let onTap {
                 Button(action: onTap) { valueText }
                     .buttonStyle(.plain)
@@ -219,6 +238,13 @@ private struct SeriesCellView: View {
             }
         }
         .frame(maxWidth: .infinity)
+        // VoiceOver: «Serie 1, 10 repeticiones, objetivo cumplido» en un solo elemento (sin esto
+        // leía «S1» y «10» por separado).
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(CardAccessibilityText.seriesLabel(index))
+        .accessibilityValue(CardAccessibilityText.seriesValue(cell.value, target: targetReps, hasError: cell.hasError))
+        .accessibilityAddTraits(cell.isFocused ? .isSelected : [])
+        .accessibilityIdentifier("series-\(index)")
     }
 
     private var valueText: some View {

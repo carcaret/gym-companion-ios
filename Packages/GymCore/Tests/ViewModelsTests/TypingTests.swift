@@ -59,32 +59,36 @@ struct TodayTypingTests {
 @MainActor
 @Suite("Lo tecleado en el historial")
 struct HistoryTypingTests {
-    @Test("Guardar con el teclado abierto guarda lo tecleado")
+    @Test("OK con el teclado abierto guarda lo tecleado")
     func saveCommits() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.type(.weight, text: "75", at: 0)
         #expect(!history.model.cards[0].isDirty)
-        await history.model.save(0)
+        await history.model.finishEditing()
         #expect(history.model.cards[0].subtitle.contains("75"))
     }
 
     @Test("salir del campo deja la tarjeta con cambios por guardar")
     func commitMarksDirty() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.type(.weight, text: "75", at: 0)
         history.model.commitTyping()
         #expect(history.model.cards[0].isDirty)
         #expect(history.model.cards[0].weight == 75)
     }
 
-    @Test("volver a la lista descarta lo tecleado, como los demás cambios sin guardar")
+    // Con el modo «Editar» (2026-10-27) se descarta con «Cancelar» y «Descartar cambios».
+    @Test("descartar los cambios descarta también lo tecleado")
     func backDiscards() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
+        let original = history.model.cards[0].weight
         history.model.type(.weight, text: "75", at: 0)
-        history.model.back()
+        history.model.cancelEditing()
+        history.model.discardChanges()
         #expect(history.model.typed == nil)
+        #expect(history.model.cards[0].weight == original)
     }
 }

@@ -47,12 +47,22 @@ private struct CatalogHarness {
 @MainActor
 @Suite("Catálogo de ejercicios")
 struct CatalogTests {
+    // Cambiado con la aprobación del usuario (2026-10-27): el catálogo se abre desde la barra de
+    // Progreso, y el total y los sin grupo van en el subtítulo del catálogo, no en una tarjeta.
     @Test("Progreso muestra la tarjeta del catálogo con el total y los sin grupo")
     func card() async {
         let catalog = await CatalogHarness.make()
-        #expect(CatalogText.cardTitle == "Catálogo de ejercicios")
-        #expect(CatalogText.total(catalog.model.total) == "4 en total")
-        #expect(CatalogText.withoutGroup(catalog.model.withoutGroup) == "1 sin grupo")
+        #expect(CatalogText.title == "Ejercicios")
+        #expect(catalog.model.summary == "4 en total · 1 sin grupo")
+    }
+
+    @Test("sin ejercicios sin grupo, el subtítulo solo dice el total")
+    func summaryAllGrouped() async {
+        let catalog = await CatalogHarness.make()
+        catalog.model.edit("huerfano")
+        catalog.model.setGroup(.core)
+        await catalog.model.save()
+        #expect(catalog.model.summary == "4 en total")
     }
 
     @Test("lista todos los ejercicios de la DB, entrenados o no")
@@ -60,7 +70,8 @@ struct CatalogTests {
         let catalog = await CatalogHarness.make()
         #expect(catalog.rows.count == 4)
         #expect(catalog.rows.contains { $0.name == "Peso Muerto Rumano" })
-        #expect(catalog.model.sections.contains { $0.title == "(sin grupo)" })
+        // «Sin grupo», sin los paréntesis de la PWA (cambiado con la aprobación del usuario, 2026-10-27).
+        #expect(catalog.model.sections.contains { $0.title == "Sin grupo" })
     }
 
     @Test("el buscador filtra ignorando tildes")
@@ -89,8 +100,7 @@ struct CatalogTests {
         await catalog.model.save()
         #expect(catalog.rows.contains { $0.name == "Press Banca Plano" })
         #expect(await catalog.harness.savedLocally?.catalog["press_banca"]?.name == "Press Banca Plano")
-        let today = TodayModel(app: catalog.app, sync: SyncModel(repository: catalog.harness.repository(), app: catalog.app),
-                               clock: FixedClock(SyncFixtures.today))
+        let today = TodayModel(app: catalog.app, clock: FixedClock(SyncFixtures.today))
         #expect(today.routineRows.contains { $0.subtitle.contains("Press Banca Plano") })
     }
 
@@ -100,7 +110,7 @@ struct CatalogTests {
         catalog.model.edit("huerfano")
         catalog.model.setGroup(.core)
         await catalog.model.save()
-        #expect(!catalog.model.sections.contains { $0.title == "(sin grupo)" })
+        #expect(!catalog.model.sections.contains { $0.title == "Sin grupo" })
         let core = try #require(catalog.model.sections.first { $0.title == "Core" })
         #expect(core.rows.map(\.name) == ["Ejercicio Huérfano"])
     }

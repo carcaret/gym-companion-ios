@@ -34,7 +34,7 @@ struct CompositionRoot {
         let demo = ProcessInfo.processInfo.arguments.contains("-demo")
         noticeDuration = ProcessInfo.processInfo.arguments.contains("-avisos-largos") ? .seconds(10) : .seconds(2.5)
         repository = TrainingRepository(
-            store: demo ? Self.demoStore() : Self.store(),
+            store: demo ? Self.demoStore(unreadable: ProcessInfo.processInfo.arguments.contains("-datos-ilegibles")) : Self.store(),
             settings: demo ? Self.demoSettings() : Self.settings(),
             credentials: KeychainCredentialStore(),
             remote: GitHubTrainingDataSource(),
@@ -46,8 +46,8 @@ struct CompositionRoot {
         sync = SyncModel(repository: repository, app: model)
         let navigation = NavigationModel()
         self.navigation = navigation
-        today = TodayModel(app: model, sync: sync, clock: SystemClock())
-        history = HistoryModel(app: model, navigation: navigation, clock: SystemClock())
+        today = TodayModel(app: model, clock: SystemClock())
+        history = HistoryModel(app: model, clock: SystemClock())
         charts = ChartsModel(app: model, clock: SystemClock())
         progress = ProgressModel(app: model, clock: SystemClock())
         catalog = CatalogModel(app: model)
@@ -67,11 +67,17 @@ struct CompositionRoot {
     }
 
     /// Para las capturas del CI (`-demo`): datos de ejemplo en una carpeta temporal nueva y sin
-    /// GitHub. No toca los datos de verdad.
-    private static func demoStore() -> any TrainingDataStore {
+    /// GitHub. No toca los datos de verdad. Con `-datos-ilegibles`, el fichero está estropeado
+    /// (el test de la pantalla de error).
+    private static func demoStore(unreadable: Bool) -> any TrainingDataStore {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("demo-\(UUID().uuidString)")
         let file = folder.appendingPathComponent("training-data.json")
         let store = JSONFileTrainingDataStore(file: file)
+        if unreadable {
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try? Data("esto no es un training-data.json".utf8).write(to: file)
+            return store
+        }
         let data = DemoData.make(today: SystemClock().today())
         let semaphore = DispatchSemaphore(value: 0)
         Task.detached {

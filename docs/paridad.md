@@ -496,9 +496,9 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/sync-ui.spec.js` › Sync — UI y ajustes › sync ok → indicador muestra estado ok | `SyncModelTests.swift` |  |
 | `e2e/sync-ui.spec.js` › Sync — UI y ajustes › clic en indicador muestra toast con estado | `SyncModelTests.swift` |  |
 | `e2e/sync-ui.spec.js` › Sync — UI y ajustes › PAT guardado en claro es legible directamente | `SyncModelTests.swift` |  |
-| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub dispara PUT y muestra toast de éxito | `SyncModelTests.swift` |  |
-| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub sin GitHub configurado → toast warn, no PUT | `SyncModelTests.swift` |  |
-| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub con conflicto activo → abre modal de conflicto | `SyncModelTests.swift` |  |
+| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub dispara PUT y muestra toast de éxito | — | «Subir a GitHub» se quitó de Ajustes con la aprobación del usuario (2026-10-27): la subida es automática y «Sincronizar ahora» está en el menú de la nube.. |
+| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub sin GitHub configurado → toast warn, no PUT | — | «Subir a GitHub» se quitó de Ajustes con la aprobación del usuario (2026-10-27): la subida es automática y «Sincronizar ahora» está en el menú de la nube.. |
+| `e2e/sync-ui.spec.js` › Sync — UI y ajustes › Subir a GitHub con conflicto activo → abre modal de conflicto | — | «Subir a GitHub» se quitó de Ajustes con la aprobación del usuario (2026-10-27): la subida es automática y «Sincronizar ahora» está en el menú de la nube.. |
 | `e2e/sync-ui.spec.js` › Sync — UI y ajustes › probar conexión NO sobrescribe la DB local | `SyncModelTests.swift` |  |
 | `e2e/workout-github-sync.spec.js` › GitHub sync durante entreno activo › iniciar entreno NO dispara PUT a GitHub | `TrainingRepositorySyncTests.swift` |  |
 | `e2e/workout-github-sync.spec.js` › GitHub sync durante entreno activo › ajustar peso durante entreno NO dispara PUT a GitHub | `TrainingRepositorySyncTests.swift` |  |

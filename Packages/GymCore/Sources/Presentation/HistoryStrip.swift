@@ -120,7 +120,7 @@ public enum HistoryStrip {
     public static func tooltip(_ log: ExerciseLog) -> String {
         let e1rm = log.estimatedOneRepMax
         let first = e1rm > 0 ? "e1RM \(LogText.kilograms((e1rm * 10 + 0.5).rounded(.down) / 10)) kg" : ""
-        let reps = log.actualReps.contains { $0 != nil } ? log.actualReps.map { $0.map(String.init) ?? "-" }.joined(separator: "-") : ""
+        let reps = log.actualReps.contains { $0 != nil } ? LogText.reps(log.actualReps) : ""
         let second = [log.weight > 0 ? "\(LogText.kilograms(log.weight)) kg" : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
         return [first, second].filter { !$0.isEmpty }.joined(separator: "\n")
     }

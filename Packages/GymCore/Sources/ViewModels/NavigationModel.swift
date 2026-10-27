@@ -32,9 +32,4 @@ public final class NavigationModel {
             selectedTab = tab
         }
     }
-
-    /// Historial → Rutinas.
-    public func showRoutines() {
-        selectedTab = .routines
-    }
 }

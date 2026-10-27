@@ -5,6 +5,9 @@ import Presentation
 import Testing
 import ViewModels
 
+// Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
+// 2026-10-27; en la PWA, «10-8-10» y «10---8»).
+
 // Port por comportamiento de los e2e del entreno en curso. "La card abierta" es `isOpen`; el
 // input de peso, `weight`; las celdas de serie, `cells`; los chips, `chips`.
 
@@ -304,12 +307,12 @@ struct WorkoutSubtitleTests {
 
     @Test("subtítulo muestra reps reales al iniciar si difieren del historial previo")
     func pressReps() async {
-        #expect(await started().model.activeCards[0].subtitle.contains("10-10-8"))
+        #expect(await started().model.activeCards[0].subtitle.contains("10·10·8"))
     }
 
     @Test("subtítulo muestra reps de curl_biceps al iniciar si difieren")
     func curlReps() async {
-        #expect(await started().model.activeCards[1].subtitle.contains("12-12-10"))
+        #expect(await started().model.activeCards[1].subtitle.contains("12·12·10"))
     }
 
     @Test("subtítulo NO muestra reps cuando todas coinciden con expected")
@@ -319,7 +322,7 @@ struct WorkoutSubtitleTests {
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10-10"))
+        #expect(!subtitle.contains("10·10"))
     }
 
     @Test("subtítulo se actualiza al cambiar una rep")
@@ -327,7 +330,7 @@ struct WorkoutSubtitleTests {
         let today = await started()
         today.model.focusSeries(2, at: 0)
         await today.model.chooseRep(7, series: 2, at: 0)
-        #expect(today.model.activeCards[0].subtitle.contains("10-10-7"))
+        #expect(today.model.activeCards[0].subtitle.contains("10·10·7"))
     }
 
     @Test("subtítulo se actualiza tras ajustar peso")
@@ -337,7 +340,7 @@ struct WorkoutSubtitleTests {
         await today.model.adjust(.weight, direction: 1, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("\(LogText.kilograms(initial + ExerciseLog.weightStep(for: initial))) kg"))
-        #expect(subtitle.contains("10-10-8"))
+        #expect(subtitle.contains("10·10·8"))
     }
 
     @Test("subtítulo incluye peso y series x reps esperadas junto a las reales")
@@ -345,7 +348,7 @@ struct WorkoutSubtitleTests {
         let subtitle = await started().model.activeCards[0].subtitle
         #expect(subtitle.contains("60 kg"))
         #expect(subtitle.contains("3×10"))
-        #expect(subtitle.contains("10-10-8"))
+        #expect(subtitle.contains("10·10·8"))
     }
 
     @Test("reps desaparecen del subtítulo si se corrigen para coincidir con expected")
@@ -354,7 +357,7 @@ struct WorkoutSubtitleTests {
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10-10"))
+        #expect(!subtitle.contains("10·10"))
     }
 }
 
@@ -554,5 +557,53 @@ struct WorkoutReorderTests {
         let today = await started()
         await today.model.reorder(from: 0, to: 1)
         #expect(today.model.activeCards.allSatisfy { !$0.isOpen })
+    }
+}
+
+// Propio de la app (2026-10-27): el `db.json` guarda un entreno por día. La PWA borraba sin
+// preguntar el terminado de hoy al empezar otra rutina; ahora se confirma antes.
+@MainActor
+@Suite("Empezar con el entreno de hoy ya terminado")
+struct TodayReplaceTests {
+    @Test("sin entreno hoy, empezar no pregunta")
+    func noPrompt() async {
+        let today = await TodayHarness.make()
+        today.model.select("DIA1")
+        await today.model.requestStart()
+        #expect(today.model.replacePrompt == nil)
+        #expect(today.model.stage == .active)
+    }
+
+    @Test("con el de hoy terminado, pregunta antes de sustituirlo y cancelar lo deja")
+    func cancel() async throws {
+        let today = await TodayHarness.make()
+        await today.start("DIA1")
+        await today.finish()
+        today.model.backToSelector()
+        today.model.select("DIA2")
+        await today.model.requestStart()
+        let prompt = try #require(today.model.replacePrompt)
+        #expect(prompt.title == "Ya has entrenado hoy (Full Body - Día 1)")
+        #expect(prompt.message == "Si empiezas Full Body - Día 2, sustituye al entreno de hoy.")
+        today.model.cancelReplace()
+        #expect(today.model.replacePrompt == nil)
+        #expect(await today.savedToday?.routineID == "DIA1")
+        #expect(await today.savedToday?.completed == true)
+    }
+
+    @Test("sustituir desde el diálogo, que se cierra antes de la acción, empieza el nuevo")
+    func replace() async throws {
+        let today = await TodayHarness.make()
+        await today.start("DIA1")
+        await today.finish()
+        today.model.backToSelector()
+        today.model.select("DIA2")
+        await today.model.requestStart()
+        let prompt = try #require(today.model.replacePrompt)
+        today.model.cancelReplace()
+        await today.model.confirmReplace(prompt)
+        #expect(today.model.stage == .active)
+        #expect(await today.savedToday?.routineID == "DIA2")
+        #expect(await today.savedToday?.completed == false)
     }
 }

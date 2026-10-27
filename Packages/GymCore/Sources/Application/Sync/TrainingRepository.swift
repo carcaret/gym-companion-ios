@@ -106,6 +106,13 @@ public actor TrainingRepository {
     private var version: RemoteVersion?
     /// Cuenta los cambios, para saber si lo subido es lo último.
     private var revision = 0
+    /// `data` son datos de verdad: arrancó leyéndolos o se bajaron de GitHub. Si lo guardado no
+    /// se pudo leer, `data` está vacío y no se sincroniza ni se guarda nada encima (revisión del
+    /// 2026-10-27: se subía el vacío a GitHub y la recuperación bajaba ese vacío).
+    private var isLoaded = false
+
+    /// Un cambio sin datos de verdad: lo guardado no se pudo leer y no se pisa.
+    public struct NotLoaded: Error {}
     private var scheduledUpload: Task<Void, Never>?
     private var runningUpload: Task<UploadResult, Never>?
 
@@ -139,6 +146,7 @@ public actor TrainingRepository {
         token = try? await credentials.token()
         setStatus(state: target == nil ? .disabled : settings.hasPendingUpload ? .pending : .ok)
         data = try await StartUp(store: store, initialData: { await self.remoteInitialData() }).run()
+        isLoaded = true
         return data
     }
 
@@ -152,7 +160,7 @@ public actor TrainingRepository {
     /// pendiente, aplica lo remoto si es distinto. Con un conflicto abierto o un entreno en curso
     /// no hace nada.
     public func synchronize() async -> SyncOutcome {
-        guard target != nil, !status.conflict else { return .nothing }
+        guard isLoaded, target != nil, !status.conflict else { return .nothing }
         if settings.hasPendingUpload {
             guard !isWorkoutActive else { return .nothing }
             return await upload() == .uploaded ? .uploaded : .failed
@@ -193,6 +201,7 @@ public actor TrainingRepository {
     }
 
     private func saveLocally(_ newData: TrainingData) async throws {
+        guard isLoaded else { throw NotLoaded() }
         data = newData
         revision += 1
         if !settings.hasPendingUpload {
@@ -231,14 +240,6 @@ public actor TrainingRepository {
 
     // MARK: - Subir
 
-    /// Botón "Subir a GitHub".
-    public func forceUpload() async -> UploadResult {
-        guard target != nil else { return .notConfigured }
-        guard !status.conflict else { return .conflict }
-        cancelScheduledUpload()
-        return await upload()
-    }
-
     /// Conflicto → "Subir local → GitHub": se pregunta la versión actual y se sube encima.
     public func keepLocal() async -> UploadResult {
         guard let target else { return .notConfigured }
@@ -268,6 +269,7 @@ public actor TrainingRepository {
 
     private func performUpload() async -> UploadResult {
         guard let target else { return .notConfigured }
+        guard isLoaded else { return .failed }
         setStatus(state: .pending)
         if version == nil {
             // Sin sha, el PUT daría un 422 que parecería un conflicto (Canónico M).
@@ -318,6 +320,7 @@ public actor TrainingRepository {
     private func apply(_ remoteData: TrainingData) async {
         cancelScheduledUpload()
         data = remoteData
+        isLoaded = true
         revision += 1
         try? await store.save(remoteData)
         settings.hasPendingUpload = false

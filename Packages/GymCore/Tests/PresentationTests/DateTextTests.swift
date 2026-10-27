@@ -48,7 +48,25 @@ struct RelativeDateTests {
         #expect(DateText.relative("2026-10-18", today: today) == "Hace 1 semana")
         #expect(DateText.relative("2026-10-12", today: today) == "Hace 1 semana")
         #expect(DateText.relative("2026-10-11", today: today) == "Hace 2 semanas")
-        #expect(DateText.relative("2026-08-01", today: today) == "Hace 12 semanas")
+        #expect(DateText.relative("2026-09-25", today: today) == "Hace 4 semanas")
+    }
+
+    // Antes seguía sin tope («Hace 52 semanas»), como la PWA (2026-10-27): más allá de un mes ya lo
+    // dicen la fecha de la fila y la sección del mes.
+    @Test("más de un mes, sin fecha relativa")
+    func older() {
+        #expect(DateText.relative("2026-09-24", today: today) == nil)
+        #expect(DateText.relative("2025-10-25", today: today) == nil)
+    }
+}
+
+@Suite("monthYear")
+struct MonthYearTests {
+    @Test("el mes entero y el año, para las secciones del Historial")
+    func monthYear() {
+        #expect(DateText.monthYear("2026-10-05") == "Octubre de 2026")
+        #expect(DateText.monthYear("2025-01-31") == "Enero de 2025")
+        #expect(DateText.monthYear("2026-09-01") == "Septiembre de 2026")
     }
 }
 

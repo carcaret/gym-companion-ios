@@ -111,15 +111,11 @@ struct SyncPresentation: ViewModifier {
             // cerrado, o al tirar de la lista (en iOS 26 el diálogo sería un globo sin de qué salir).
             .alert(SyncText.conflictTitle, isPresented: whileActive($sync.isConflictPresented)) {
                 Button(SyncText.keepLocalLabel) { Task { await sync.keepLocal() } }
-                Button(SyncText.keepRemoteLabel) { Task { await sync.keepRemote() } }
+                // Lo de este iPhone se pierde: en rojo.
+                Button(SyncText.keepRemoteLabel, role: .destructive) { Task { await sync.keepRemote() } }
                 Button(SyncText.cancelLabel, role: .cancel) { sync.cancelConflict() }
             } message: {
                 Text(SyncText.conflictMessage)
-            }
-            .alert(SyncText.savedLocallyTitle, isPresented: whileActive($sync.isSavedLocallyPresented)) {
-                Button(SyncText.understood) {}
-            } message: {
-                Text(SyncText.savedLocallyMessage)
             }
     }
 

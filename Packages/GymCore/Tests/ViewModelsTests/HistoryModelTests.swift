@@ -5,22 +5,21 @@ import Presentation
 import Testing
 import ViewModels
 
+// Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
+// 2026-10-27; en la PWA, «10-8-10» y «10---8»).
+
 /// Historial con el `db-test.json` de los e2e (o los datos que se pasen), sin GitHub.
 @MainActor
 struct HistoryHarness {
     let harness: SyncHarness
     let app: AppModel
-    let navigation: NavigationModel
     let model: HistoryModel
 
     static func make(_ data: TrainingData = PWATestDB.data) async -> HistoryHarness {
         let harness = SyncHarness(local: data, configured: false)
         let app = AppModel(repository: harness.repository())
         await app.start()
-        let navigation = NavigationModel()
-        navigation.select(.history)
-        return HistoryHarness(harness: harness, app: app, navigation: navigation,
-                              model: HistoryModel(app: app, navigation: navigation, clock: FixedClock(SyncFixtures.today)))
+        return HistoryHarness(harness: harness, app: app, model: HistoryModel(app: app, clock: FixedClock(SyncFixtures.today)))
     }
 
     var saved: TrainingData? {
@@ -31,6 +30,12 @@ struct HistoryHarness {
     func openFirstAndExpand() {
         model.open(model.rows[0].date)
         model.toggleCard(0)
+    }
+
+    /// Abre la primera sesión, su primera tarjeta y pasa a editar.
+    func openFirstAndEdit() {
+        openFirstAndExpand()
+        model.startEditing()
     }
 }
 
@@ -54,11 +59,15 @@ struct HistoryFullTests {
         #expect(subtitle.contains("3×8"))
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): abrir la tarjeta
+    // enseña lo guardado; los controles salen al tocar «Editar».
     @Test("tap en card expande y muestra controles de edicion")
     func expand() async {
         let history = await HistoryHarness.make()
         history.openFirstAndExpand()
         #expect(history.model.cards[0].isOpen)
+        #expect(!history.model.cards[0].isEditable)
+        history.model.startEditing()
         #expect(history.model.cards[0].isEditable)
     }
 
@@ -70,54 +79,69 @@ struct HistoryFullTests {
         #expect(history.model.cards.allSatisfy { !$0.isOpen })
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): un solo «OK» para
+    // toda la sesión, que dice si hay cambios (`hasChanges`), en vez de un «Guardar» por tarjeta.
     @Test("boton Guardar no aparece antes de modificar nada")
     func noSaveYet() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
+        #expect(!history.model.hasChanges)
         #expect(!history.model.cards[0].isDirty)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): como el anterior.
     @Test("boton Guardar aparece al modificar un valor")
     func saveAppears() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.set(.weight, text: "75", at: 0)
+        #expect(history.model.hasChanges)
         #expect(history.model.cards[0].isDirty)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): «OK» guarda y vuelve
+    // a solo lectura (la tarjeta sigue como estaba, abierta).
     @Test("guardar actualiza subtitulo y colapsa la card")
     func save() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.set(.weight, text: "75", at: 0)
-        await history.model.save(0)
-        #expect(history.model.cards.allSatisfy { !$0.isOpen })
+        await history.model.finishEditing()
+        #expect(!history.model.isEditing)
+        #expect(!history.model.cards[0].isEditable)
         #expect(history.model.cards[0].subtitle.contains("75"))
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): cerrar una tarjeta ya
+    // no descarta nada: lo cambiado se conserva hasta «OK» o «Cancelar».
     @Test("colapsar sin guardar descarta cambios y muestra valor original al reexpandir")
     func discardOnCollapse() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
-        let original = history.model.cards[0].weight
+        history.openFirstAndEdit()
         history.model.set(.weight, text: "999", at: 0)
-        #expect(history.model.cards[0].isDirty)
         history.model.toggleCard(0)
-        #expect(history.model.cards.allSatisfy { !$0.isOpen })
         history.model.toggleCard(0)
-        #expect(history.model.cards[0].weight == original)
+        #expect(history.model.cards[0].weight == 999)
+        #expect(history.model.hasChanges)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): se edita en una hoja que
+    // tapa las pestañas y la flecha; para salir con cambios, «Cancelar» pregunta, y descartar deja
+    // lo guardado al volver.
     @Test("navegar atras sin guardar descarta cambios")
     func discardOnBack() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let original = history.model.cards[0].weight
         history.model.set(.weight, text: "999", at: 0)
+        history.model.cancelEditing()
+        #expect(history.model.isDiscardPromptPresented)
+        history.model.discardChanges()
         history.model.back()
         #expect(history.model.selectedDate == nil)
         history.openFirstAndExpand()
         #expect(history.model.cards[0].weight == original)
+        #expect(!history.model.isEditing)
     }
 
     @Test("eliminar entry confirmar desaparece de la lista")
@@ -180,7 +204,7 @@ struct HistoryFullTests {
     @Test("subtitulo se actualiza al modificar peso sin guardar")
     func liveSubtitle() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let before = history.model.cards[0].subtitle
         history.model.set(.weight, text: "123", at: 0)
         let after = history.model.cards[0].subtitle
@@ -191,7 +215,7 @@ struct HistoryFullTests {
     @Test("boton + de peso actualiza el input de peso")
     func plusWeight() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let initial = history.model.cards[0].weight
         history.model.adjust(.weight, direction: 1, at: 0)
         #expect(history.model.cards[0].weight == initial + 5)
@@ -200,7 +224,7 @@ struct HistoryFullTests {
     @Test("boton - de peso actualiza el input de peso")
     func minusWeight() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let initial = history.model.cards[0].weight
         history.model.adjust(.weight, direction: -1, at: 0)
         #expect(history.model.cards[0].weight == max(0, initial - 5))
@@ -209,7 +233,7 @@ struct HistoryFullTests {
     @Test("boton + de series actualiza el input de series")
     func plusSeries() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let initial = history.model.cards[0].series
         history.model.adjust(.series, direction: 1, at: 0)
         #expect(history.model.cards[0].series == initial + 1)
@@ -218,12 +242,12 @@ struct HistoryFullTests {
     @Test("chip de serie en historial abre chip strip y permite cambiar rep")
     func chips() async throws {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.focusSeries(0, at: 0)
         let chip = try #require(history.model.cards[0].chips.first)
         history.model.chooseRep(chip.value, series: 0, at: 0)
         #expect(history.model.cards[0].cells[0].text == "\(chip.value)")
-        #expect(history.model.cards[0].isDirty)
+        #expect(history.model.hasChanges)
     }
 }
 
@@ -239,6 +263,21 @@ struct HistoryListTests {
         #expect(rows[1].day == "8")
         #expect(rows[1].month == "ENE")
         #expect(rows[1].summary == "2 ejercicios · Press Banca · Curl Bíceps")
+    }
+
+    // Propio de la app (2026-10-27): por meses, como Fotos o Fitness.
+    @Test("las sesiones van en secciones por mes, de la más reciente a la más antigua")
+    func sections() async {
+        let data = TrainingData(
+            catalog: Catalog([Exercise(id: "press_banca", name: "Press Banca")]),
+            routines: [Routine(id: "DIA1", name: "Día 1", exerciseIDs: ["press_banca"])],
+            history: ["2026-09-30", "2026-10-02", "2025-12-15", "2026-10-20"].map {
+                Session(date: LocalDate(iso: $0)!, routineID: "DIA1", completed: true, logs: [])
+            }
+        )
+        let history = await HistoryHarness.make(data)
+        #expect(history.model.sections.map(\.title) == ["Octubre de 2026", "Septiembre de 2026", "Diciembre de 2025"])
+        #expect(history.model.sections.map { $0.rows.map(\.date.iso) } == [["2026-10-20", "2026-10-02"], ["2026-09-30"], ["2025-12-15"]])
     }
 
     @Test("cada sesión lleva el color de su rutina (filete y etiqueta de la PWA)")
@@ -371,12 +410,15 @@ struct HistoryIncompleteTests {
         #expect(history.model.selectedDate == nil)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27): en iOS una acción no cambia de pestaña
+    // sola; se queda en el detalle, ya terminado (sin la etiqueta ni el botón).
     @Test("botón \"Completar entreno\" navega al tab Hoy")
     func navigatesToToday() async {
         let history = await make()
         history.model.open(Self.incompleteDate)
         await history.model.completeWorkout()
-        #expect(history.navigation.selectedTab == .routines)
+        #expect(history.model.selectedDate == Self.incompleteDate)
+        #expect(!history.model.isIncomplete)
     }
 
     @Test("botón \"Completar entreno\" marca el entreno como completado en DB")
@@ -412,52 +454,225 @@ struct HistoryIncompleteTests {
 @MainActor
 @Suite("Validación en edición de Historial")
 struct HistoryValidationTests {
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): «OK» en vez del
+    // «Guardar» de la tarjeta.
     @Test("expandir entry → todo correcto → guardar se cierra normalmente")
     func saveCloses() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.set(.weight, text: "\(Int(history.model.cards[0].weight) + 5)", at: 0)
-        await history.model.save(0)
-        #expect(history.model.cards.allSatisfy { !$0.isOpen })
+        await history.model.finishEditing()
+        #expect(!history.model.isEditing)
+        #expect(history.app.notice == nil)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): se rellenan al
+    // editar; en solo lectura se ve lo guardado (la serie vacía, vacía).
     @Test("entry con reps.actual vacío → al expandir se rellenan con expected")
     func prefill() async {
         let history = await HistoryHarness.make()
         history.model.open(history.model.rows.last!.date)
         history.model.toggleCard(0)
+        #expect(history.model.cards[0].cells[0].value == nil)
+        history.model.startEditing()
         #expect(history.model.cards[0].cells[0].text == "10")
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): «Cancelar» en vez de
+    // cerrar la tarjeta.
     @Test("entry con reps.actual vacío → colapsar sin guardar → reexpandir → sigue rellenando con expected")
     func prefillAgain() async {
         let history = await HistoryHarness.make()
         history.model.open(history.model.rows.last!.date)
         history.model.toggleCard(0)
+        history.model.startEditing()
         #expect(history.model.cards[0].cells[0].text == "10")
-        history.model.toggleCard(0)
-        history.model.toggleCard(0)
+        history.model.cancelEditing()
+        // Rellenar no cuenta como cambio: sale sin preguntar.
+        #expect(!history.model.isDiscardPromptPresented)
+        history.model.startEditing()
         #expect(history.model.cards[0].cells[0].text == "10")
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): «OK».
     @Test("guardar persiste cambio en localStorage")
     func persists() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         history.model.set(.weight, text: "77", at: 0)
-        await history.model.save(0)
-        #expect(history.model.cards.allSatisfy { !$0.isOpen })
+        await history.model.finishEditing()
         #expect(await history.saved?.history.session(on: LocalDate(iso: "2024-01-10")!)?.logs[0].weight == 77)
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): «Cancelar» y
+    // «Descartar cambios» en vez de cerrar la tarjeta.
     @Test("colapsar sin guardar NO persiste cambio en localStorage")
     func notPersisted() async {
         let history = await HistoryHarness.make()
-        history.openFirstAndExpand()
+        history.openFirstAndEdit()
         let original = history.model.cards[0].weight
         history.model.set(.weight, text: "999", at: 0)
-        history.model.toggleCard(0)
+        history.model.cancelEditing()
+        #expect(history.model.isDiscardPromptPresented)
+        history.model.discardChanges()
+        #expect(!history.model.isEditing)
+        #expect(history.model.selectedDate != nil)
+        #expect(history.model.cards[0].weight == original)
         #expect(await history.saved?.history.session(on: LocalDate(iso: "2024-01-10")!)?.logs[0].weight == original)
+    }
+}
+
+// Propio de la app (2026-10-27): el detalle es de solo lectura y se corrige con «Editar», como en
+// Contactos; «Cancelar» con cambios pregunta antes de tirarlos.
+@MainActor
+@Suite("Historial — modo Editar")
+struct HistoryEditingTests {
+    @Test("en solo lectura los controles no cambian nada")
+    func readOnly() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndExpand()
+        let weight = history.model.cards[0].weight
+        history.model.adjust(.weight, direction: 1, at: 0)
+        history.model.set(.weight, text: "999", at: 0)
+        history.model.chooseRep(1, series: 0, at: 0)
+        #expect(history.model.cards[0].weight == weight)
+        #expect(!history.model.hasChanges)
+    }
+
+    @Test("cancelar sin cambios sale sin preguntar")
+    func cancelClean() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.cancelEditing()
+        #expect(!history.model.isEditing)
+        #expect(!history.model.isDiscardPromptPresented)
+    }
+
+    @Test("seguir editando conserva lo cambiado")
+    func keepEditing() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.set(.weight, text: "88", at: 0)
+        history.model.cancelEditing()
+        history.model.keepEditing()
+        #expect(history.model.isEditing)
+        #expect(!history.model.isDiscardPromptPresented)
+        #expect(history.model.cards[0].weight == 88)
+    }
+
+    @Test("lo tecleado sin salir del campo cuenta al cancelar y al aceptar")
+    func typing() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.type(.weight, text: "66", at: 0)
+        history.model.cancelEditing()
+        #expect(history.model.isDiscardPromptPresented)
+        history.model.keepEditing()
+        history.model.type(.weight, text: "67", at: 0)
+        await history.model.finishEditing()
+        #expect(await history.saved?.history.session(on: LocalDate(iso: "2024-01-10")!)?.logs[0].weight == 67)
+    }
+
+    @Test("OK guarda todas las tarjetas cambiadas de una vez")
+    func savesAll() async {
+        let history = await HistoryHarness.make()
+        let date = history.model.rows[1].date
+        history.model.open(date)
+        history.model.startEditing()
+        history.model.set(.weight, text: "41", at: 0)
+        history.model.set(.weight, text: "12", at: 1)
+        await history.model.finishEditing()
+        let logs = await history.saved?.history.session(on: date)?.logs
+        #expect(logs?.map(\.weight) == [41, 12])
+    }
+
+    // Revisión del 2026-10-27: «OK» escribía el relleno de las series vacías en todas las
+    // tarjetas, también en las que no se tocaron.
+    @Test("OK guarda solo las tarjetas cambiadas: las demás conservan sus series vacías")
+    func savesOnlyChanged() async throws {
+        let date = LocalDate(iso: "2026-10-20")!
+        let data = TrainingData(
+            catalog: Catalog([Exercise(id: "press_banca", name: "Press Banca"), Exercise(id: "remo", name: "Remo")]),
+            routines: [Routine(id: "DIA1", name: "Día 1", exerciseIDs: ["press_banca", "remo"])],
+            history: [Session(date: date, routineID: "DIA1", completed: false, logs: [
+                ExerciseLog(exerciseID: "press_banca", series: 3, targetReps: 10, actualReps: [10, 9, nil], weight: 60),
+                ExerciseLog(exerciseID: "remo", series: 3, targetReps: 12, actualReps: [nil, nil, nil], weight: 40),
+            ])]
+        )
+        let history = await HistoryHarness.make(data)
+        history.model.open(date)
+        history.model.startEditing()
+        history.model.set(.weight, text: "62,5", at: 0)
+        await history.model.finishEditing()
+        let logs = try #require(await history.saved?.history.session(on: date)?.logs)
+        #expect(logs[0].weight == 62.5)
+        #expect(logs[0].actualReps == [10, 9, 10], "La tarjeta cambiada se guarda como se veía al editarla")
+        #expect(logs[1].actualReps == [nil, nil, nil], "La que no se tocó, tal cual")
+    }
+
+    // Revisión del 2026-10-27: si la sesión cambia mientras se edita (el entreno en curso, otra
+    // rutina hoy, lo bajado de GitHub), «OK» la machacaba con la copia vieja.
+    @Test("si la sesión cambia mientras se edita, OK no la pisa y lo dice")
+    func changedWhileEditing() async throws {
+        let history = await HistoryHarness.make()
+        let date = history.model.rows[0].date
+        history.model.open(date)
+        history.model.startEditing()
+        history.model.set(.weight, text: "99", at: 0)
+        var data = try #require(history.app.data)
+        let position = try #require(data.history.firstIndex { $0.date == date })
+        data.history[position].logs[0].actualReps = [12, 12, 12]
+        await history.app.update(data)
+        await history.model.finishEditing()
+        #expect(!history.model.isEditing)
+        #expect(history.app.notice == HistoryText.changedWhileEditing)
+        let log = try #require(await history.saved?.history.session(on: date)?.logs[0])
+        #expect(log.actualReps == [12, 12, 12])
+        #expect(log.weight != 99)
+    }
+
+    @Test("OK sin cambios no escribe nada")
+    func okClean() async {
+        let history = await HistoryHarness.make()
+        let before = await history.saved
+        history.model.open(history.model.rows.last!.date)
+        history.model.startEditing()
+        await history.model.finishEditing()
+        #expect(!history.model.isEditing)
+        // El relleno de las series vacías no se guarda solo por mirar.
+        #expect(await history.saved == before)
+    }
+
+    @Test("descartar desde el diálogo, que se cierra antes de la acción, descarta igual")
+    func discardAfterDialogDismissal() async throws {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.set(.weight, text: "999", at: 0)
+        history.model.cancelEditing()
+        #expect(history.model.isDiscardPromptPresented)
+        history.model.keepEditing()
+        history.model.discardChanges()
+        #expect(!history.model.isEditing)
+        #expect(history.model.selectedDate != nil, "Descartar cierra la hoja y deja el detalle")
+    }
+
+    @Test("tocar otra vez la pestaña vuelve a la lista y no deja nada a medias")
+    func reselectClean() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.reselect()
+        #expect(history.model.selectedDate == nil)
+        #expect(!history.model.isEditing)
+    }
+
+    @Test("abrir otra sesión no arrastra la edición de la anterior")
+    func reopen() async {
+        let history = await HistoryHarness.make()
+        history.openFirstAndEdit()
+        history.model.back()
+        history.model.open(history.model.rows[1].date)
+        #expect(!history.model.isEditing)
+        #expect(!history.model.hasChanges)
     }
 }
 
@@ -531,9 +746,9 @@ struct HistoryStripE2ETests {
         }
         // Los kilos con espacio y coma decimal, como en el resto de la app (la PWA: "84kg",
         // "73.3kg"); cambio aprobado por el usuario, 2026-10-27.
-        #expect(w1 == "e1RM 84 kg\n60 kg · 12-11-10")
-        #expect(w1.split(separator: "\n").joined(separator: " · ") == "e1RM 84 kg · 60 kg · 12-11-10")
-        #expect(w2 == "e1RM 73,3 kg\n55 kg · 10-10-8")
+        #expect(w1 == "e1RM 84 kg\n60 kg · 12·11·10")
+        #expect(w1.split(separator: "\n").joined(separator: " · ") == "e1RM 84 kg · 60 kg · 12·11·10")
+        #expect(w2 == "e1RM 73,3 kg\n55 kg · 10·10·8")
     }
 
     @Test("barra más alta corresponde a la sesión con mayor e1RM")

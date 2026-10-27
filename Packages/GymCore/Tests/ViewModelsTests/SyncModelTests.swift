@@ -58,36 +58,6 @@ struct SyncUITests {
         #expect(await harness.settings.settings.location == SyncLocation(repository: "user/repo", branch: "master", path: "db.json"))
     }
 
-    @Test("Subir a GitHub dispara PUT y muestra toast de éxito")
-    func forceUpload() async {
-        let harness = SyncHarness()
-        let (_, sync) = await models(harness)
-        await sync.forceUpload()
-        #expect(sync.notice == SyncText.uploaded)
-        #expect(await harness.remote.pushes.count == 1)
-    }
-
-    @Test("Subir a GitHub sin GitHub configurado → toast warn, no PUT")
-    func forceUploadNotConfigured() async {
-        let harness = SyncHarness(configured: false)
-        let (_, sync) = await models(harness)
-        await sync.forceUpload()
-        #expect(sync.notice == SyncText.notConfigured)
-        #expect(await harness.remote.pushAttempts == 0)
-    }
-
-    @Test("Subir a GitHub con conflicto activo → abre modal de conflicto")
-    func forceUploadConflict() async {
-        let harness = SyncHarness()
-        await harness.remote.fail(push: .conflict)
-        let (app, sync) = await models(harness)
-        #expect(await app.finishWorkout(F.finishedWorkout()) == .conflict)
-        await sync.refresh()
-        #expect(sync.status == SyncStatus(state: .pending, conflict: true))
-        await sync.forceUpload()
-        #expect(sync.isConflictPresented)
-    }
-
     // Cambiado con la aprobación del usuario (2026-10-27, auditoría de los avisos): el resultado no es un
     // aviso: lo devuelve para enseñarlo debajo del botón.
     @Test("probar conexión NO sobrescribe la DB local")
@@ -364,18 +334,18 @@ struct SyncModelTests {
         #expect(sync.status.conflict)
     }
 
-    @Test("terminar un entreno sin poder subirlo avisa de que queda guardado en el iPhone")
-    func savedLocallyPrompt() async {
+    // Antes salía la alerta «Entreno guardado localmente», como en la PWA (quitada con la aprobación
+    // del usuario, 2026-10-27): se arregla sola, y la nube ya lo dice.
+    @Test("terminar un entreno sin poder subirlo no interrumpe: la nube queda pendiente y late")
+    func savedLocallyQuiet() async {
         let harness = SyncHarness()
         await harness.remote.fail(fetch: .unreachable, push: .unreachable)
         let (app, sync) = await models(harness)
-        let result = await app.finishWorkout(F.finishedWorkout())
-        sync.workoutFinished(result)
-        #expect(sync.isSavedLocallyPresented)
-        sync.workoutFinished(.uploaded)
-        sync.isSavedLocallyPresented = false
-        sync.workoutFinished(.notConfigured)
-        #expect(!sync.isSavedLocallyPresented)
+        #expect(await app.finishWorkout(F.finishedWorkout()) == .unreachable)
+        await sync.refresh()
+        #expect(sync.status.state == .pending)
+        #expect(sync.indicatorPulses)
+        #expect(sync.notice == nil)
     }
 }
 

@@ -95,35 +95,13 @@ struct TrainingRepositoryTests {
         let harness = SyncHarness()
         let repository = harness.repositoryWithoutTimer()
         _ = try await repository.start()
-        try await repository.update(F.finishedWorkout())
-        async let first = repository.forceUpload()
-        async let second = repository.forceUpload()
-        #expect(await [first, second] == [.uploaded, .uploaded])
+        async let first = repository.saveAndUpload(F.finishedWorkout())
+        async let second = repository.saveAndUpload(F.adding(Exercise(id: "dominadas", name: "Dominadas")))
+        #expect(try await [first, second] == [.uploaded, .uploaded])
         #expect(await repository.status == SyncStatus(state: .ok, conflict: false))
     }
 
     // MARK: - Botones de Ajustes y del conflicto
-
-    @Test("Subir a GitHub sin configurar no toca la red")
-    func forceUploadNotConfigured() async throws {
-        let harness = SyncHarness(configured: false)
-        let repository = harness.repository()
-        _ = try await repository.start()
-        #expect(await repository.forceUpload() == .notConfigured)
-        #expect(await harness.remote.pushAttempts == 0)
-    }
-
-    @Test("Subir a GitHub con un conflicto abierto no sube: hay que resolverlo")
-    func forceUploadWithConflict() async throws {
-        let harness = SyncHarness()
-        await harness.remote.fail(push: .conflict)
-        let repository = harness.repository()
-        _ = try await repository.start()
-        _ = try await repository.saveAndUpload(F.finishedWorkout())
-        let attempts = await harness.remote.pushAttempts
-        #expect(await repository.forceUpload() == .conflict)
-        #expect(await harness.remote.pushAttempts == attempts)
-    }
 
     @Test("conflicto → Subir local: baja el sha actual y machaca GitHub con lo local")
     func keepLocal() async throws {
@@ -284,5 +262,38 @@ struct TrainingRepositoryTests {
         _ = try await repository.start()
         #expect(await repository.synchronize() == .nothing)
         #expect(await harness.remote.pushAttempts == 0)
+    }
+
+    // Revisión del 2026-10-27: con lo guardado ilegible, `start()` lanzaba pero dejaba los datos
+    // vacíos, y al sincronizar se subían a GitHub encima de los de verdad.
+    @Test("con lo guardado ilegible no sincroniza: ni sube lo vacío ni pisa el fichero")
+    func unreadableDoesNotSync() async throws {
+        let harness = SyncHarness(remote: F.finishedWorkout(), pending: true)
+        await harness.local.fail(loading: true)
+        let repository = harness.repository()
+        await #expect(throws: (any Error).self) { try await repository.start() }
+        #expect(await repository.synchronize() == .nothing)
+        await repository.flush()
+        #expect(await harness.remote.pushAttempts == 0)
+        #expect(await harness.remote.data == F.finishedWorkout())
+        // Sin nada pendiente, tampoco sustituye el fichero por lo remoto sin que se pida.
+        let clean = SyncHarness(remote: F.finishedWorkout())
+        await clean.local.fail(loading: true)
+        let cleanRepository = clean.repository()
+        _ = try? await cleanRepository.start()
+        #expect(await cleanRepository.synchronize() == .nothing)
+        #expect(await clean.local.saves == 0)
+    }
+
+    @Test("con lo guardado ilegible, descargar de GitHub lo recupera y vuelve a sincronizar")
+    func unreadableRecovers() async throws {
+        let harness = SyncHarness(remote: F.finishedWorkout())
+        await harness.local.fail(loading: true)
+        let repository = harness.repository()
+        _ = try? await repository.start()
+        #expect(await repository.download() == .applied(F.finishedWorkout()))
+        try await repository.update(F.adding(Exercise(id: "dominadas", name: "Dominadas")))
+        await repository.flush()
+        #expect(await harness.remote.pushes.count == 1)
     }
 }

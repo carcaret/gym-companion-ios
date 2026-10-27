@@ -438,7 +438,7 @@ struct WaitingForWorkoutTests {
         _ = try await repository.saveAndUpload(F.finishedWorkout())
         #expect(await repository.status == SyncStatus(state: .pending, waitingForWorkout: false))
         await harness.remote.fail()
-        _ = await repository.forceUpload()
+        #expect(await repository.synchronize() == .uploaded)
         #expect(await repository.status == SyncStatus(state: .ok))
     }
 

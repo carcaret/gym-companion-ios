@@ -16,8 +16,6 @@ public final class SyncModel {
     }
     /// Diálogo de conflicto: subir lo local, bajar lo remoto o cancelar.
     public var isConflictPresented = false
-    /// Aviso de que el entreno terminado se quedó en el iPhone sin subir.
-    public var isSavedLocallyPresented = false
     /// La hoja de los ajustes de sincronización (`SettingsModel`), que se abre desde el indicador.
     public var isSettingsPresented = false
 
@@ -125,27 +123,7 @@ public final class SyncModel {
         status.state == .pending && !status.waitingForWorkout
     }
 
-    /// Tras terminar un entreno: si había GitHub y no se pudo subir, se avisa.
-    public func workoutFinished(_ result: UploadResult) {
-        switch result {
-        case .unreachable, .failed, .conflict: isSavedLocallyPresented = true
-        case .uploaded, .notConfigured: break
-        }
-    }
-
     // MARK: - Botones
-
-    /// "Subir a GitHub". Lo que está en marcha lo dice la fila del botón (`SettingsModel.activity`).
-    public func forceUpload() async {
-        switch await repository.forceUpload() {
-        case .uploaded: notice = SyncText.uploaded
-        case .notConfigured: notice = SyncText.notConfigured
-        case .conflict: isConflictPresented = true
-        case .unreachable: notice = SyncText.offline
-        case .failed: notice = SyncText.uploadFailed
-        }
-        await refresh()
-    }
 
     /// "Descargar de GitHub", ya confirmado.
     public func download() async {
@@ -203,8 +181,10 @@ public final class SyncModel {
 
     /// "Guardar": rama y ruta vacías toman las de siempre (`master`, `db.json`). Sin repo o sin
     /// token no guarda (el botón está desactivado).
-    public func configure(repository name: String, branch: String, path: String, token: String) async {
-        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return }
+    /// Devuelve si se guardó.
+    @discardableResult
+    public func configure(repository name: String, branch: String, path: String, token: String) async -> Bool {
+        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return false }
         do {
             switch try await repository.configure(location, token: token) {
             case .downloaded(let remote):
@@ -216,8 +196,11 @@ public final class SyncModel {
             }
         } catch {
             notice = SyncText.configureFailed
+            await refresh()
+            return false
         }
         await refresh()
+        return true
     }
 
     /// Repo y token escritos, sin contar los espacios: lo mínimo para guardar o probar.

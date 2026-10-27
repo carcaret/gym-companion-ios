@@ -2,6 +2,9 @@ import Domain
 import Presentation
 import Testing
 
+// Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
+// 2026-10-27; en la PWA, «10-8-10» y «10---8»).
+
 // Port de tests/unit/builders.test.js: la tira "Últimas sesiones" de cada ejercicio, el delta
 // "vs última" y los chips de reps. En la PWA se comprueba el HTML; aquí, el contenido de la tira.
 
@@ -154,8 +157,8 @@ struct HistoryStripTests {
     func tooltip() {
         // Los kilos con espacio y coma decimal, como en el resto de la app (la PWA: "80kg",
         // "73.3kg"); cambio aprobado por el usuario, 2026-10-27.
-        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 60)) == "e1RM 80 kg\n60 kg · 10-10-8")
-        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 55)) == "e1RM 73,3 kg\n55 kg · 10-10-8")
-        #expect(HistoryStrip.tooltip(log(series: 2, expected: 10, actual: [10, nil], weight: 0)) == "10--")
+        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 60)) == "e1RM 80 kg\n60 kg · 10·10·8")
+        #expect(HistoryStrip.tooltip(log(series: 3, expected: 10, actual: [10, 10, 8], weight: 55)) == "e1RM 73,3 kg\n55 kg · 10·10·8")
+        #expect(HistoryStrip.tooltip(log(series: 2, expected: 10, actual: [10, nil], weight: 0)) == "10·—")
     }
 }

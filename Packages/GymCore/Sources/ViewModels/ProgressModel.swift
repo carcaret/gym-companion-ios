@@ -74,7 +74,7 @@ public final class ProgressModel {
                 exerciseID: progress.exerciseID, name: data.catalog.name(of: progress.exerciseID),
                 weight: progress.weight > 0 ? "\(LogText.kilograms(progress.weight)) kg" : nil,
                 phrase: ProgressText.phrase(progress), status: progress.status,
-                recentReps: progress.recentReps.map { $0.map(String.init).joined(separator: "-") },
+                recentReps: progress.recentReps.map { LogText.reps($0) },
                 canOpenCharts: progress.status != .noTrack, isOpen: openRows.contains(progress.exerciseID)
             )
         }
