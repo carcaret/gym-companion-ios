@@ -87,12 +87,8 @@ final class ScreenshotTests: XCTestCase {
         app.tabBars.buttons["Progreso"].tap()  // tocar otra vez la pestaña vuelve a Progreso
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
 
-        // La tarjeta del catálogo está al final de la lista: la List no la crea hasta que se ve.
-        let catalog = app.buttons["catalog-card"].firstMatch
-        for _ in 0..<6 where !catalog.isHittable {
-            app.swipeUp()
-        }
-        catalog.tap()
+        // El catálogo, en la barra de Progreso.
+        app.buttons["catalog-button"].tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         capture(app, "50-catalogo")
 

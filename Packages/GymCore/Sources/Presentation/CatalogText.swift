@@ -3,7 +3,6 @@ import Domain
 /// Los textos del catálogo de ejercicios (sección catálogo de `views/estadisticas.js`).
 public enum CatalogText {
     public static let cardTitle = "Catálogo de ejercicios"
-    public static let cardSubtitle = "Editar nombres y grupos musculares"
     public static func total(_ count: Int) -> String { "\(count) en total" }
     public static func withoutGroup(_ count: Int) -> String { "\(count) sin grupo" }
 

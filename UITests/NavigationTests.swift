@@ -170,27 +170,10 @@ final class NavigationTests: XCTestCase {
 
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
-        // La tarjeta del catálogo está al final: la lista no la crea hasta que se ve.
-        let catalog = app.buttons["catalog-card"].firstMatch
-        for _ in 0..<6 where !catalog.isHittable {
-            app.swipeUp()
-        }
-        catalog.tap()
+        // El catálogo, en la barra de Progreso.
+        app.buttons["catalog-button"].tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         assertSyncIndicator(app, "en el catálogo")
-    }
-
-    /// El catálogo, en la barra de Progreso, sin bajar hasta el final (2026-10-27).
-    @MainActor
-    func testElCatalogoSeAbreDesdeLaBarraDeProgreso() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
-        app.tabBars.buttons["Progreso"].tap()
-        let button = app.buttons["catalog-button"]
-        XCTAssertTrue(button.appears(timeout: 10))
-        button.tap()
-        XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
     }
 
     @MainActor

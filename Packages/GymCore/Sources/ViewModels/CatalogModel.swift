@@ -50,12 +50,17 @@ public final class CatalogModel {
 
     private var data: TrainingData { app.data ?? TrainingData() }
 
-    // MARK: - Tarjeta en Progreso
+    // MARK: - Resumen
 
     public var total: Int { data.catalog.ids.count }
 
     /// Los que no tienen uno de los grupos que se pueden elegir.
     public var withoutGroup: Int { data.catalog.all.filter { !($0.group?.isKnown ?? false) }.count }
+
+    /// Debajo del título del catálogo: «4 en total · 1 sin grupo» (antes, la tarjeta de Progreso).
+    public var summary: String {
+        withoutGroup > 0 ? "\(CatalogText.total(total)) · \(CatalogText.withoutGroup(withoutGroup))" : CatalogText.total(total)
+    }
 
     // MARK: - Lista
 

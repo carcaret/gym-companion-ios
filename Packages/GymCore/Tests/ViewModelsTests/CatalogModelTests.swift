@@ -47,12 +47,22 @@ private struct CatalogHarness {
 @MainActor
 @Suite("Catálogo de ejercicios")
 struct CatalogTests {
+    // Cambiado con la aprobación del usuario (2026-10-27): el catálogo se abre desde la barra de
+    // Progreso, y el total y los sin grupo van en el subtítulo del catálogo, no en una tarjeta.
     @Test("Progreso muestra la tarjeta del catálogo con el total y los sin grupo")
     func card() async {
         let catalog = await CatalogHarness.make()
-        #expect(CatalogText.cardTitle == "Catálogo de ejercicios")
-        #expect(CatalogText.total(catalog.model.total) == "4 en total")
-        #expect(CatalogText.withoutGroup(catalog.model.withoutGroup) == "1 sin grupo")
+        #expect(CatalogText.title == "Ejercicios")
+        #expect(catalog.model.summary == "4 en total · 1 sin grupo")
+    }
+
+    @Test("sin ejercicios sin grupo, el subtítulo solo dice el total")
+    func summaryAllGrouped() async {
+        let catalog = await CatalogHarness.make()
+        catalog.model.edit("huerfano")
+        catalog.model.setGroup(.core)
+        await catalog.model.save()
+        #expect(catalog.model.summary == "4 en total")
     }
 
     @Test("lista todos los ejercicios de la DB, entrenados o no")

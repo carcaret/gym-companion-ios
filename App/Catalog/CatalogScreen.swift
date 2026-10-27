@@ -6,35 +6,6 @@ import ViewModels
 /// El catálogo, empujado con valor desde Progreso para que tocar otra vez la pestaña lo cierre.
 struct CatalogRoute: Hashable {}
 
-/// La entrada al catálogo al final de Progreso (`.catalog-card`), una fila de sección: total y
-/// cuántos ejercicios no tienen grupo.
-struct CatalogCard: View {
-    let model: CatalogModel
-
-    var body: some View {
-        NavigationLink(value: CatalogRoute()) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(CatalogText.cardTitle).scaledFont(15, .medium).foregroundStyle(Theme.text)
-                    HStack(spacing: 4) {
-                        Text(CatalogText.cardSubtitle).foregroundStyle(Theme.textSecondary)
-                        if model.withoutGroup > 0 {
-                            Text(CatalogText.withoutGroup(model.withoutGroup)).fontWeight(.semibold).foregroundStyle(Theme.orange)
-                        }
-                    }
-                    .scaledFont(12)
-                }
-                Spacer()
-                Text(CatalogText.total(model.total)).scaledFont(12).foregroundStyle(Theme.textMuted)
-                Image(systemName: "chevron.right").scaledFont(13, .semibold).foregroundStyle(Theme.textMuted)
-            }
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("catalog-card")
-    }
-}
-
 /// La lista del catálogo por grupos, con buscador, y el editor de cada ejercicio. Una `List` de
 /// iOS con sus filas y sus secciones (cada una con su número de ejercicios), con los colores de la
 /// app, como Gráficas y Ajustes; antes eran las filas tarjeta de la PWA (2026-10-27).
@@ -77,6 +48,8 @@ struct CatalogScreen: View {
         }
         .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
         .navigationTitle(CatalogText.title)
+        // Lo que decía la tarjeta de Progreso: el total y los que no tienen grupo.
+        .navigationSubtitle(model.summary)
         .screenBackground()
         .keyboardDismissal()
         .onDisappear { model.leave() }

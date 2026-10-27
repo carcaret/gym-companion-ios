@@ -28,10 +28,10 @@ struct RootView: View {
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
-                    ProgressScreen(model: root.progress, footer: AnyView(CatalogCard(model: root.catalog)))
+                    ProgressScreen(model: root.progress)
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
-                        // El catálogo, siempre a la vista en la barra; la tarjeta del final, además,
-                        // dice cuántos hay y cuántos sin grupo (2026-10-27).
+                        // El catálogo, siempre a la vista en la barra (2026-10-27; antes, una tarjeta
+                        // al final de la lista).
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
                                 NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
