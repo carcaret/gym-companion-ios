@@ -9,10 +9,10 @@ struct SettingsScreen: View {
     /// La tecla de retorno pasa al campo siguiente, como en un formulario de iOS; en el último
     /// cierra el teclado.
     @FocusState private var focused: Field?
-    @Environment(\.dismiss) private var dismiss
 
+    /// En el orden en que se ven: la tecla de retorno pasa al siguiente.
     private enum Field: CaseIterable {
-        case repository, branch, path, token
+        case repository, token, branch, path
     }
 
     var body: some View {
@@ -23,6 +23,20 @@ struct SettingsScreen: View {
                     TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
                         .accessibilityIdentifier("settings-repository")
                 }
+                field(SettingsText.token, .token) {
+                    // Sin `textContentType(.password)`: no es una contraseña, y iOS ofrecía
+                    // guardarla en Contraseñas (2026-10-27).
+                    SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
+                        .accessibilityIdentifier("settings-token")
+                }
+                // Por qué no se guardó (la conexión falló), debajo de los campos.
+                if let result = model.connectionResult {
+                    NoticeLabel(notice: result)
+                        .accessibilityIdentifier("settings-connection-result")
+                }
+            }
+            .listRowBackground(Theme.surface)
+            Section(SettingsText.advancedSection) {
                 field(SettingsText.branch, .branch) {
                     TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
                         .accessibilityIdentifier("settings-branch")
@@ -31,36 +45,22 @@ struct SettingsScreen: View {
                     TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
                         .accessibilityIdentifier("settings-path")
                 }
-                field(SettingsText.token, .token) {
-                    SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
-                        .textContentType(.password)
-                        .accessibilityIdentifier("settings-token")
-                }
-            }
-            .listRowBackground(Theme.surface)
-            Section {
-                action(SettingsText.save, .saving) { Task { await model.save() } }
-                    .disabled(!model.canSave)
-                action(SettingsText.testConnection, .testing) { Task { await model.testConnection() } }
-                    .disabled(!model.canTestConnection)
-                // El resultado de la prueba, debajo de su botón (en la PWA, un aviso).
-                if let result = model.connectionResult {
-                    NoticeLabel(notice: result)
-                        .accessibilityIdentifier("settings-connection-result")
-                }
-            }
-            .listRowBackground(Theme.surface)
-            Section {
-                action(SettingsText.download, .downloading, role: .destructive) { model.requestDownload() }
-                    .disabled(!model.canTransfer)
-                    // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
-                    .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
-                                        titleVisibility: .visible) {
-                        Button(SyncText.downloadConfirm, role: .destructive) { Task { await model.confirmDownload() } }
-                        Button(SyncText.cancelLabel, role: .cancel) {}
-                    } message: {
-                        Text(SyncText.downloadWarning)
+                Button(role: .destructive) { model.requestDownload() } label: {
+                    HStack {
+                        Text(SettingsText.download)
+                        Spacer()
+                        if model.activity == .downloading { ProgressView() }
                     }
+                }
+                .disabled(!model.canTransfer)
+                // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
+                .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
+                                    titleVisibility: .visible) {
+                    Button(SyncText.downloadConfirm, role: .destructive) { Task { await model.confirmDownload() } }
+                    Button(SyncText.cancelLabel, role: .cancel) {}
+                } message: {
+                    Text(SyncText.downloadWarning)
+                }
             } footer: {
                 Text(model.versionLabel)
                     .frame(maxWidth: .infinity)
@@ -72,28 +72,31 @@ struct SettingsScreen: View {
         .navigationTitle(SettingsText.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(role: .close) { dismiss() }
+            ToolbarItem(placement: .cancellationAction) {
+                // Con algo escrito sin guardar, pregunta antes de tirarlo (antes lo tiraba).
+                Button(role: .close) { model.requestClose() }
                     .accessibilityIdentifier("settings-close")
+                    .confirmationDialog(SettingsText.discardTitle, isPresented: $model.isDiscardPromptPresented,
+                                        titleVisibility: .visible) {
+                        Button(SettingsText.discardConfirm, role: .destructive) { model.discardAndClose() }
+                        Button(SyncText.cancelLabel, role: .cancel) { model.keepEditing() }
+                    }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                // Prueba la conexión y, si va bien, guarda y cierra (como al añadir una cuenta).
+                if model.activity == .saving {
+                    ProgressView()
+                } else {
+                    Button(SettingsText.save) { Task { await model.save() } }
+                        .disabled(!model.canSave)
+                        .accessibilityIdentifier("settings-save")
+                }
             }
         }
         .interactiveDismissDisabled(model.hasUnsavedChanges)
         .screenBackground()
         .keyboardDismissal()
         .task { await model.load() }
-    }
-
-    /// Un botón del formulario; mientras hace lo suyo, una ruedita a la derecha (en la PWA, un aviso
-    /// «Probando conexión...», «Subiendo...»).
-    private func action(_ title: String, _ activity: SettingsModel.Activity, role: ButtonRole? = nil,
-                        perform: @escaping () -> Void) -> some View {
-        Button(role: role, action: perform) {
-            HStack {
-                Text(title)
-                Spacer()
-                if model.activity == activity { ProgressView() }
-            }
-        }
     }
 
     /// Una fila del formulario: el nombre a la izquierda y lo escrito a la derecha, como en los

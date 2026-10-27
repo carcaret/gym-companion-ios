@@ -4,8 +4,9 @@ import Observation
 import Presentation
 
 /// Los ajustes de sincronización (`views/settings.js` de la PWA), en la hoja que abre el indicador:
-/// dónde está el `db.json` de GitHub y el token, y los botones de probar, subir y descargar. La
-/// sincronización la hace `SyncModel`.
+/// dónde está el `db.json` de GitHub y el token. «Guardar» prueba lo escrito y, si va bien, guarda y
+/// cierra la hoja, como al añadir una cuenta de correo (2026-10-27; la PWA tenía «Probar conexión»
+/// aparte). La sincronización la hace `SyncModel`.
 @MainActor
 @Observable
 public final class SettingsModel {
@@ -14,17 +15,19 @@ public final class SettingsModel {
     public var branch = "" { didSet { connectionResult = nil } }
     public var path = "" { didSet { connectionResult = nil } }
     public var token = "" { didSet { connectionResult = nil } }
-    /// Confirmación de "Descargar de GitHub" (sobreescribe lo local).
+    /// Confirmación de «Sustituir por los datos de GitHub» (sobreescribe lo local).
     public var isDownloadConfirmationPresented = false
+    /// La X con algo escrito sin guardar: «Descartar cambios» o seguir.
+    public var isDiscardPromptPresented = false
 
-    /// Lo que está en marcha: su fila enseña una ruedita y los botones esperan (en la PWA, un
-    /// aviso «Probando conexión...», «Subiendo...»).
+    /// Lo que está en marcha: una ruedita en su sitio y los botones esperan (en la PWA, un aviso
+    /// «Probando conexión...»).
     public enum Activity: Hashable, Sendable {
-        case saving, testing, downloading
+        case saving, downloading
     }
 
     public private(set) var activity: Activity?
-    /// El resultado de «Probar conexión», debajo del botón.
+    /// Por qué no se guardó (la conexión falló), debajo de los campos.
     public private(set) var connectionResult: Notice?
 
     public let version: AppVersion
@@ -43,10 +46,10 @@ public final class SettingsModel {
     /// "Versión 0.1 (15)": lo que ha instalado el NAS.
     public var versionLabel: String { "Versión \(version.label)" }
 
-    /// Repo y token escritos, y nada en marcha.
-    public var canSave: Bool { activity == nil && SyncModel.isComplete(repository: repository, token: token) }
-    /// Se prueba lo escrito, sin guardarlo antes.
-    public var canTestConnection: Bool { canSave }
+    /// Algo cambiado, con repo y token escritos, y nada en marcha.
+    public var canSave: Bool {
+        activity == nil && hasUnsavedChanges && SyncModel.isComplete(repository: repository, token: token)
+    }
     /// Descargar trabaja con lo guardado.
     public var canTransfer: Bool { activity == nil && savedLocation != nil }
 
@@ -72,26 +75,40 @@ public final class SettingsModel {
 
     private var fields: [String] { [repository, branch, path, token] }
 
-    /// "Guardar": rama y ruta vacías toman las de siempre.
+    /// "Guardar": prueba lo escrito y, si va bien, lo guarda y cierra la hoja; si no, dice por qué
+    /// debajo de los campos y no guarda nada. Rama y ruta vacías toman las de siempre.
     public func save() async {
         guard canSave else { return }
-        await run(.saving) {
-            await sync.configure(repository: repository, branch: branch, path: path, token: token)
-            await load()
-        }
-    }
-
-    /// "Probar conexión": con lo escrito, sin guardar nada ni tocar los datos.
-    public func testConnection() async {
-        guard canTestConnection else { return }
         connectionResult = nil
-        await run(.testing) {
+        await run(.saving) {
             let result = await sync.testConnection(repository: repository, branch: branch, path: path, token: token)
-            connectionResult = result
+            guard result == SyncText.connected else {
+                connectionResult = result
+                return
+            }
+            let saved = await sync.configure(repository: repository, branch: branch, path: path, token: token)
+            await load()
+            if saved { sync.isSettingsPresented = false }
         }
     }
 
-    /// "Descargar de GitHub": primero se confirma.
+    /// La X: sin cambios, cierra; con cambios, pregunta antes de tirarlos.
+    public func requestClose() {
+        guard hasUnsavedChanges else { return sync.isSettingsPresented = false }
+        isDiscardPromptPresented = true
+    }
+
+    /// «Descartar cambios». No depende del diálogo, que SwiftUI cierra antes de la acción.
+    public func discardAndClose() {
+        isDiscardPromptPresented = false
+        sync.isSettingsPresented = false
+    }
+
+    public func keepEditing() {
+        isDiscardPromptPresented = false
+    }
+
+    /// «Sustituir por los datos de GitHub»: primero se confirma.
     public func requestDownload() {
         isDownloadConfirmationPresented = true
     }

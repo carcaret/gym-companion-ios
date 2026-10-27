@@ -181,8 +181,10 @@ public final class SyncModel {
 
     /// "Guardar": rama y ruta vacías toman las de siempre (`master`, `db.json`). Sin repo o sin
     /// token no guarda (el botón está desactivado).
-    public func configure(repository name: String, branch: String, path: String, token: String) async {
-        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return }
+    /// Devuelve si se guardó.
+    @discardableResult
+    public func configure(repository name: String, branch: String, path: String, token: String) async -> Bool {
+        guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return false }
         do {
             switch try await repository.configure(location, token: token) {
             case .downloaded(let remote):
@@ -194,8 +196,11 @@ public final class SyncModel {
             }
         } catch {
             notice = SyncText.configureFailed
+            await refresh()
+            return false
         }
         await refresh()
+        return true
     }
 
     /// Repo y token escritos, sin contar los espacios: lo mínimo para guardar o probar.

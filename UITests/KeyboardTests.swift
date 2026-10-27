@@ -10,8 +10,8 @@ final class KeyboardTests: XCTestCase {
     /// Los ajustes son un `Form`: como en los formularios de iOS, el teclado se cierra al desplazar
     /// (o con la tecla de retorno, `SettingsTests`), no al tocar una fila, donde el reconocedor de
     /// la ventana no actúa (decisión del usuario, 2026-10-26). Con algo escrito sin guardar, ese
-    /// mismo gesto no cierra la hoja (`SettingsModel.hasUnsavedChanges`); su botón sí, y la barra
-    /// de pestañas vuelve a responder.
+    /// mismo gesto no cierra la hoja (`SettingsModel.hasUnsavedChanges`); su X pregunta y, al
+    /// descartar, la cierra, y la barra de pestañas vuelve a responder.
     @MainActor
     func testDesplazarCierraElTecladoEnAjustes() {
         let app = openSettingsWithKeyboard()
@@ -23,6 +23,9 @@ final class KeyboardTests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
         XCTAssertTrue(app.navigationBars["Sincronización"].exists, "Deslizar cerró la hoja con algo sin guardar")
         app.buttons["settings-close"].tap()
+        let discard = app.buttons["Descartar cambios"].firstMatch
+        XCTAssertTrue(discard.appears(timeout: 5), "Con algo sin guardar, la X pregunta")
+        discard.tap()
         XCTAssertTrue(app.navigationBars["Sincronización"].waitForNonExistence(timeout: 5), "La hoja sigue abierta")
         app.tabBars.buttons["Historial"].tap()
         XCTAssertTrue(app.navigationBars["Historial"].appears(timeout: 5))

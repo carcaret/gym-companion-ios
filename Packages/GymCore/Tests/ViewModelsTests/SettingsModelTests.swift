@@ -60,7 +60,6 @@ struct SettingsTests {
         let settings = await SettingsHarness.make()
         settings.model.token = "ghp_token"
         #expect(!settings.model.canSave)
-        #expect(!settings.model.canTestConnection)
     }
 
     @Test("al abrir ajustes con PAT guardado, se muestra en el campo")
@@ -72,82 +71,135 @@ struct SettingsTests {
         #expect(settings.model.path == "db.json")
     }
 
+    // Cambiado con la aprobación del usuario (2026-10-27): «Guardar» prueba la conexión antes de
+    // guardar, y probarla no toca los datos (con datos en el iPhone, se suben).
     @Test("probar conexión NO modifica la DB")
     func testDoesNotModify() async {
         let settings = await SettingsHarness.make(configured: true, remote: TrainingData(catalog: Catalog([Exercise(id: "sentadilla", name: "Sentadilla")])))
-        await settings.model.testConnection()
-        #expect(settings.model.connectionResult != nil)
+        settings.model.branch = "otra"
+        await settings.model.save()
+        #expect(settings.model.connectionResult == nil)
         #expect(settings.app.data == PWATestDB.data)
         #expect(await settings.harness.savedLocally == PWATestDB.data)
     }
 }
 
-// Cambiados con la aprobación del usuario (2026-10-27, auditoría de los avisos): el resultado va
-// debajo del botón, en el formulario (`connectionResult`), no en un aviso; y se prueba lo escrito,
-// sin tener que guardarlo antes.
+// Cambiados con la aprobación del usuario (2026-10-27): no hay botón «Probar conexión»; «Guardar»
+// prueba lo escrito y, si va bien, guarda y cierra la hoja, como al añadir una cuenta de correo. Si
+// falla, el error sale debajo de los campos y no se guarda nada.
 @MainActor
 @Suite("probar conexión — respuestas de red")
 struct SettingsConnectionTests {
     @Test("probar conexión sin config guardada → toast de aviso")
     func notSaved() async {
         let settings = await SettingsHarness.make()
-        #expect(!settings.model.canTestConnection)
+        #expect(!settings.model.canSave)
         settings.model.repository = "u/r"
         settings.model.token = "ghp_sin_guardar"
-        #expect(settings.model.canTestConnection)
-        await settings.model.testConnection()
-        #expect(settings.model.connectionResult == SyncText.connected)
-        #expect(await settings.harness.credentials.token == nil)
+        #expect(settings.model.canSave)
+        settings.sync.showSettings()
+        await settings.model.save()
+        #expect(await settings.harness.credentials.token == "ghp_sin_guardar")
+        #expect(!settings.sync.isSettingsPresented, "Bien guardado, la hoja se cierra")
     }
 
     @Test("probar conexión con respuesta 200 → toast de éxito")
     func ok() async {
         let settings = await SettingsHarness.make(configured: true)
-        await settings.model.testConnection()
-        #expect(settings.model.connectionResult?.text == "Conexión exitosa")
-        #expect(settings.app.notice == nil)
+        settings.sync.showSettings()
+        settings.model.branch = "main2"
+        await settings.model.save()
+        #expect(settings.model.connectionResult == nil)
+        #expect(!settings.sync.isSettingsPresented)
+        #expect(await settings.harness.settings.settings.location?.branch == "main2")
     }
 
     @Test("probar conexión con 401 → toast de error con código")
     func unauthorized() async {
         let settings = await SettingsHarness.make(configured: true)
+        settings.sync.showSettings()
         await settings.harness.remote.fail(fetch: .status(401))
-        await settings.model.testConnection()
+        settings.model.token = "ghp_otro"
+        await settings.model.save()
         #expect(settings.model.connectionResult?.text.contains("401") == true)
         #expect(settings.model.connectionResult?.kind == .error)
+        #expect(settings.sync.isSettingsPresented, "Con error, la hoja sigue abierta")
+        #expect(await settings.harness.credentials.token == SyncFixtures.token, "No se guarda nada")
     }
 
     @Test("probar conexión con fallo de red → toast de error genérico")
     func offline() async {
         let settings = await SettingsHarness.make(configured: true)
         await settings.harness.remote.fail(fetch: .unreachable)
-        await settings.model.testConnection()
+        settings.model.token = "ghp_otro"
+        await settings.model.save()
         #expect(settings.model.connectionResult == SyncText.offline)
+        #expect(await settings.harness.credentials.token == SyncFixtures.token)
     }
 
     @Test("al cambiar un campo, el resultado de la prueba anterior se va")
     func resultClears() async {
         let settings = await SettingsHarness.make(configured: true)
-        await settings.model.testConnection()
+        await settings.harness.remote.fail(fetch: .unreachable)
+        settings.model.token = "ghp_otro"
+        await settings.model.save()
         #expect(settings.model.connectionResult != nil)
         settings.model.branch = "otra"
         #expect(settings.model.connectionResult == nil)
     }
 
-    @Test("mientras prueba, la fila lo dice y los botones esperan")
+    @Test("mientras guarda, la barra lo dice y los botones esperan")
     func activity() async {
         let settings = await SettingsHarness.make(configured: true)
+        settings.model.branch = "otra"
         await settings.harness.remote.holdFetches()
-        let testing = Task { await settings.model.testConnection() }
+        let saving = Task { await settings.model.save() }
         await settings.harness.remote.waitForHeldFetch()
-        #expect(settings.model.activity == .testing)
+        #expect(settings.model.activity == .saving)
         #expect(!settings.model.canSave)
-        #expect(!settings.model.canTestConnection)
         #expect(!settings.model.canTransfer)
         await settings.harness.remote.releaseFetches()
-        await testing.value
+        await saving.value
         #expect(settings.model.activity == nil)
         #expect(settings.model.canTransfer)
+    }
+}
+
+// Propio de la app (2026-10-27): cerrar la hoja con algo escrito sin guardar pregunta antes.
+@MainActor
+@Suite("Ajustes — cerrar")
+struct SettingsCloseTests {
+    @Test("sin cambios, la X cierra al momento")
+    func closeClean() async {
+        let settings = await SettingsHarness.make(configured: true)
+        settings.sync.showSettings()
+        settings.model.requestClose()
+        #expect(!settings.sync.isSettingsPresented)
+        #expect(!settings.model.isDiscardPromptPresented)
+    }
+
+    @Test("con cambios, la X pregunta; descartar cierra y seguir deja lo escrito")
+    func closeDirty() async {
+        let settings = await SettingsHarness.make(configured: true)
+        settings.sync.showSettings()
+        settings.model.repository = "otro/repo"
+        settings.model.requestClose()
+        #expect(settings.model.isDiscardPromptPresented)
+        #expect(settings.sync.isSettingsPresented)
+        settings.model.keepEditing()
+        #expect(settings.model.repository == "otro/repo")
+        settings.model.requestClose()
+        settings.model.keepEditing()
+        settings.model.discardAndClose()
+        #expect(!settings.sync.isSettingsPresented)
+    }
+
+    @Test("sin cambios, Guardar no se ofrece")
+    func saveNeedsChanges() async {
+        let settings = await SettingsHarness.make(configured: true)
+        #expect(!settings.model.canSave)
+        settings.model.path = "otro.json"
+        #expect(settings.model.canSave)
     }
 }
 
