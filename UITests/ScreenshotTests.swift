@@ -63,7 +63,17 @@ final class ScreenshotTests: XCTestCase {
         first.tap()
         XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
+        // Con la tarjeta ya abierta del todo: sin esperar, la captura salía a medio abrir.
+        XCTAssertTrue(app.descendants(matching: .any)["series-0"].firstMatch.appears(timeout: 10))
         capture(app, "21-historial-detalle")
+
+        app.buttons["session-edit"].tap()
+        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 10))
+        XCTAssertTrue(app.buttons["weight-plus"].firstMatch.appears(timeout: 10))
+        capture(app, "22-historial-editando")
+        // Sin cambios, «Cancelar» cierra la hoja sin preguntar.
+        app.buttons["session-cancel"].tap()
+        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 10))
 
         app.tabBars.buttons["Gráficas"].tap()
         let exercise = app.buttons["chart-exercise"]
