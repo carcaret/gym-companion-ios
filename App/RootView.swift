@@ -62,7 +62,7 @@ struct RootView: View {
         // las filas de las tarjetas ya no caben en el ancho de un iPhone.
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         // Solo en la rama de prueba visual: si iOS pide reducir el movimiento.
-        .overlay(alignment: .bottomLeading) { ReduceMotionProbe().padding(.bottom, 90).padding(.leading, 8) }
+        .overlay(alignment: .bottomLeading) { ReduceMotionProbe().padding(.bottom, 120).padding(.leading, 8) }
     }
 
     private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
@@ -80,12 +80,22 @@ struct RootView: View {
 
 private struct ReduceMotionProbe: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var wide = false
 
     var body: some View {
+        VStack(alignment: .leading) {
+            Button { withAnimation(.linear(duration: 2)) { wide.toggle() } } label: {
+                Rectangle().fill(.yellow).frame(width: wide ? 300 : 30, height: 24)
+            }
+            .accessibilityIdentifier("sonda-animacion")
+            label
+        }
+    }
+
+    private var label: some View {
         Text("REDUCIR MOVIMIENTO: \(reduceMotion ? "SÍ" : "NO") · UIKit: \(UIAccessibility.isReduceMotionEnabled ? "SÍ" : "NO")")
             .font(.system(size: 14, weight: .bold))
             .foregroundStyle(.yellow)
             .background(.black)
-            .allowsHitTesting(false)
     }
 }

@@ -27,6 +27,13 @@ final class VideoTarjetasTests: XCTestCase {
         XCTAssertTrue(routine.appears(timeout: 20))
         pause()
 
+        mark("sonda: crecer en 2 s")
+        app.buttons["sonda-animacion"].tap()
+        pause(3)
+        mark("sonda: encoger en 2 s")
+        app.buttons["sonda-animacion"].tap()
+        pause(3)
+
         mark("rutina: pulsación larga a la derecha")
         routine.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).press(forDuration: 1.0)
         let card = app.buttons["card-press_banca"].firstMatch
