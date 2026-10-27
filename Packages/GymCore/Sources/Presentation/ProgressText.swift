@@ -33,9 +33,9 @@ public enum ProgressText {
 public enum GroupText {
     private static let spelled: [MuscleGroup: String] = [.biceps: "Bíceps", .triceps: "Tríceps"]
 
-    /// "Bíceps", "Pecho"…; sin grupo, "(sin grupo)".
+    /// "Bíceps", "Pecho"…; sin grupo, "Sin grupo" (la PWA, "(sin grupo)").
     public static func name(_ group: MuscleGroup?) -> String {
-        guard let group else { return "(sin grupo)" }
+        guard let group else { return "Sin grupo" }
         return spelled[group] ?? group.rawValue.prefix(1).uppercased() + group.rawValue.dropFirst()
     }
 }

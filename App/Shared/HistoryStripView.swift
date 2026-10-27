@@ -64,7 +64,7 @@ struct HistoryStripView: View {
             AxisMarks(values: keys) { value in
                 AxisValueLabel {
                     if let key = value.as(String.self), let index = Int(key) {
-                        Text(strip.bars[index].dateLabel).scaledFont(9).foregroundStyle(Theme.textSecondary)
+                        Text(strip.bars[index].dateLabel).scaledFont(11).foregroundStyle(Theme.textSecondary)
                             .fixedSize()  // con letra grande, entera aunque roce la de al lado
                     }
                 }

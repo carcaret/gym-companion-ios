@@ -7,7 +7,7 @@ public enum ChartsText {
     public static let to = "Hasta"
     public static let exercise = "Ejercicio"
     public static let chooseExercise = "Elegir"
-    public static let searchPlaceholder = "Buscar ejercicio..."
+    public static let searchPlaceholder = "Buscar ejercicio…"
     public static let inRoutine = "En rutinas"
     public static let others = "Otros"
     public static let noResults = "Sin resultados"

@@ -11,7 +11,7 @@ public enum SettingsText {
     public static let path = "Ruta del fichero"
     public static let pathPlaceholder = "db.json"
     public static let token = "Token (PAT)"
-    public static let tokenPlaceholder = "ghp_..."
+    public static let tokenPlaceholder = "ghp_…"
     public static let save = "Guardar"
     public static let testConnection = "Probar conexión"
     /// Para recuperar los datos de GitHub (la subida es automática; «Subir a GitHub» se quitó el

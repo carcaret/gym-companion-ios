@@ -13,9 +13,9 @@ public enum TodayText {
     public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 
-    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo..." (los tres primeros).
+    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros).
     public static func routineSummary(_ names: [String]) -> String {
-        let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "..." : "")
+        let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "…" : "")
         return "\(names.count) ejercicios · \(preview)"
     }
 
@@ -54,7 +54,7 @@ public enum TodayText {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     public static func addTitle(_ routine: String) -> String { "Añadir a \(routine)" }
-    public static let searchPlaceholder = "Buscar ejercicio..."
+    public static let searchPlaceholder = "Buscar ejercicio…"
     public static let oneOffToggle = "Solo esta sesión"
     public static let createExercise = "Crear nuevo ejercicio"
     public static let createTitle = "Crear nuevo ejercicio"

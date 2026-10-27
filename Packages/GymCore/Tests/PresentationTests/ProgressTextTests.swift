@@ -63,12 +63,14 @@ struct RowPhraseTests {
 
 @Suite("Nombres de grupo")
 struct GroupNameTests {
-    @Test("con su ortografía, sin grupo entre paréntesis")
+    // «Sin grupo», sin los paréntesis de la PWA (cambiado con la aprobación del usuario,
+    // 2026-10-27).
+    @Test("con su ortografía, y «Sin grupo» sin paréntesis")
     func names() {
         #expect(GroupText.name(.biceps) == "Bíceps")
         #expect(GroupText.name(.triceps) == "Tríceps")
         #expect(GroupText.name(.pecho) == "Pecho")
         #expect(GroupText.name("brazos") == "Brazos")
-        #expect(GroupText.name(nil) == "(sin grupo)")
+        #expect(GroupText.name(nil) == "Sin grupo")
     }
 }

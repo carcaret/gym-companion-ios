@@ -6,9 +6,9 @@ public enum WatchText {
     public static let noWorkout = "Sin entreno en curso"
     public static let firstTime = "Primera vez"
 
-    /// "12-12-11-10": las reps de cada serie, aunque se repitan; una serie sin reps, "—".
+    /// "12·12·11·10": las reps de cada serie, aunque se repitan; una serie sin reps, "—".
     public static func reps(_ reps: [Int?]) -> String {
-        reps.map { $0.map(String.init) ?? TodayText.emptyRep }.joined(separator: "-")
+        LogText.reps(reps)
     }
 
     /// "62,5 kg", o "Peso corporal" sin peso.

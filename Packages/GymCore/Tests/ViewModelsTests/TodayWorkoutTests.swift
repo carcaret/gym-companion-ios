@@ -5,6 +5,9 @@ import Presentation
 import Testing
 import ViewModels
 
+// Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
+// 2026-10-27; en la PWA, «10-8-10» y «10---8»).
+
 // Port por comportamiento de los e2e del entreno en curso. "La card abierta" es `isOpen`; el
 // input de peso, `weight`; las celdas de serie, `cells`; los chips, `chips`.
 
@@ -304,12 +307,12 @@ struct WorkoutSubtitleTests {
 
     @Test("subtítulo muestra reps reales al iniciar si difieren del historial previo")
     func pressReps() async {
-        #expect(await started().model.activeCards[0].subtitle.contains("10-10-8"))
+        #expect(await started().model.activeCards[0].subtitle.contains("10·10·8"))
     }
 
     @Test("subtítulo muestra reps de curl_biceps al iniciar si difieren")
     func curlReps() async {
-        #expect(await started().model.activeCards[1].subtitle.contains("12-12-10"))
+        #expect(await started().model.activeCards[1].subtitle.contains("12·12·10"))
     }
 
     @Test("subtítulo NO muestra reps cuando todas coinciden con expected")
@@ -319,7 +322,7 @@ struct WorkoutSubtitleTests {
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10-10"))
+        #expect(!subtitle.contains("10·10"))
     }
 
     @Test("subtítulo se actualiza al cambiar una rep")
@@ -327,7 +330,7 @@ struct WorkoutSubtitleTests {
         let today = await started()
         today.model.focusSeries(2, at: 0)
         await today.model.chooseRep(7, series: 2, at: 0)
-        #expect(today.model.activeCards[0].subtitle.contains("10-10-7"))
+        #expect(today.model.activeCards[0].subtitle.contains("10·10·7"))
     }
 
     @Test("subtítulo se actualiza tras ajustar peso")
@@ -337,7 +340,7 @@ struct WorkoutSubtitleTests {
         await today.model.adjust(.weight, direction: 1, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("\(LogText.kilograms(initial + ExerciseLog.weightStep(for: initial))) kg"))
-        #expect(subtitle.contains("10-10-8"))
+        #expect(subtitle.contains("10·10·8"))
     }
 
     @Test("subtítulo incluye peso y series x reps esperadas junto a las reales")
@@ -345,7 +348,7 @@ struct WorkoutSubtitleTests {
         let subtitle = await started().model.activeCards[0].subtitle
         #expect(subtitle.contains("60 kg"))
         #expect(subtitle.contains("3×10"))
-        #expect(subtitle.contains("10-10-8"))
+        #expect(subtitle.contains("10·10·8"))
     }
 
     @Test("reps desaparecen del subtítulo si se corrigen para coincidir con expected")
@@ -354,7 +357,7 @@ struct WorkoutSubtitleTests {
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10-10"))
+        #expect(!subtitle.contains("10·10"))
     }
 }
 

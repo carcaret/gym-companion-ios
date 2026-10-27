@@ -60,7 +60,8 @@ struct CatalogTests {
         let catalog = await CatalogHarness.make()
         #expect(catalog.rows.count == 4)
         #expect(catalog.rows.contains { $0.name == "Peso Muerto Rumano" })
-        #expect(catalog.model.sections.contains { $0.title == "(sin grupo)" })
+        // «Sin grupo», sin los paréntesis de la PWA (cambiado con la aprobación del usuario, 2026-10-27).
+        #expect(catalog.model.sections.contains { $0.title == "Sin grupo" })
     }
 
     @Test("el buscador filtra ignorando tildes")
@@ -99,7 +100,7 @@ struct CatalogTests {
         catalog.model.edit("huerfano")
         catalog.model.setGroup(.core)
         await catalog.model.save()
-        #expect(!catalog.model.sections.contains { $0.title == "(sin grupo)" })
+        #expect(!catalog.model.sections.contains { $0.title == "Sin grupo" })
         let core = try #require(catalog.model.sections.first { $0.title == "Core" })
         #expect(core.rows.map(\.name) == ["Ejercicio Huérfano"])
     }

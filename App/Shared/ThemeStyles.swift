@@ -36,7 +36,7 @@ extension View {
 
     /// Etiqueta de sección de la PWA: mayúsculas pequeñas, en gris.
     func sectionLabelStyle() -> some View {
-        scaledFont(10, .medium)
+        scaledFont(11, .medium)
             .textCase(.uppercase)
             .tracking(0.4)
             .foregroundStyle(Theme.textSecondary)

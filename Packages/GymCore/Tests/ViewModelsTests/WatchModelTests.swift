@@ -3,6 +3,9 @@ import GymCoreTesting
 import Testing
 import ViewModels
 
+// Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
+// 2026-10-27; en la PWA, «10-8-10» y «10---8»).
+
 // La pantalla del reloj (#16): una página por ejercicio del entreno en curso.
 
 @MainActor
@@ -45,7 +48,7 @@ struct WatchModelTests {
         #expect(pages.map(\.name) == ["Press Banca", "Dominadas"])
         #expect(pages.map(\.position) == ["1/2", "2/2"])
         #expect(pages.map(\.weight) == ["62,5 kg", "Peso corporal"])
-        #expect(pages.map(\.reps) == ["12-12-11-10", "8-8-6"])
+        #expect(pages.map(\.reps) == ["12·12·11·10", "8·8·6"])
     }
 
     @Test("las sesiones anteriores, una fila por sesión con la fecha y las reps")
@@ -57,8 +60,8 @@ struct WatchModelTests {
         ])]))
         guard case .workout(let pages) = model.content else { Issue.record("sin entreno"); return }
         #expect(pages[0].previous == [
-            WatchModel.PreviousRow(date: "21 oct", reps: "12-12-11-10"),
-            WatchModel.PreviousRow(date: "17 oct", reps: "12-11-—-10"),
+            WatchModel.PreviousRow(date: "21 oct", reps: "12·12·11·10"),
+            WatchModel.PreviousRow(date: "17 oct", reps: "12·11·—·10"),
         ])
         #expect(pages[0].noPrevious == nil)
     }

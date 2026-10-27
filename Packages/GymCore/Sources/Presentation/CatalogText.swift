@@ -8,7 +8,7 @@ public enum CatalogText {
     public static func withoutGroup(_ count: Int) -> String { "\(count) sin grupo" }
 
     public static let title = "Ejercicios"
-    public static let searchPlaceholder = "Buscar ejercicio..."
+    public static let searchPlaceholder = "Buscar ejercicio…"
     /// Sin ejercicios en el catálogo (sin coincidencias con lo buscado lo dice la búsqueda de iOS).
     public static let empty = "Aún no hay ejercicios"
 

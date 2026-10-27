@@ -161,7 +161,7 @@ private struct HistoryRowView: View {
         HStack(spacing: 14) {
             VStack(spacing: 2) {
                 Text(row.day).scaledFont(20, .bold).monospacedDigit().foregroundStyle(Theme.text)
-                Text(row.month).scaledFont(9.5, .semibold).tracking(0.4).foregroundStyle(Theme.textMuted)
+                Text(row.month).scaledFont(11, .semibold).tracking(0.4).foregroundStyle(Theme.textMuted)
             }
             .frame(minWidth: 40)
             Rectangle().fill(Theme.border).frame(width: 1, height: 32)
@@ -172,7 +172,7 @@ private struct HistoryRowView: View {
                         Text(relative).scaledFont(11).foregroundStyle(Theme.textSecondary)
                     }
                     if row.isIncomplete {
-                        Image(systemName: "pause.fill").scaledFont(10).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
+                        Image(systemName: "pause.fill").scaledFont(11).foregroundStyle(Theme.accent).accessibilityLabel(HistoryText.incomplete)
                     }
                 }
                 Text(row.summary).scaledFont(12).foregroundStyle(Theme.textSecondary).lineLimit(2)
@@ -193,7 +193,7 @@ struct RoutineBadge: View {
 
     var body: some View {
         Text(text)
-            .scaledFont(9.5, .bold)
+            .scaledFont(11, .bold)
             .textCase(.uppercase)
             .tracking(0.4)
             .lineLimit(1)

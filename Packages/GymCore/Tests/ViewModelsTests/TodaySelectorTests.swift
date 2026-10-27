@@ -76,7 +76,7 @@ struct RoutineRowTests {
         var data = PWATestDB.data
         data.routines[0].exerciseIDs.append("sentadilla")
         let longer = await TodayHarness.make(data)
-        #expect(longer.model.routineRows[0].subtitle == "4 ejercicios · Press Banca, Curl Bíceps, Ejercicio Sin Historial...")
+        #expect(longer.model.routineRows[0].subtitle == "4 ejercicios · Press Banca, Curl Bíceps, Ejercicio Sin Historial…")
     }
 
     @Test("cada rutina lleva su color (filete y título de la PWA)")

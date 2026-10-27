@@ -228,7 +228,7 @@ private struct SeriesCellView: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(cell.label).scaledFont(10).foregroundStyle(Theme.textMuted)
+            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textMuted)
             if let onTap {
                 Button(action: onTap) { valueText }
                     .buttonStyle(.plain)
