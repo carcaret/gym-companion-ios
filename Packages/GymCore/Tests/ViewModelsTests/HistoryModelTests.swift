@@ -125,19 +125,19 @@ struct HistoryFullTests {
         #expect(history.model.hasChanges)
     }
 
-    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): volver con cambios
-    // (tocar otra vez la pestaña; la flecha y el gesto no están mientras se edita) pregunta antes, y
-    // descartar vuelve a la lista con lo guardado.
+    // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): se edita en una hoja que
+    // tapa las pestañas y la flecha; para salir con cambios, «Cancelar» pregunta, y descartar deja
+    // lo guardado al volver.
     @Test("navegar atras sin guardar descarta cambios")
     func discardOnBack() async {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
         let original = history.model.cards[0].weight
         history.model.set(.weight, text: "999", at: 0)
-        history.model.reselect()
+        history.model.cancelEditing()
         #expect(history.model.isDiscardPromptPresented)
-        #expect(history.model.selectedDate != nil)
-        history.model.discardChanges(history.model.discardPrompt!)
+        history.model.discardChanges()
+        history.model.back()
         #expect(history.model.selectedDate == nil)
         history.openFirstAndExpand()
         #expect(history.model.cards[0].weight == original)
@@ -514,7 +514,7 @@ struct HistoryValidationTests {
         history.model.set(.weight, text: "999", at: 0)
         history.model.cancelEditing()
         #expect(history.model.isDiscardPromptPresented)
-        history.model.discardChanges(history.model.discardPrompt!)
+        history.model.discardChanges()
         #expect(!history.model.isEditing)
         #expect(history.model.selectedDate != nil)
         #expect(history.model.cards[0].weight == original)
@@ -648,15 +648,15 @@ struct HistoryEditingTests {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
         history.model.set(.weight, text: "999", at: 0)
-        history.model.reselect()
-        let prompt = try #require(history.model.discardPrompt)
+        history.model.cancelEditing()
+        #expect(history.model.isDiscardPromptPresented)
         history.model.keepEditing()
-        history.model.discardChanges(prompt)
-        #expect(history.model.selectedDate == nil)
+        history.model.discardChanges()
         #expect(!history.model.isEditing)
+        #expect(history.model.selectedDate != nil, "Descartar cierra la hoja y deja el detalle")
     }
 
-    @Test("tocar otra vez la pestaña sin cambios vuelve a la lista sin preguntar")
+    @Test("tocar otra vez la pestaña vuelve a la lista y no deja nada a medias")
     func reselectClean() async {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()

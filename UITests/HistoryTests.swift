@@ -90,8 +90,8 @@ final class HistoryTests: XCTestCase {
         let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: notice)
         wait(for: [gone], timeout: 5)
     }
-    /// El detalle es de solo lectura y se corrige con «Editar» (2026-10-27): mientras se edita no se
-    /// vuelve deslizando, y «Cancelar» con cambios pregunta y, al descartar, deja lo guardado.
+    /// El detalle es de solo lectura y se corrige con «Editar», en una hoja (2026-10-27): con cambios
+    /// no se cierra deslizando, y «Cancelar» pregunta y, al descartar, deja lo guardado.
     @MainActor
     func testEditarYCancelarDescarta() {
         let app = openFirstSessionCard()
@@ -106,10 +106,9 @@ final class HistoryTests: XCTestCase {
         plus.tap()
         XCTAssertNotEqual(app.textFields["weight-field"].firstMatch.value as? String, saved)
 
-        // Deslizar desde el borde no vuelve a la lista mientras se edita.
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
-            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
-        XCTAssertTrue(app.buttons["session-cancel"].appears(timeout: 5), "Editando no se vuelve deslizando")
+        // La hoja de editar, con cambios, no se cierra deslizando hacia abajo.
+        app.navigationBars.firstMatch.swipeDown()
+        XCTAssertTrue(app.buttons["session-cancel"].appears(timeout: 5), "Con cambios, deslizar no cierra la hoja")
 
         app.buttons["session-cancel"].tap()
         let discard = app.buttons["Descartar cambios"].firstMatch
@@ -117,26 +116,6 @@ final class HistoryTests: XCTestCase {
         discard.tap()
         XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 5))
         XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
-    }
-
-    /// Con cambios, tocar otra vez la pestaña pregunta antes de tirarlos y no sale del detalle
-    /// (revisión del 2026-10-27: si iOS sacaba el detalle por su cuenta, se perdían sin preguntar).
-    @MainActor
-    func testTocarLaPestanaConCambiosPregunta() {
-        let app = openFirstSessionCard()
-        app.buttons["session-edit"].tap()
-        let plus = app.buttons["weight-plus"].firstMatch
-        XCTAssertTrue(plus.appears(timeout: 5))
-        plus.tap()
-        let edited = app.textFields["weight-field"].firstMatch.value as? String
-
-        app.tabBars.buttons["Historial"].tap()
-        let discard = app.buttons["Descartar cambios"].firstMatch
-        XCTAssertTrue(discard.appears(timeout: 5), "Tiene que preguntar antes de tirar los cambios")
-        // En iOS 26 el diálogo es un globo sin «Seguir editando»: tocar fuera sigue editando.
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 5), "Cerrar el diálogo deja la edición")
-        XCTAssertEqual(app.textFields["weight-field"].firstMatch.value as? String, edited)
     }
 
     /// «OK» guarda y vuelve a solo lectura con lo cambiado.

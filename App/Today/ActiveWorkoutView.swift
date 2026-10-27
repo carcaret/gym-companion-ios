@@ -157,6 +157,7 @@ struct ExercisePickerSheet: View {
                 Text(model.createMessage ?? TodayText.createNameLabel)
             }
         }
-        .presentationDetents([.medium, .large])
+        // Siempre grande: a media altura, al cerrarse el teclado la hoja se encogía, la fila se
+        // movía bajo el dedo e iOS cancelaba el toque (vídeo del CI y el iPhone, 2026-10-27).
     }
 }

@@ -87,7 +87,7 @@ struct HistoryTypingTests {
         let original = history.model.cards[0].weight
         history.model.type(.weight, text: "75", at: 0)
         history.model.cancelEditing()
-        history.model.discardChanges(history.model.discardPrompt!)
+        history.model.discardChanges()
         #expect(history.model.typed == nil)
         #expect(history.model.cards[0].weight == original)
     }

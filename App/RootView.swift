@@ -24,7 +24,7 @@ struct RootView: View {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
             Tab("Historial", systemImage: "clock", value: AppTab.history) {
-                stack(.history) { HistoryScreen(model: root.history, sync: root.sync) }
+                stack(.history) { HistoryScreen(model: root.history, sync: root.sync, noticeDuration: root.noticeDuration) }
             }
             Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
@@ -71,7 +71,8 @@ struct RootView: View {
         } message: {
             Text(DataErrorText.saveMessage)
         }
-        .syncPresentation(root.sync, noticeDuration: root.noticeDuration, isActive: !root.sync.isSettingsPresented)
+        .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
+                          isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
             NavigationStack { SettingsScreen(model: root.settings) }
                 .syncPresentation(root.sync, noticeDuration: root.noticeDuration)

@@ -7,6 +7,8 @@ import ViewModels
 struct HistoryScreen: View {
     @Bindable var model: HistoryModel
     let sync: SyncModel
+    /// Para los avisos de la hoja de editar (`CompositionRoot.noticeDuration`).
+    let noticeDuration: Duration
 
     var body: some View {
         list
@@ -19,7 +21,7 @@ struct HistoryScreen: View {
             )) {
                 // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
                 // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
-                SessionDetail(model: model)
+                SessionDetail(model: model, sync: sync, noticeDuration: noticeDuration)
                     .syncToolbar()
                     .navigationTitle(model.detailTitle)
                     .navigationSubtitle(model.detailSubtitle)
@@ -73,9 +75,13 @@ struct HistoryScreen: View {
     }
 }
 
-/// El detalle de una sesión, empujado sobre la lista.
+/// El detalle de una sesión, empujado sobre la lista: de solo lectura. «Editar» abre la sesión en
+/// una hoja (`SessionEditor`), como un contacto o un evento del Calendario (2026-10-27): la hoja
+/// tapa las pestañas y la flecha, así que nada saca la sesión a medias y se pierde sin preguntar.
 private struct SessionDetail: View {
     @Bindable var model: HistoryModel
+    let sync: SyncModel
+    let noticeDuration: Duration
 
     var body: some View {
         ScrollView {
@@ -89,49 +95,40 @@ private struct SessionDetail: View {
                         .background(Theme.accent.opacity(0.18), in: .capsule)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                ForEach(Array(model.cards.enumerated()), id: \.offset) { index, card in
-                    // Sin acciones, solo lectura: los controles salen al tocar «Editar».
-                    ExerciseCardView(card: card, toggle: { model.toggleCard(index) }, actions: card.isEditable ? actions(index) : nil)
-                }
+                SessionCards(model: model)
             }
             .padding()
         }
-        .keyboardDismissal()
-        // Mientras se edita, «Cancelar» y «OK» sustituyen a la flecha; sin ella, iOS apaga también
-        // volver deslizando, y nada se pierde sin preguntar.
-        .navigationBarBackButtonHidden(model.isEditing)
         .toolbar {
-            if model.isEditing {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(HistoryText.cancel) { model.cancelEditing() }
-                        .accessibilityIdentifier("session-cancel")
-                        // Colgado de «Cancelar»: en iOS 26 el diálogo sale como globo que apunta a
-                        // su vista. `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes.
-                        .confirmationDialog(HistoryText.discardTitle, isPresented: Binding(
-                            get: { model.discardPrompt != nil }, set: { if !$0 { model.keepEditing() } }
-                        ), titleVisibility: .visible, presenting: model.discardPrompt) { prompt in
-                            Button(HistoryText.discardConfirm, role: .destructive) { model.discardChanges(prompt) }
-                            Button(HistoryText.keepEditing, role: .cancel) { model.keepEditing() }
-                        }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(HistoryText.done) { Task { await model.finishEditing() } }
-                        .accessibilityIdentifier("session-done")
-                }
-            } else {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(HistoryText.edit) { model.startEditing() }
-                        .accessibilityIdentifier("session-edit")
-                }
+            ToolbarItem(placement: .primaryAction) {
+                Button(HistoryText.edit) { model.startEditing() }
+                    .accessibilityIdentifier("session-edit")
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if model.isIncomplete && !model.isEditing {
+            if model.isIncomplete {
                 BottomActions(primary: {
                     Button { Task { await model.completeWorkout() } } label: { Text(HistoryText.completeWorkout).frame(maxWidth: .infinity) }
                         .buttonStyle(.glassPill())
                 })
             }
+        }
+        // Deslizarla hacia abajo es cancelar: sin cambios, se cierra; con cambios, no se deja.
+        .sheet(isPresented: Binding(get: { model.isEditing }, set: { if !$0 { model.cancelEditing() } })) {
+            NavigationStack { SessionEditor(model: model) }
+                // Lo que cuelga de la raíz queda debajo de la hoja: avisos y conflicto, aquí.
+                .syncPresentation(sync, noticeDuration: noticeDuration)
+        }
+    }
+}
+
+/// Las tarjetas de la sesión: de solo lectura en el detalle, editables en la hoja.
+private struct SessionCards: View {
+    @Bindable var model: HistoryModel
+
+    var body: some View {
+        ForEach(Array(model.cards.enumerated()), id: \.offset) { index, card in
+            ExerciseCardView(card: card, toggle: { model.toggleCard(index) }, actions: card.isEditable ? actions(index) : nil)
         }
     }
 
@@ -143,6 +140,42 @@ private struct SessionDetail: View {
             focusSeries: { series in model.focusSeries(series, at: index) },
             chooseRep: { value, series in model.chooseRep(value, series: series, at: index) }
         )
+    }
+}
+
+/// La hoja de editar una sesión: «Cancelar» y «OK», y con cambios no se cierra deslizando.
+private struct SessionEditor: View {
+    @Bindable var model: HistoryModel
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) { SessionCards(model: model) }
+                .padding()
+        }
+        .keyboardDismissal()
+        .screenBackground()
+        .navigationTitle(model.detailTitle)
+        .navigationSubtitle(model.detailSubtitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .interactiveDismissDisabled(model.hasChanges)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(HistoryText.cancel) { model.cancelEditing() }
+                    .accessibilityIdentifier("session-cancel")
+                    // Colgado de «Cancelar»: en iOS 26 el diálogo sale como globo que apunta a su
+                    // vista, y se cierra tocando fuera (sigue editando).
+                    .confirmationDialog(HistoryText.discardTitle, isPresented: Binding(
+                        get: { model.isDiscardPromptPresented }, set: { if !$0 { model.keepEditing() } }
+                    ), titleVisibility: .visible) {
+                        Button(HistoryText.discardConfirm, role: .destructive) { model.discardChanges() }
+                        Button(HistoryText.keepEditing, role: .cancel) { model.keepEditing() }
+                    }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(HistoryText.done) { Task { await model.finishEditing() } }
+                    .accessibilityIdentifier("session-done")
+            }
+        }
     }
 }
 

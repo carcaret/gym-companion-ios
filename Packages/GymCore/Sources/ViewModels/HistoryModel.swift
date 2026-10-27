@@ -5,9 +5,9 @@ import Presentation
 
 /// La pestaña Historial (`views/historial.js` de la PWA): la lista de sesiones, de la más reciente
 /// a la más antigua, y el detalle de una. El detalle es de solo lectura y se corrige con «Editar»,
-/// como en Contactos (2026-10-27; la PWA tenía un «Guardar» por tarjeta, y cerrarla o volver tiraba
-/// lo corregido sin avisar): los cambios van sobre una copia de la sesión, «OK» la guarda entera y
-/// «Cancelar» con cambios pregunta antes de tirarlos.
+/// en una hoja, como un contacto o un evento del Calendario (2026-10-27; la PWA tenía un «Guardar»
+/// por tarjeta, y cerrarla o volver tiraba lo corregido sin avisar): los cambios van sobre una copia
+/// de la sesión, «OK» guarda lo cambiado y «Cancelar» con cambios pregunta antes de tirarlos.
 @MainActor
 @Observable
 public final class HistoryModel {
@@ -23,12 +23,6 @@ public final class HistoryModel {
         /// Sin terminar: se pinta con tinte azul y el icono de pausa.
         public let isIncomplete: Bool
         public let tint: RoutineTint?
-    }
-
-    /// «Cancelar» con cambios, o tocar otra vez la pestaña: «Descartar cambios» o «Seguir editando».
-    public struct DiscardPrompt: Hashable, Sendable {
-        /// Viene de tocar la pestaña: al descartar, a la lista.
-        public let leavesDetail: Bool
     }
 
     /// Un mes del Historial: «Octubre de 2026» y sus sesiones.
@@ -54,7 +48,8 @@ public final class HistoryModel {
     private var editBase: [ExerciseLog]?
     /// Los errores que marcó el último «OK», por posición.
     private var validationErrors: [Int: [LogValidationError]] = [:]
-    public private(set) var discardPrompt: DiscardPrompt?
+    /// «Cancelar» con cambios: «Descartar cambios» o «Seguir editando».
+    public var isDiscardPromptPresented = false
     public private(set) var focusedSeries: (log: Int, series: Int)?
     public private(set) var deletePrompt: DeletePrompt?
     /// Lo tecleado en un campo de la sesión abierta que aún no se ha aplicado (`TypedValue`).
@@ -109,12 +104,10 @@ public final class HistoryModel {
         selectedDate = nil
     }
 
-    /// Tocar otra vez la pestaña: la lista (`renderHistorial`). Con cambios sin guardar, antes
-    /// pregunta.
+    /// Tocar otra vez la pestaña: la lista (`renderHistorial`). Mientras se edita no se puede: la
+    /// hoja de editar tapa las pestañas.
     public func reselect() {
-        commitTyping()
-        guard hasChanges else { return back() }
-        discardPrompt = DiscardPrompt(leavesDetail: true)
+        back()
     }
 
     private func resetDetail() {
@@ -128,7 +121,7 @@ public final class HistoryModel {
         editBase = nil
         validationErrors = [:]
         focusedSeries = nil
-        discardPrompt = nil
+        isDiscardPromptPresented = false
     }
 
     // MARK: - Borrar
@@ -229,21 +222,18 @@ public final class HistoryModel {
     public func cancelEditing() {
         commitTyping()
         guard hasChanges else { return endEditing() }
-        discardPrompt = DiscardPrompt(leavesDetail: false)
+        isDiscardPromptPresented = true
     }
 
-    public var isDiscardPromptPresented: Bool { discardPrompt != nil }
-
-    /// «Descartar cambios»: vuelve a lo guardado (y a la lista, si venía de tocar la pestaña).
-    /// Recibe el aviso que se confirma, no lo lee de `discardPrompt`: SwiftUI cierra el diálogo
-    /// (`keepEditing`) antes de ejecutar la acción del botón.
-    public func discardChanges(_ prompt: DiscardPrompt) {
-        if prompt.leavesDetail { back() } else { endEditing() }
+    /// «Descartar cambios»: vuelve a lo guardado y cierra la hoja. No depende del diálogo, que
+    /// SwiftUI cierra (`keepEditing`) antes de ejecutar la acción del botón.
+    public func discardChanges() {
+        endEditing()
     }
 
     /// «Seguir editando», o el diálogo que se cierra.
     public func keepEditing() {
-        discardPrompt = nil
+        isDiscardPromptPresented = false
     }
 
     /// «OK»: si algo no vale, se marca, se abre la primera tarjeta con errores y no se guarda; si
