@@ -17,7 +17,5 @@ public enum CatalogText {
     public static let noGroup = "Sin grupo"
     public static let secondaryLabel = "Contribuye también a"
     public static let secondaryHint = "Cada serie cuenta como media serie para estos grupos en la barra de indirecto."
-    public static let cancel = "Cancelar"
-    public static let save = "Guardar"
 
 }

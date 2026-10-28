@@ -157,10 +157,11 @@ private struct SessionEditor: View {
         .interactiveDismissDisabled(model.hasChanges)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button(HistoryText.cancel) { model.cancelEditing() }
+                // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
+                Button(role: .close) { model.cancelEditing() }
                     .accessibilityIdentifier("session-cancel")
-                    // Colgado de «Cancelar»: en iOS 26 el diálogo sale como globo que apunta a su
-                    // vista, y se cierra tocando fuera (sigue editando).
+                    // Colgado de la ✕: en iOS 26 el diálogo sale como globo que apunta a su vista, y
+                    // se cierra tocando fuera (sigue editando).
                     .confirmationDialog(HistoryText.discardTitle, isPresented: Binding(
                         get: { model.isDiscardPromptPresented }, set: { if !$0 { model.keepEditing() } }
                     ), titleVisibility: .visible) {
@@ -169,7 +170,8 @@ private struct SessionEditor: View {
                     }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(HistoryText.done) { Task { await model.finishEditing() } }
+                Button(role: .confirm) { Task { await model.finishEditing() } }
+                    .disabled(!model.hasChanges)
                     .accessibilityIdentifier("session-done")
             }
         }

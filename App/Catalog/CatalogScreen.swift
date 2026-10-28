@@ -108,9 +108,10 @@ private struct CatalogEditor: View {
             .keyboardDismissal()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(CatalogText.cancel) { model.cancelEditing() } }
+                // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
+                ToolbarItem(placement: .cancellationAction) { Button(role: .close) { model.cancelEditing() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(CatalogText.save) { Task { await model.save() } }
+                    Button(role: .confirm) { Task { await model.save() } }
                         .disabled(!model.canSave)
                 }
             }

@@ -131,7 +131,10 @@ final class HistoryTests: XCTestCase {
         app.buttons["session-edit"].tap()
         let plus = app.buttons["weight-plus"].firstMatch
         XCTAssertTrue(plus.appears(timeout: 5))
+        // La ✓, apagada sin cambios (2026-10-28).
+        XCTAssertFalse(app.buttons["session-done"].isEnabled)
         plus.tap()
+        XCTAssertTrue(app.buttons["session-done"].isEnabled)
         let edited = app.textFields["weight-field"].firstMatch.value as? String
         app.buttons["session-done"].tap()
 

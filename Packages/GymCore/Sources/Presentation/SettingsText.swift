@@ -14,7 +14,6 @@ public enum SettingsText {
     public static let advancedSection = "Avanzado"
     public static let token = "Token de acceso"
     public static let tokenPlaceholder = "ghp_…"
-    public static let save = "Guardar"
     public static let discardTitle = "Los cambios sin guardar se perderán."
     public static let discardConfirm = "Descartar cambios"
     /// Para recuperar los datos de GitHub (la subida es automática; «Subir a GitHub» se quitó el

@@ -89,7 +89,7 @@ struct SettingsScreen: View {
                 if model.activity == .saving {
                     ProgressView()
                 } else {
-                    Button(SettingsText.save) { Task { await model.save() } }
+                    Button(role: .confirm) { Task { await model.save() } }
                         .disabled(!model.canSave)
                         .accessibilityIdentifier("settings-save")
                 }

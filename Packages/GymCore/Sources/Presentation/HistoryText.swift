@@ -8,7 +8,6 @@ public enum HistoryText {
     public static let completeWorkout = "Completar entreno"
     // Editar una sesión (2026-10-27)
     public static let edit = "Editar"
-    public static let done = "OK"
     public static let discardTitle = "Los cambios en esta sesión se perderán."
     public static let discardConfirm = "Descartar cambios"
     public static let keepEditing = "Seguir editando"
