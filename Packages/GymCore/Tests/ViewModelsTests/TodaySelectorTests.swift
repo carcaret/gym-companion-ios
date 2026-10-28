@@ -551,3 +551,24 @@ struct CreateExerciseScreenTests {
         #expect(today.model.createGroup == nil)
     }
 }
+
+// Propio de la app (repaso de la HIG, 2026-10-28): la vista previa de una rutina sin ejercicios dice
+// qué hacer, y solo ella: al empezar el entreno, la vista previa que se va no lo enseña.
+@MainActor
+@Suite("Vista previa de una rutina vacía")
+struct EmptyPreviewTests {
+    @Test("solo en la vista previa de una rutina sin ejercicios")
+    func onlyInEmptyPreview() async {
+        var data = PWATestDB.data
+        data.routines.append(Routine(id: "VACIA", name: "Vacía", exerciseIDs: []))
+        let today = await TodayHarness.make(data)
+        #expect(!today.model.isPreviewEmpty, "En el selector, no")
+        today.model.select("DIA1")
+        #expect(!today.model.isPreviewEmpty, "Con ejercicios, no")
+        today.model.reselect()
+        today.model.select("VACIA")
+        #expect(today.model.isPreviewEmpty)
+        await today.model.requestStart()
+        #expect(!today.model.isPreviewEmpty, "Con el entreno empezado, no")
+    }
+}

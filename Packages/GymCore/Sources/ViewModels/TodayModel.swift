@@ -198,6 +198,13 @@ public final class TodayModel {
 
     // MARK: - Vista previa
 
+    /// La vista previa de una rutina sin ejercicios, que dice qué hacer. Mira la etapa, no solo las
+    /// tarjetas: al empezar el entreno no hay tarjetas de vista previa, y la que se va lo enseñaba.
+    public var isPreviewEmpty: Bool {
+        guard case .preview(let routine) = stage else { return false }
+        return data.routines.first { $0.id == routine }?.exerciseIDs.isEmpty ?? true
+    }
+
     /// Cada ejercicio con los valores con los que arrancaría (`getBestRecentValuesForExercise`).
     public var previewCards: [Card] {
         guard case .preview(let routine) = stage else { return [] }

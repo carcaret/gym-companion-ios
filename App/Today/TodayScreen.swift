@@ -120,7 +120,7 @@ private struct RoutinePreview: View {
         }
         // Sin ejercicios (la primera vez): qué hacer, en vez de una pantalla en blanco.
         .overlay {
-            if model.previewCards.isEmpty {
+            if model.isPreviewEmpty {
                 ContentUnavailableView(TodayText.emptyRoutineTitle, systemImage: "dumbbell",
                                        description: Text(TodayText.emptyRoutineMessage))
             }
