@@ -43,6 +43,50 @@ private struct CatalogHarness {
     var rows: [CatalogModel.Row] { model.sections.flatMap(\.rows) }
 }
 
+// Propio de la app (2026-10-28): la ✕ del editor, como en las demás hojas, pregunta antes de tirar
+// lo cambiado; sin cambios, cierra.
+@MainActor
+@Suite("Catálogo — cerrar el editor")
+struct CatalogCloseTests {
+    @Test("sin cambios, la ✕ cierra al momento")
+    func closeClean() async {
+        let catalog = await CatalogHarness.make()
+        catalog.model.edit("jalon")
+        #expect(!catalog.model.hasChanges)
+        catalog.model.requestCancel()
+        #expect(catalog.model.editor == nil)
+        #expect(!catalog.model.isDiscardPromptPresented)
+    }
+
+    @Test("con cambios, la ✕ pregunta; seguir deja lo cambiado y descartar lo tira")
+    func closeDirty() async {
+        let catalog = await CatalogHarness.make()
+        catalog.model.edit("jalon")
+        catalog.model.toggleSecondary(.biceps)
+        #expect(catalog.model.hasChanges)
+        catalog.model.requestCancel()
+        #expect(catalog.model.isDiscardPromptPresented)
+        #expect(catalog.model.editor != nil)
+        catalog.model.keepEditing()
+        #expect(catalog.model.editor?.secondaries == [.biceps])
+        catalog.model.requestCancel()
+        catalog.model.keepEditing()
+        catalog.model.discardChanges()
+        #expect(catalog.model.editor == nil)
+        #expect(catalog.rows.first { $0.exerciseID == "jalon" }?.secondaries.isEmpty == true)
+    }
+
+    @Test("deshacer el cambio a mano deja el editor sin cambios")
+    func undoByHand() async {
+        let catalog = await CatalogHarness.make()
+        catalog.model.edit("jalon")
+        catalog.model.editor?.name = "Jalón"
+        #expect(catalog.model.hasChanges)
+        catalog.model.editor?.name = "Jalón al Pecho"
+        #expect(!catalog.model.hasChanges)
+    }
+}
+
 // tests/e2e/catalogo.spec.js
 @MainActor
 @Suite("Catálogo de ejercicios")
@@ -183,9 +227,12 @@ struct CatalogEditorTests {
     func notice() async {
         let catalog = await CatalogHarness.make()
         catalog.model.edit("jalon")
+        // Con un cambio: sin cambios, la ✓ está apagada (2026-10-28).
+        catalog.model.toggleSecondary(.biceps)
         await catalog.model.save()
         #expect(catalog.app.notice == nil)
         #expect(catalog.model.editor == nil)
+        #expect(catalog.rows.first { $0.exerciseID == "jalon" }?.secondaries == ["Bíceps"])
     }
 
     @Test("sin coincidencias no hay secciones (y la vista lo dice con la búsqueda de iOS)")

@@ -62,7 +62,6 @@ public enum TodayText {
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
     public static let createConfirm = "Crear y añadir"
-    public static let close = "Cerrar"
     public static let cancel = "Cancelar"
 
     // Quitar

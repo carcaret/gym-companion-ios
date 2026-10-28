@@ -147,7 +147,8 @@ struct ExercisePickerSheet: View {
             .navigationSubtitle(model.picker?.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(TodayText.close) { model.closePicker() } }
+                // Solo para elegir: la ✕ de iOS 26, sin ✓.
+                ToolbarItem(placement: .cancellationAction) { Button(role: .close) { model.closePicker() } }
             }
             .alert(TodayText.createTitle, isPresented: $model.isCreatePresented) {
                 TextField(TodayText.createNamePlaceholder, text: $model.createName)

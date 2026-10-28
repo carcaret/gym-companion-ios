@@ -78,9 +78,9 @@ struct SettingsScreen: View {
                 // Con algo escrito sin guardar, pregunta antes de tirarlo (antes lo tiraba).
                 Button(role: .close) { model.requestClose() }
                     .accessibilityIdentifier("settings-close")
-                    .confirmationDialog(SettingsText.discardTitle, isPresented: $model.isDiscardPromptPresented,
+                    .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
                                         titleVisibility: .visible) {
-                        Button(SettingsText.discardConfirm, role: .destructive) { model.discardAndClose() }
+                        Button(FormText.discardConfirm, role: .destructive) { model.discardAndClose() }
                         Button(SyncText.cancelLabel, role: .cancel) { model.keepEditing() }
                     }
             }
@@ -89,7 +89,7 @@ struct SettingsScreen: View {
                 if model.activity == .saving {
                     ProgressView()
                 } else {
-                    Button(SettingsText.save) { Task { await model.save() } }
+                    Button(role: .confirm) { Task { await model.save() } }
                         .disabled(!model.canSave)
                         .accessibilityIdentifier("settings-save")
                 }
