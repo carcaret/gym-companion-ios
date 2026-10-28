@@ -13,7 +13,6 @@ struct HistoryScreen: View {
     var body: some View {
         list
             .navigationTitle(HistoryText.title)
-            .navigationBarTitleDisplayMode(.large)
             // El detalle entra empujado, como en cualquier app de iOS: se vuelve también con el
             // botón de la barra o deslizando desde el borde.
             .navigationDestination(isPresented: Binding(
@@ -28,7 +27,6 @@ struct HistoryScreen: View {
                     }
                     .navigationTitle(model.detailTitle)
                     .navigationSubtitle(model.detailSubtitle)
-                    .navigationBarTitleDisplayMode(.inline)
                     .screenBackground()
             }
     }
@@ -38,9 +36,13 @@ struct HistoryScreen: View {
         if model.rows.isEmpty {
             ContentUnavailableView(HistoryText.empty, systemImage: "list.clipboard", description: Text(HistoryText.emptyMessage))
         } else {
-            // Por meses, como Fotos o Fitness (2026-10-27).
+            // Por meses, como Fotos o Fitness (2026-10-27). El mes es una fila y no la cabecera de
+            // la sección: en una lista `.plain` la cabecera se queda fija debajo de la barra, y eran
+            // dos franjas arriba. Se va al desplazar, como en Mail o Ajustes; cada sesión ya dice
+            // su día y su mes (decisión del usuario, 2026-10-28).
             List(model.sections) { section in
-                Section(section.title) {
+                Section {
+                    MonthHeader(title: section.title)
                     ForEach(section.rows) { row in
                         Button { model.open(row.date) } label: { HistoryRowView(row: row) }
                             .buttonStyle(.card)
@@ -79,6 +81,21 @@ struct HistoryScreen: View {
     }
 }
 
+/// El mes en la lista, con el aspecto de la cabecera de sección que era: se va al desplazar.
+private struct MonthHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .scaledFont(17, .semibold)
+            .foregroundStyle(Theme.textSecondary)
+            .accessibilityAddTraits(.isHeader)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 18, leading: 16, bottom: 4, trailing: 16))
+    }
+}
+
 /// El detalle de una sesión, empujado sobre la lista: de solo lectura. «Editar» abre la sesión en
 /// una hoja (`SessionEditor`), como un contacto o un evento del Calendario (2026-10-27): la hoja
 /// tapa las pestañas y la flecha, así que nada saca la sesión a medias y se pierde sin preguntar.
@@ -113,7 +130,7 @@ private struct SessionDetail: View {
         }
         // Deslizarla hacia abajo es cancelar: sin cambios, se cierra; con cambios, no se deja.
         .sheet(isPresented: Binding(get: { model.isEditing }, set: { if !$0 { model.cancelEditing() } })) {
-            AppNavigationStack { SessionEditor(model: model) }
+            NavigationStack { SessionEditor(model: model) }
                 // Lo que cuelga de la raíz queda debajo de la hoja: avisos y conflicto, aquí.
                 .syncPresentation(sync, noticeDuration: noticeDuration)
         }
@@ -171,8 +188,7 @@ private struct SessionEditor: View {
                     }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(role: .confirm) { Task { await model.finishEditing() } }
-                    .confirmTint()
+                ConfirmButton { Task { await model.finishEditing() } }
                     .disabled(!model.hasChanges)
                     .accessibilityIdentifier("session-done")
             }

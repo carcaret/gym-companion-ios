@@ -78,7 +78,7 @@ private struct CatalogEditor: View {
     @Bindable var model: CatalogModel
 
     var body: some View {
-        AppNavigationStack {
+        NavigationStack {
             Form {
                 Section(CatalogText.nameLabel) {
                     TextField(CatalogText.nameLabel, text: Binding(get: { model.editor?.name ?? "" }, set: { model.editor?.name = $0 }))
@@ -121,8 +121,7 @@ private struct CatalogEditor: View {
                         }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(role: .confirm) { Task { await model.save() } }
-                        .confirmTint()
+                    ConfirmButton { Task { await model.save() } }
                         .disabled(!model.canSave)
                 }
             }

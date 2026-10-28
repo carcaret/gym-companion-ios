@@ -54,6 +54,7 @@ struct PillButtonStyle: ButtonStyle {
             .scaledFont(15, .semibold)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
+            .frame(minHeight: TouchTarget.minimum)  // medía 40 (repaso de la HIG, 2026-10-28)
             .foregroundStyle(foreground)
             .background(background, in: .capsule)
             .overlay { Capsule().strokeBorder(border) }

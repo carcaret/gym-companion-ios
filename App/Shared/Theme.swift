@@ -23,6 +23,8 @@ enum Theme {
 
     // Colores
     static let accent = Color(hex: 0x569CD6)
+    /// El mismo que el color de acento de la app (`AccentColor` en Assets), que el sistema pone en
+    /// pestañas, interruptores y alertas. Aquí en hexadecimal porque el reloj no tiene ese asset.
     static let accentLight = Color(hex: 0x9CDCFE)
     static let accentSoft = Color(hex: 0x93C5EA)
     static let accentTint = Color(hex: 0x569CD6).opacity(0.15)
