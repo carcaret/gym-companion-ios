@@ -59,7 +59,9 @@ struct ExerciseCardView: View {
                 HistoryStripView(strip: strip).padding(.bottom, 10)
                 divider
             }
-            VStack(spacing: 8) {
+            // Sin hueco entre filas: cada zona de toque de 44 pt ya deja 8 pt entre los círculos de
+            // una fila y los de la siguiente, sin montarse.
+            VStack(spacing: 0) {
                 parameterRow(.weight, TodayText.weightLabel, LogText.kilograms(card.weight), decimal: true, hasError: card.errors.contains(.negativeWeight))
                 parameterRow(.series, TodayText.seriesLabel, "\(card.series)", decimal: false, hasError: card.errors.contains(.invalidSeries))
                 parameterRow(.targetReps, TodayText.targetRepsLabel, "\(card.targetReps)", decimal: false, hasError: card.errors.contains(.invalidTargetReps))
@@ -82,7 +84,9 @@ struct ExerciseCardView: View {
                                 .accessibilityIdentifier("chip-\(chip.value)")
                         }
                     }
-                    .padding(6)
+                    // Los chips miden 44 de alto para el dedo y 32 a la vista: arriba y abajo no
+                    // hace falta más margen.
+                    .padding(.horizontal, 6)
                     .background(Theme.cardSolid, in: .rect(cornerRadius: 8))
                     .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.border) }
                 }
@@ -139,54 +143,67 @@ private struct ParameterRow: View {
             // Con letra grande pasa a dos líneas en vez de cortarse.
             Text(label).scaledFont(12, .medium).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer()
-            if let adjust, let type, let commit {
-                RoundIconButton(systemImage: "minus") { adjust(-1) }
-                    .accessibilityLabel(CardAccessibilityText.decrease(parameter))
-                    .accessibilityIdentifier("\(identifier)-minus")
-                TextField(label, text: $text)
-                    .keyboardType(decimal ? .decimalPad : .numberPad)
-                    .multilineTextAlignment(.center)
-                    .scaledFont(15, .semibold)
-                    .foregroundStyle(Theme.text)
-                    .frame(width: boxWidth, height: boxHeight)
-                    .background(Theme.input, in: .rect(cornerRadius: 7))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 7).strokeBorder(hasError ? Theme.red : focused ? Theme.accent : Theme.border)
+            // Las zonas de toque sobresalen 4 pt de cada círculo: entre ellos y la caja se ven 10.
+            HStack(spacing: 6) { controls }
+        }
+    }
+
+    @ViewBuilder
+    private var controls: some View {
+        if let adjust, let type, let commit {
+            RoundIconButton(systemImage: "minus") { adjust(-1) }
+                .accessibilityLabel(CardAccessibilityText.decrease(parameter))
+                .accessibilityIdentifier("\(identifier)-minus")
+            TextField(label, text: $text)
+                .keyboardType(decimal ? .decimalPad : .numberPad)
+                .multilineTextAlignment(.center)
+                .scaledFont(15, .semibold)
+                .foregroundStyle(Theme.text)
+                // La caja se ve de su altura, pero la zona de toque es de 44: el campo de texto solo
+                // ocupa la línea del texto, y lo que queda alrededor (detrás) también lo abre.
+                .frame(width: boxWidth, height: TouchTarget.side(for: boxHeight))
+                .background {
+                    RoundedRectangle(cornerRadius: 7).fill(Theme.input)
+                        .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(hasError ? Theme.red : focused ? Theme.accent : Theme.border) }
+                        .frame(height: boxHeight)
+                        .frame(maxHeight: .infinity)
+                        .contentShape(.rect)
+                        .onTapGesture { focused = true }
+                }
+                .focused($focused)
+                .onAppear { text = value }
+                .onChange(of: value) { _, new in text = new }
+                // Un botón no quita el foco: el modelo se queda con lo tecleado y lo aplica
+                // al salir del campo o antes de la siguiente acción (`TypedValue`).
+                .onChange(of: text) { _, new in if focused, new != value { type(new) } }
+                .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                .onDisappear { if focused { commit() } }
+                // VoiceOver: «Peso, 60 kg», y deslizar arriba o abajo lo cambia, como un
+                // Stepper; tocar dos veces lo edita con el teclado.
+                .accessibilityLabel(CardAccessibilityText.name(parameter))
+                .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: adjust(1)
+                    case .decrement: adjust(-1)
+                    @unknown default: break
                     }
-                    .focused($focused)
-                    .onAppear { text = value }
-                    .onChange(of: value) { _, new in text = new }
-                    // Un botón no quita el foco: el modelo se queda con lo tecleado y lo aplica
-                    // al salir del campo o antes de la siguiente acción (`TypedValue`).
-                    .onChange(of: text) { _, new in if focused, new != value { type(new) } }
-                    .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
-                    .onDisappear { if focused { commit() } }
-                    // VoiceOver: «Peso, 60 kg», y deslizar arriba o abajo lo cambia, como un
-                    // Stepper; tocar dos veces lo edita con el teclado.
-                    .accessibilityLabel(CardAccessibilityText.name(parameter))
-                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
-                    .accessibilityAdjustableAction { direction in
-                        switch direction {
-                        case .increment: adjust(1)
-                        case .decrement: adjust(-1)
-                        @unknown default: break
-                        }
-                    }
-                    .accessibilityIdentifier("\(identifier)-field")
-                RoundIconButton(systemImage: "plus") { adjust(1) }
-                    .accessibilityLabel(CardAccessibilityText.increase(parameter))
-                    .accessibilityIdentifier("\(identifier)-plus")
-            } else {
-                Text(value)
-                    .scaledFont(15, .semibold)
-                    .foregroundStyle(Theme.text)
-                    .frame(width: boxWidth, height: boxHeight)
-                    .background(Theme.input, in: .rect(cornerRadius: 7))
-                    .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
-                    .accessibilityLabel(CardAccessibilityText.name(parameter))
-                    .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
-                    .accessibilityIdentifier("\(identifier)-value")
-            }
+                }
+                .accessibilityIdentifier("\(identifier)-field")
+            RoundIconButton(systemImage: "plus") { adjust(1) }
+                .accessibilityLabel(CardAccessibilityText.increase(parameter))
+                .accessibilityIdentifier("\(identifier)-plus")
+        } else {
+            Text(value)
+                .scaledFont(15, .semibold)
+                .foregroundStyle(Theme.text)
+                .frame(width: boxWidth, height: boxHeight)
+                .background(Theme.input, in: .rect(cornerRadius: 7))
+                .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
+                .accessibilityLabel(CardAccessibilityText.name(parameter))
+                .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
+                .accessibilityIdentifier("\(identifier)-value")
+                .frame(height: TouchTarget.side(for: boxHeight))
         }
     }
 
@@ -214,6 +231,8 @@ private struct RoundIconButton: View {
                 .frame(width: side, height: side)
                 .background(Theme.input, in: .circle)
                 .overlay { Circle().strokeBorder(Theme.border) }
+                .frame(width: TouchTarget.side(for: side), height: TouchTarget.side(for: side))
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
     }
@@ -228,13 +247,14 @@ private struct SeriesCellView: View {
     let onTap: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 3) {
-            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textMuted)
+        // Se toca la celda entera, con su «S1»: así la zona de toque pasa de 44 pt sin que la
+        // celda crezca.
+        Group {
             if let onTap {
-                Button(action: onTap) { valueText }
+                Button(action: onTap) { cellContent.contentShape(.rect) }
                     .buttonStyle(.plain)
             } else {
-                valueText
+                cellContent
             }
         }
         .frame(maxWidth: .infinity)
@@ -245,6 +265,13 @@ private struct SeriesCellView: View {
         .accessibilityValue(CardAccessibilityText.seriesValue(cell.value, target: targetReps, hasError: cell.hasError))
         .accessibilityAddTraits(cell.isFocused ? .isSelected : [])
         .accessibilityIdentifier("series-\(index)")
+    }
+
+    private var cellContent: some View {
+        VStack(spacing: 3) {
+            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textMuted)
+            valueText
+        }
     }
 
     private var valueText: some View {
@@ -279,6 +306,8 @@ private struct ChipButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: 32)
             .background(chip.isCurrent ? color.opacity(0.15) : .clear, in: .rect(cornerRadius: Theme.radiusTag))
             .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(chip.isCurrent ? color : color.opacity(0.3)) }
+            .frame(minHeight: TouchTarget.minimum)
+            .contentShape(.rect)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
     }
 

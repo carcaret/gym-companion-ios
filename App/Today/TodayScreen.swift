@@ -138,8 +138,9 @@ private struct RoutinePreview: View {
     }
 }
 
-/// La fila de botones fija abajo, encima de la barra de pestañas: uno secundario a su tamaño y el
-/// principal con el resto del ancho, o solo el principal a todo el ancho. Píldoras de cristal
+/// La fila de botones fija abajo, encima de la barra de pestañas: el secundario y el principal a
+/// partes iguales (se distinguen por el estilo, no por el tamaño: repaso de la HIG, 2026-10-28), o
+/// solo el principal a todo el ancho. Píldoras de cristal
 /// (`.glassPill`) sin fondo detrás: las tarjetas pasan por debajo al desplazarse.
 struct BottomActions<Secondary: View, Primary: View>: View {
     @ViewBuilder let secondary: Secondary

@@ -57,6 +57,17 @@ final class WorkoutTests: XCTestCase {
         wait(for: [gone], timeout: 5)
     }
 
+    /// «Añadir ejercicio» y «Finalizar entreno» miden lo mismo: la principal se distingue por el
+    /// estilo, no por el tamaño (repaso de la HIG, 2026-10-28).
+    @MainActor
+    func testLosDosBotonesDeAbajoMidenLoMismo() {
+        let app = startWorkout()
+        let add = app.buttons["add-exercise"].frame
+        let finish = app.buttons["finish-workout"].frame
+        XCTAssertEqual(add.width, finish.width, accuracy: 1)
+        XCTAssertEqual(add.height, finish.height, accuracy: 1)
+    }
+
     /// Con el entreno de hoy terminado, empezar otra rutina pregunta antes de sustituirlo
     /// (2026-10-27; la PWA lo borraba sin decir nada). «Cancelar» lo deja y «Sustituir» empieza.
     @MainActor

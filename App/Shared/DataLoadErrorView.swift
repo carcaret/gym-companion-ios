@@ -17,7 +17,9 @@ struct DataLoadErrorView: View {
         } description: {
             Text(DataErrorText.loadMessage)
         } actions: {
+            // Lo más probable es reintentar: destacado, como la acción principal de las píldoras.
             Button(DataErrorText.retry) { run { await model.start() } }
+                .buttonStyle(.pill())
                 .accessibilityIdentifier("data-retry")
             if sync.status.state != .disabled {
                 Button(SettingsText.download, role: .destructive) { isDownloadConfirmationPresented = true }

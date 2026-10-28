@@ -32,16 +32,15 @@ struct ProgressScreen: View {
     /// el resumen, es la que pliega y despliega.
     private var exercises: some View {
         ListSection {
-            DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises", toggle: model.toggleExpanded) {
+            // Los márgenes de cada fila van dentro de su botón: se toca la fila entera.
+            DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises",
+                             padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16), minHeight: 48,
+                             toggle: model.toggleExpanded) {
                 Text(model.exercisesSubtitle).scaledFont(13).foregroundStyle(Theme.textSecondary)
             }
-            .padding(.horizontal, 16)
-            .frame(minHeight: 48)
             ForEach(model.visibleRows) { row in
                 ListSeparator(inset: 16)
                 ExerciseProgressRow(row: row, toggle: { model.toggleRow(row.exerciseID) }, openCharts: { model.openCharts(row.exerciseID) })
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
             }
         } header: {
             header(StatsText.exercisesTitle)
@@ -53,8 +52,6 @@ struct ProgressScreen: View {
             ForEach(Array(model.groups.enumerated()), id: \.element.id) { index, group in
                 if index > 0 { ListSeparator(inset: 16) }
                 GroupBarRow(group: group, scale: model.scale, band: model.referenceBand) { model.toggleGroup(group.name) }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 13)
             }
         } header: {
             header(StatsText.groupsTitle)
@@ -72,7 +69,9 @@ struct ProgressScreen: View {
     /// La cabecera de una sección: el título y, a la derecha, la ventana de semanas.
     private func header(_ title: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
+            // VoiceOver salta de una sección a otra con el rotor de encabezados.
             Text(title).scaledFont(17, .semibold).foregroundStyle(Theme.textSecondary)
+                .accessibilityAddTraits(.isHeader)
             Spacer()
             // Más pequeña que el título: es un dato de la sección, no otro título.
             Text(StatsText.window(weeks: ProgressModel.weeks)).scaledFont(13).foregroundStyle(Theme.textMuted)
@@ -137,7 +136,8 @@ private struct ExerciseProgressRow: View {
     @ScaledMetric(relativeTo: .subheadline) private var iconSide: CGFloat = 28
 
     var body: some View {
-        CardDisclosure(isExpanded: row.isOpen, chevronSize: 12, identifier: "stats-row-\(row.exerciseID.rawValue)", toggle: toggle) {
+        CardDisclosure(isExpanded: row.isOpen, chevronSize: 12, identifier: "stats-row-\(row.exerciseID.rawValue)",
+                       headerPadding: EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16), toggle: toggle) {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .scaledFont(13, .bold)
@@ -158,24 +158,37 @@ private struct ExerciseProgressRow: View {
             }
             .padding(.vertical, 4)
         } content: {
+            // Alineado con el nombre, a la derecha del icono. El botón llega a los dos bordes de la
+            // sección, con el margen dentro: se toca toda su fila.
             VStack(alignment: .leading, spacing: 6) {
-                Text(StatsText.recentSessions).sectionLabelStyle()
-                Text(row.recentReps.joined(separator: "  ·  "))
-                    .scaledFont(13).monospacedDigit()
-                    .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                Group {
+                    Text(StatsText.recentSessions).sectionLabelStyle()
+                    Text(row.recentReps.joined(separator: "  ·  "))
+                        .scaledFont(13).monospacedDigit()
+                        .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                }
+                .padding(.leading, indent)
+                .padding(.trailing, 16)
                 if row.canOpenCharts {
-                    Button(StatsText.openCharts, action: openCharts)
-                        .scaledFont(15)
-                        .foregroundStyle(Theme.accentLight)
-                        .buttonStyle(.plain)
-                        .frame(minHeight: 44)
+                    Button(action: openCharts) {
+                        Text(StatsText.openCharts)
+                            .scaledFont(15)
+                            .foregroundStyle(Theme.accentLight)
+                            .frame(maxWidth: .infinity, minHeight: TouchTarget.minimum, alignment: .leading)
+                            .padding(.leading, indent)
+                            .padding(.trailing, 16)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, iconSide + 12)
-            .padding(.top, 8)
+            .padding(.bottom, 8)
         }
     }
+
+    /// El margen de la sección y el icono con su hueco.
+    private var indent: CGFloat { 16 + iconSide + 12 }
 
     private var noTrack: Bool { row.status == .noTrack }
 
@@ -208,7 +221,8 @@ private struct GroupBarRow: View {
     @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 26
 
     var body: some View {
-        CardDisclosure(isExpanded: group.isOpen, chevronSize: 11, toggle: toggle) {
+        CardDisclosure(isExpanded: group.isOpen, chevronSize: 11, identifier: "stats-group-\(group.name)",
+                       headerPadding: EdgeInsets(top: 13, leading: 16, bottom: 13, trailing: 16), toggle: toggle) {
             HStack(spacing: 10) {
                 Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)
                 GroupBar(group: group, scale: scale, band: band)
@@ -229,8 +243,10 @@ private struct GroupBarRow: View {
                     }
                 }
             }
-            .padding(.leading, 72)
-            .padding(.top, 12)
+            // Alineado con la barra: el nombre, con su ancho que crece con la letra, y su hueco.
+            .padding(.leading, nameWidth + 10)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 13)
         }
     }
 

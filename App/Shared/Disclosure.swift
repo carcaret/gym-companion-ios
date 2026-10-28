@@ -11,13 +11,15 @@ struct CardDisclosure<Label: View, Content: View>: View {
     var chevronSize: CGFloat = 13
     /// Para los tests: va en el botón de la cabecera.
     var identifier: String?
+    /// El margen de la cabecera, dentro de su zona de toque (en Progreso, el de la fila).
+    var headerPadding = EdgeInsets()
     let toggle: () -> Void
     @ViewBuilder let label: Label
     @ViewBuilder let content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DisclosureHeader(isExpanded: isExpanded, chevronSize: chevronSize, identifier: identifier, toggle: toggle) {
+            DisclosureHeader(isExpanded: isExpanded, chevronSize: chevronSize, identifier: identifier, padding: headerPadding, toggle: toggle) {
                 label
             }
             if isExpanded {
@@ -45,6 +47,9 @@ struct DisclosureHeader<Label: View>: View {
     let isExpanded: Bool
     var chevronSize: CGFloat = 13
     var identifier: String?
+    /// Dentro del botón: la fila entera se toca, no solo el texto.
+    var padding = EdgeInsets()
+    var minHeight = TouchTarget.minimum
     let toggle: () -> Void
     @ViewBuilder let label: Label
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -70,9 +75,11 @@ struct DisclosureHeader<Label: View>: View {
                     .animation(animates || reduceMotion ? nil : .snappy) { $0.rotationEffect(.degrees(isExpanded ? 90 : 0)) }
                     .foregroundStyle(Theme.textMuted)
             }
+            .padding(padding)
+            .frame(minHeight: minHeight)
             .contentShape(.rect)
         }
-        .buttonStyle(StillButtonStyle())
+        .buttonStyle(DimmedButtonStyle())
         .accessibilityValue(isExpanded ? Text("Desplegado") : Text("Plegado"))
         if let identifier {
             button.accessibilityIdentifier(identifier)
@@ -82,11 +89,13 @@ struct DisclosureHeader<Label: View>: View {
     }
 }
 
-/// Un botón que no cambia al pulsarlo. Con `.plain`, el texto de la cabecera bajaba un 20 % de
-/// brillo al tocarla y volvía con un fundido: un parpadeo en cada toque (medido en el vídeo del CI,
-/// 2026-10-27). El giro de la flecha y lo que se abre ya responden al toque.
-private struct StillButtonStyle: ButtonStyle {
+/// Mientras el dedo está apoyado, la cabecera se apaga un poco: Apple pide que todo botón propio se
+/// vea pulsado (repaso de la HIG, 2026-10-28). Sin animación: con `.plain`, el texto volvía con un
+/// fundido después de abrirse la tarjeta, un parpadeo en cada toque (vídeo del CI, 2026-10-27).
+private struct DimmedButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .opacity(configuration.isPressed ? 0.6 : 1)
+            .animation(nil, value: configuration.isPressed)
     }
 }

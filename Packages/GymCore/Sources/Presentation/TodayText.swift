@@ -39,7 +39,7 @@ public enum TodayText {
     // Botones
     public static let start = "Iniciar entreno"
     public static let finish = "Finalizar entreno"
-    public static let addExercise = "Ejercicio"
+    public static let addExercise = "Añadir ejercicio"
 
     // Selectores de ejercicio
     public static let swapTitle = "Cambiar ejercicio"
