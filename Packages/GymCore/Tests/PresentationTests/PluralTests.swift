@@ -1,3 +1,4 @@
+import Domain
 import Presentation
 import Testing
 
@@ -23,5 +24,18 @@ struct PluralTests {
     func stalled() {
         #expect(StatsText.exercisesSubtitle(stalled: 1, total: 1, progressing: 0) == "1 de 1 estancado")
         #expect(StatsText.exercisesSubtitle(stalled: 1, total: 3, progressing: 0) == "1 de 3 estancados")
+    }
+
+    /// Lo vio la captura de Progreso del CI: «1 sesiones, aún sin recorrido».
+    @Test("un ejercicio con una sola sesión")
+    func oneSession() {
+        #expect(ProgressText.phrase(ExerciseProgress(status: .noTrack, sessionCount: 1)) == "1 sesión, aún sin recorrido")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .noTrack, sessionCount: 2)) == "2 sesiones, aún sin recorrido")
+    }
+
+    @Test("un solo día")
+    func oneDay() {
+        #expect(ProgressText.span(days: 1) == "1 día")
+        #expect(ProgressText.span(days: 9) == "9 días")
     }
 }

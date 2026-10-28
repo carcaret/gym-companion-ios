@@ -6,4 +6,8 @@ enum Plural {
     static func exercises(_ count: Int) -> String {
         count == 1 ? "1 ejercicio" : "\(count) ejercicios"
     }
+
+    static func sessions(_ count: Int) -> String {
+        count == 1 ? "1 sesión" : "\(count) sesiones"
+    }
 }
