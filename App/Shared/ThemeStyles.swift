@@ -97,16 +97,21 @@ extension ButtonStyle where Self == PillButtonStyle {
 /// cristal, como la barra de pestañas que tienen debajo, con los colores de la PWA. La principal,
 /// teñida de azul y con el texto oscuro (el blanco que pone iOS no gustaba, decisión del usuario,
 /// 2026-10-27); la secundaria, cristal sin teñir con el texto en azul claro. `interactive()`: al
-/// tocarla reacciona como los botones de cristal de iOS.
+/// tocarla reacciona como los botones de cristal de iOS. Miden 50 pt de alto como poco, los
+/// botones grandes de iOS (repaso de la HIG, 2026-10-28: medían 40, menos que los 44 de una zona
+/// de toque), y crecen con la letra.
 struct GlassPillButtonStyle: ButtonStyle {
     enum Kind { case primary, secondary }
     var kind: Kind = .primary
+
+    static let minimumHeight: CGFloat = 50
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaledFont(15, .semibold)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
+            .frame(minHeight: Self.minimumHeight)
             .foregroundStyle(kind == .primary ? Color(hex: 0x08121C) : Theme.accentLight)
             .contentShape(.capsule)
             .glassEffect(kind == .primary ? .regular.tint(Theme.accent).interactive() : .regular.interactive(), in: .capsule)

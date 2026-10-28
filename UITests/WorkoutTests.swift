@@ -68,6 +68,17 @@ final class WorkoutTests: XCTestCase {
         XCTAssertEqual(add.height, finish.height, accuracy: 1)
     }
 
+    /// Los botones de abajo miden 50 pt de alto, los botones grandes de iOS: medían 40, menos que
+    /// los 44 de una zona de toque (repaso de la HIG, 2026-10-28).
+    @MainActor
+    func testLosBotonesDeAbajoMiden50DeAlto() {
+        let app = startWorkout()
+        for name in ["add-exercise", "finish-workout"] {
+            let height = app.buttons[name].frame.height
+            XCTAssertGreaterThanOrEqual(height, 50, "\(name) mide \(height) pt de alto")
+        }
+    }
+
     /// Crear un ejercicio sin buscar es una pantalla con el nombre y el grupo, no una alerta con un
     /// campo (repaso de la HIG, 2026-10-28). La ✓ lo crea y entra en el entreno.
     @MainActor

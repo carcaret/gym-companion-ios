@@ -37,7 +37,6 @@ enum Theme {
     static let dangerTint = Color(hex: 0xD97070).opacity(0.15)
     static let orange = Color(hex: 0xCE9178)
     static let gold = Color(hex: 0xDCDCAA)
-    static let focus = Color(hex: 0xE8B84B)           // la serie que se está editando
 
     // Un color, un significado (repaso de la HIG, 2026-10-28): verde es solo «sincronizado» o
     // «bien»; rojo, solo error o lo que borra.

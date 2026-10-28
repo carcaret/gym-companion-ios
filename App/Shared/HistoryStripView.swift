@@ -1,15 +1,17 @@
 import Charts
 import Presentation
 import SwiftUI
+import ViewModels
 
 /// La tira "Últimas sesiones" de un ejercicio: seis columnas, la de hoy la última, en una gráfica
 /// de barras de Swift Charts. Un toque en una barra enseña su detalle (el tooltip de la PWA) en un
 /// bocadillo encima, como las gráficas de Salud, y apaga las demás; se va solo a los pocos
-/// segundos o con otro toque en la misma (decisión del usuario, 2026-10-27). Con la selección por
-/// arrastre de Swift Charts, dentro de una lista que se desplaza había que mantener el dedo.
+/// segundos, con otro toque en la misma o donde no hay sesión, y un toque en otra barra lo cambia
+/// directamente (`TapSelection`; decisiones del usuario, 2026-10-27 y 2026-10-28). Con la selección
+/// por arrastre de Swift Charts, dentro de una lista que se desplaza había que mantener el dedo.
 struct HistoryStripView: View {
     let strip: HistoryStripContent
-    @State private var selected: Int?
+    @State private var selection = TapSelection<Int>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let bubbleDuration: Duration = .seconds(3)
@@ -32,10 +34,11 @@ struct HistoryStripView: View {
             }
             chart
         }
-        .task(id: selected) {
-            guard selected != nil else { return }
-            try? await Task.sleep(for: Self.bubbleDuration)
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selected = nil }
+        .task(id: selection.selected) {
+            guard let shown = selection.selected else { return }
+            // Cancelado por otro toque, no cierra nada: el bocadillo que se ve ya es otro.
+            guard (try? await Task.sleep(for: Self.bubbleDuration)) != nil else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selection.expire(shown) }
         }
         .accessibilityElement(children: .contain)
     }
@@ -49,13 +52,13 @@ struct HistoryStripView: View {
                 BarMark(x: .value("Sesión", Self.key(index)), yStart: .value("Altura", 0.0), yEnd: .value("Altura", height(bar)),
                         width: .inset(2))
                     .foregroundStyle(color(bar))
-                    .opacity(selected == nil || selected == index ? 1 : 0.4)
+                    .opacity(selection.selected == nil || selection.selected == index ? 1 : 0.4)
                     .cornerRadius(2)
                     .accessibilityLabel(tooltip(bar))
                     // En cada barra y no en la gráfica: en un contenedor pisaba lo de dentro.
                     .accessibilityIdentifier("strip-bar-\(index)")
                     .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                        if selected == index { bubble(bar) }
+                        if selection.selected == index { bubble(bar) }
                     }
             }
         }
@@ -101,10 +104,13 @@ struct HistoryStripView: View {
         }
     }
 
-    /// Solo las sesiones tienen detalle. Un toque en la que ya se ve lo cierra.
+    /// Solo las sesiones tienen detalle: un toque en una vacía o saltada cuenta como fuera.
     private func tap(_ key: String?) {
-        guard let key, let index = Int(key), case .session = strip.bars[index].kind else { return }
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selected = selected == index ? nil : index }
+        let session = key.flatMap(Int.init).flatMap { index -> Int? in
+            if case .session = strip.bars[index].kind { return index }
+            return nil
+        }
+        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selection.tap(session) }
     }
 
     /// El detalle de una sesión: el peso y las reps destacados, y debajo el e1RM (las dos líneas del

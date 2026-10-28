@@ -38,7 +38,7 @@ struct RootView: View {
         .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
                           isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
-            NavigationStack { SettingsScreen(model: root.settings) }
+            AppNavigationStack { SettingsScreen(model: root.settings) }
                 .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
         }
         // Para la nube de cada pantalla (`syncToolbar`).
@@ -106,15 +106,9 @@ struct RootView: View {
         navigationStack(tab) { content().syncToolbar(action: action) }
     }
 
-    /// La flecha de volver y los botones de la barra, sin teñir: en iOS 26 el color es para el fondo
-    /// de la acción principal, no para símbolos ni texto (repaso de la HIG, 2026-10-28). El
-    /// contenido conserva el azul de la raíz. La nube lleva sus propios colores.
     private func navigationStack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
-        NavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
-            content()
-                .tint(Theme.accentLight)
-                .screenBackground()
+        AppNavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
+            content().screenBackground()
         }
-        .tint(Theme.text)
     }
 }

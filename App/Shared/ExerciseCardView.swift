@@ -44,10 +44,11 @@ struct ExerciseCardView: View {
                 if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
                 if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
             }
-            // Lo cambiado al editar el historial, en amarillo, hasta la ✓ o la ✕.
+            // Lo cambiado al editar el historial, en amarillo de pendiente, como la nube, hasta la ✓
+            // o la ✕.
             Text(card.subtitle)
                 .scaledFont(12)
-                .foregroundStyle(card.isDirty ? Theme.focus : Theme.textSecondary)
+                .foregroundStyle(card.isDirty ? Theme.gold : Theme.textSecondary)
                 .lineLimit(2)
         }
     }
@@ -238,8 +239,10 @@ private struct RoundIconButton: View {
     }
 }
 
-/// Una celda de serie: azul si llega al objetivo, naranja si se queda corta, dorada la que se edita
-/// y roja con error (`.series-cell-chip`; en la PWA, corta era verde).
+/// Una celda de serie: azul si llega al objetivo, naranja si se queda corta y roja con error
+/// (`.series-cell-chip`; en la PWA, corta era verde). La que se edita conserva su color y lleva un
+/// borde claro más grueso: la selección no es un color más (repaso de la HIG, 2026-10-28; antes,
+/// dorada, el amarillo de pendiente y del récord, junto al naranja de corta).
 private struct SeriesCellView: View {
     let cell: ExerciseCard.SeriesCell
     let index: Int
@@ -280,12 +283,14 @@ private struct SeriesCellView: View {
             .foregroundStyle(colors.text)
             .frame(maxWidth: .infinity, minHeight: 34)
             .background(colors.background, in: .rect(cornerRadius: Theme.radiusTag))
-            .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(colors.border) }
+            .overlay {
+                RoundedRectangle(cornerRadius: Theme.radiusTag)
+                    .strokeBorder(cell.isFocused ? Theme.text : colors.border, lineWidth: cell.isFocused ? 2 : 1)
+            }
     }
 
     private var colors: (text: Color, background: Color, border: Color) {
         if cell.hasError { return (Color(hex: 0xFFA9A9), Theme.dangerTint, Theme.danger) }
-        if cell.isFocused { return (Theme.focus, Theme.focus.opacity(0.12), Theme.focus) }
         switch cell.state {
         case .done: return (Theme.accentSoft, Theme.accentTint, Theme.accent.opacity(0.5))
         case .filled: return (Theme.below, Theme.belowTint, Theme.below.opacity(0.5))
