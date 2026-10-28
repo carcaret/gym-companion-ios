@@ -7,17 +7,21 @@ public enum StatsText {
     public static let exercisesTitle = "Ejercicios"
     public static let groupsTitle = "Grupos musculares"
     public static let recentSessions = "Últimas sesiones"
+    /// Sin nada que comparar (repaso de la HIG, 2026-10-28).
+    public static let emptyTitle = "Aún no hay progreso"
+    public static let emptyMessage = "Termina un par de entrenos y aquí verás qué avanza y qué se estanca."
     public static let openCharts = "Ver en Gráficas"
-    public static let direct = "directo"
-    public static let indirect = "indirecto"
+    // Las etiquetas sueltas empiezan en mayúscula, como en iOS (repaso de la HIG, 2026-10-28).
+    public static let direct = "Directo"
+    public static let indirect = "Indirecto"
     public static let setsHeader = "series"
     public static let sessionsHeader = "· sesiones"
 
-    public static func window(weeks: Int) -> String { "últimas \(weeks) semanas" }
+    public static func window(weeks: Int) -> String { "Últimas \(weeks) semanas" }
 
     /// "1 de 3 estancados" o, sin ninguno, "Nada estancado · 2 progresando".
     public static func exercisesSubtitle(stalled: Int, total: Int, progressing: Int) -> String {
-        stalled > 0 ? "\(stalled) de \(total) estancados" : "Nada estancado · \(progressing) progresando"
+        stalled > 0 ? "\(stalled) de \(total) \(total == 1 ? "estancado" : "estancados")" : "Nada estancado · \(progressing) progresando"
     }
 
     public static func referenceBand(_ range: ClosedRange<Int>) -> String {

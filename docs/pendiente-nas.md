@@ -99,7 +99,7 @@ Falta lo que necesita el iPhone o el NAS:
       `carcaret/gym-companion`, rama `master`, ruta `db.json` y un PAT con permiso de escritura
       en ese repo. Con la app vacía, "Guardar" baja los datos; comprobar que salen las 297+
       sesiones en Historial.
-- [ ] "Probar conexión" con un token malo da "Error 401 — verifica repo, PAT y rama".
+- [ ] Guardar los ajustes con un token malo da "GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama."
 - [ ] Teclado (PR #32): escribir en un campo y tocar fuera lo cierra y vuelve la barra de
       pestañas; también desplazar la pantalla. Probarlo además en las
       reps del entreno, el buscador de Gráficas y el editor del Catálogo.

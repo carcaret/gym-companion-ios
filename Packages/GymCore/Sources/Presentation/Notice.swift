@@ -15,16 +15,24 @@ public struct Notice: Hashable, Sendable {
         self.text = text
         self.kind = kind
     }
+
+    /// Un error no se va solo: espera a que se cierre (repaso de la HIG, 2026-10-28). Lo demás se
+    /// va a los pocos segundos.
+    public var staysUntilDismissed: Bool { kind == .error }
+
+    /// La acción de VoiceOver que cierra el aviso (con el dedo, se desliza hacia arriba o se toca).
+    public static let dismissLabel = "Cerrar aviso"
 }
 
 /// Los textos de la sincronización, los mismos que la PWA (`app.js`, `views/settings.js`,
 /// `src/store.js`).
 public enum SyncText {
-    // Indicador y su menú (y el estado en los ajustes)
+    // Indicador y su menú (y el estado en los ajustes). Con «…» lo que abre otra pantalla o pide
+    // algo más (repaso de la HIG, 2026-10-28); sincronizar se hace al momento.
     public static let syncNowLabel = "Sincronizar ahora"
-    public static let resolveConflictLabel = "Resolver conflicto"
-    public static let configureLabel = "Configurar GitHub"
-    public static let settingsLabel = "Ajustes de sincronización"
+    public static let resolveConflictLabel = "Resolver conflicto…"
+    public static let configureLabel = "Configurar GitHub…"
+    public static let settingsLabel = "Ajustes de sincronización…"
     public static let pendingStatus = "Hay cambios pendientes de subir a GitHub"
 
     // Avisos (2026-10-27, con la aprobación del usuario: de los de la PWA quedan solo los que
@@ -53,11 +61,17 @@ public enum SyncText {
     public static let keepRemoteLabel = "Usar los de GitHub"
     public static let cancelLabel = "Cancelar"
 
-    // "Probar conexión": el resultado va debajo del botón, en el formulario, no en un aviso
+    // Probar la conexión al guardar los ajustes: el resultado va debajo de los campos, no en un aviso
     public static let connected = Notice("Conexión exitosa", .success)
     public static let invalidRemoteContent = Notice("Conectado, pero el fichero no es un db.json válido", .error)
 
+    /// Qué pasa y qué revisar, con los nombres de los campos de los ajustes; sin el código ni «PAT»
+    /// (repaso de la HIG, 2026-10-28).
     public static func connectionError(status: Int) -> Notice {
-        Notice("Error \(status) — verifica repo, PAT y rama", .error)
+        switch status {
+        case 401, 403: Notice("GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama.", .error)
+        case 404: Notice("GitHub no encuentra el repositorio, la rama o la ruta. Revísalos.", .error)
+        default: Notice("GitHub ha respondido con un error. Prueba otra vez más tarde.", .error)
+        }
     }
 }

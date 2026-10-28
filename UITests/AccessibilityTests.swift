@@ -20,6 +20,9 @@ final class AccessibilityTests: XCTestCase {
         XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
         app.buttons["card-press_banca"].firstMatch.tap()
 
+        // Un botón dice lo que hace, con su verbo; antes, «+ Ejercicio» y VoiceOver solo decía
+        // «Ejercicio» (repaso de la HIG, 2026-10-28).
+        XCTAssertEqual(app.buttons["add-exercise"].label, "Añadir ejercicio")
         XCTAssertEqual(app.buttons["weight-plus"].firstMatch.label, "Subir peso")
         XCTAssertEqual(app.buttons["weight-minus"].firstMatch.label, "Bajar peso")
         XCTAssertEqual(app.buttons["target-reps-plus"].firstMatch.label, "Subir repeticiones objetivo")

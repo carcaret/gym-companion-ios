@@ -221,3 +221,28 @@ struct ProgressModelTests {
         #expect(StatsText.indirectSets(1.25) == "1,3")
     }
 }
+
+// Propio de la app (repaso de la HIG, 2026-10-28): sin nada que comparar, Progreso dice cuál es el
+// siguiente paso en vez de «Nada estancado · 0 progresando» y barras a cero.
+@MainActor
+@Suite("Progreso sin datos")
+struct ProgressEmptyTests {
+    @Test("sin entrenos no hay progreso que enseñar")
+    func empty() async {
+        let routines = [Routine(id: "DIA1", name: "Día 1", exerciseIDs: [])]
+        #expect(await !progress(TrainingData(routines: routines)).0.hasProgress)
+    }
+
+    @Test("con ejercicios sin recorrido tampoco")
+    func onlyNoTrack() async {
+        var data = statsData()
+        data.history = [Session(date: SyncFixtures.today.adding(days: -1), routineID: "DIA1", completed: true,
+                                logs: [ExerciseLog(exerciseID: "nuevo", series: 3, targetReps: 9, actualReps: [9, 9, 9], weight: 0)])]
+        #expect(await !progress(data).0.hasProgress)
+    }
+
+    @Test("con algo que progresa o se estanca, sí")
+    func withData() async {
+        #expect(await progress().0.hasProgress)
+    }
+}

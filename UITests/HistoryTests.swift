@@ -1,8 +1,9 @@
 import XCTest
 
-/// El borrado de una sesión tal como lo hace el usuario: deslizar, "Borrar" y confirmar en la
-/// alerta. Lo que no ven los tests del modelo: SwiftUI cierra la alerta antes de ejecutar la acción
-/// del botón, y el borrado no puede depender de lo que ese cierre descarta.
+/// El borrado de una sesión tal como lo hace el usuario: deslizar, "Borrar" y confirmar en el globo
+/// que apunta a la fila, como quitar un ejercicio del entreno (repaso de la HIG, 2026-10-28; antes,
+/// una alerta). Lo que no ven los tests del modelo: SwiftUI cierra el globo antes de ejecutar la
+/// acción del botón, y el borrado no puede depender de lo que ese cierre descarta.
 final class HistoryTests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -23,9 +24,10 @@ final class HistoryTests: XCTestCase {
         XCTAssertTrue(swipeDelete.appears(timeout: 5))
         swipeDelete.tap()
 
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.appears(timeout: 5))
-        alert.buttons["Borrar"].tap()
+        let confirm = app.buttons["Borrar entreno"].firstMatch
+        XCTAssertTrue(confirm.appears(timeout: 5))
+        XCTAssertFalse(app.alerts.firstMatch.exists, "Es un globo, no una alerta")
+        confirm.tap()
 
         let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: row)
         wait(for: [gone], timeout: 5)
@@ -49,12 +51,13 @@ final class HistoryTests: XCTestCase {
         let swipeDelete = app.buttons["Borrar"].firstMatch
         XCTAssertTrue(swipeDelete.appears(timeout: 5))
         swipeDelete.tap()
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.appears(timeout: 5))
+        let confirm = app.buttons["Borrar entreno"].firstMatch
+        XCTAssertTrue(confirm.appears(timeout: 5))
         XCTAssertEqual(rows.allElementsBoundByIndex.map(\.identifier), before)
 
-        alert.buttons["Cancelar"].tap()
-        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: alert)
+        // En iOS 26 el globo no tiene «Cancelar»: se cierra tocando fuera.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: confirm)
         wait(for: [closed], timeout: 5)
         XCTAssertEqual(rows.allElementsBoundByIndex.map(\.identifier), before)
     }
@@ -91,7 +94,7 @@ final class HistoryTests: XCTestCase {
         wait(for: [gone], timeout: 5)
     }
     /// El detalle es de solo lectura y se corrige con «Editar», en una hoja (2026-10-27): con cambios
-    /// no se cierra deslizando, y «Cancelar» pregunta y, al descartar, deja lo guardado.
+    /// no se cierra deslizando, y la ✕ pregunta y, al descartar, deja lo guardado.
     @MainActor
     func testEditarYCancelarDescarta() {
         let app = openFirstSessionCard()
@@ -120,7 +123,7 @@ final class HistoryTests: XCTestCase {
         XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
     }
 
-    /// «OK» guarda y vuelve a solo lectura con lo cambiado.
+    /// La ✓ guarda y vuelve a solo lectura con lo cambiado.
     @MainActor
     func testEditarYOKGuarda() {
         let app = openFirstSessionCard()

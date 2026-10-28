@@ -11,6 +11,8 @@ struct RootView: View {
     /// Lo empujado con `NavigationLink(value:)` en cada pestaña (catálogo, elegir ejercicio). El
     /// detalle del historial, la vista previa y las gráficas de Progreso los lleva su modelo.
     @State private var paths: [AppTab: NavigationPath] = [:]
+    /// La pestaña visible, para volver a ella si iOS cierra la app (repaso de la HIG, 2026-10-28).
+    @SceneStorage("pestana") private var savedTab: String?
 
     init(root: CompositionRoot) {
         self.root = root
@@ -28,7 +30,8 @@ struct RootView: View {
             }
         }
         .alert(DataErrorText.saveTitle, isPresented: Bindable(root.model).isSaveErrorPresented) {
-            Button(DataErrorText.understood) {}
+            Button(DataErrorText.notNow, role: .cancel) {}
+            Button(DataErrorText.retry) { Task { await root.model.retrySave() } }
         } message: {
             Text(DataErrorText.saveMessage)
         }
@@ -53,28 +56,26 @@ struct RootView: View {
     private var tabs: some View {
         // Por `select`, que distingue tocar otra pestaña de volver a tocar la activa.
         TabView(selection: Binding(get: { navigation.selectedTab }, set: { navigation.select($0) })) {
-            Tab("Rutinas", systemImage: "dumbbell", value: AppTab.routines) {
+            Tab(TodayText.selectorTitle, systemImage: "dumbbell", value: AppTab.routines) {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
-            Tab("Historial", systemImage: "clock", value: AppTab.history) {
+            Tab(HistoryText.title, systemImage: "clock", value: AppTab.history) {
                 stack(.history) { HistoryScreen(model: root.history, sync: root.sync, noticeDuration: root.noticeDuration) }
             }
-            Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
+            Tab(StatsText.title, systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
                     ProgressScreen(model: root.progress)
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
-                        // El catálogo, siempre a la vista en la barra (2026-10-27; antes, una tarjeta
-                        // al final de la lista).
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
-                                    .accessibilityLabel(CatalogText.cardTitle)
-                                    .accessibilityIdentifier("catalog-button")
-                            }
-                        }
+                } action: {
+                    // El catálogo, siempre a la vista en la barra (2026-10-27; antes, una tarjeta al
+                    // final de la lista), a la izquierda de la nube: el borde izquierdo es para volver
+                    // (repaso de la HIG, 2026-10-28).
+                    NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
+                        .accessibilityLabel(CatalogText.cardTitle)
+                        .accessibilityIdentifier("catalog-button")
                 }
             }
-            Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
+            Tab(ChartsText.title, systemImage: "chart.bar", value: AppTab.charts) {
                 stack(.charts) { ChartsScreen(model: root.charts) }
             }
         }
@@ -82,6 +83,8 @@ struct RootView: View {
         // vuelve a la de entrada (decisión del usuario, 2026-10-25). Nunca en el `onAppear` de la
         // pantalla: ese salta también al empezar a deslizar para volver, y cerraba el detalle de
         // golpe en mitad del gesto.
+        .onAppear { navigation.restore(savedTab) }
+        .onChange(of: navigation.selectedTab) { _, tab in savedTab = tab.rawValue }
         .onChange(of: navigation.reselection) { _, reselection in
             guard let tab = reselection?.tab else { return }
             paths[tab] = NavigationPath()
@@ -95,10 +98,23 @@ struct RootView: View {
     }
 
     private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
+        navigationStack(tab) { content().syncToolbar() }
+    }
+
+    /// Con una acción de la pantalla de entrada a la izquierda de la nube.
+    private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View, @ViewBuilder action: () -> some View) -> some View {
+        navigationStack(tab) { content().syncToolbar(action: action) }
+    }
+
+    /// La flecha de volver y los botones de la barra, sin teñir: en iOS 26 el color es para el fondo
+    /// de la acción principal, no para símbolos ni texto (repaso de la HIG, 2026-10-28). El
+    /// contenido conserva el azul de la raíz. La nube lleva sus propios colores.
+    private func navigationStack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
         NavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
             content()
+                .tint(Theme.accentLight)
                 .screenBackground()
-                .syncToolbar()
         }
+        .tint(Theme.text)
     }
 }

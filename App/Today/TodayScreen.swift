@@ -118,6 +118,13 @@ private struct RoutinePreview: View {
             }
             .padding()
         }
+        // Sin ejercicios (la primera vez): qué hacer, en vez de una pantalla en blanco.
+        .overlay {
+            if model.isPreviewEmpty {
+                ContentUnavailableView(TodayText.emptyRoutineTitle, systemImage: "dumbbell",
+                                       description: Text(TodayText.emptyRoutineMessage))
+            }
+        }
         .safeAreaInset(edge: .bottom) {
             BottomActions(primary: {
                 Button { Task { await model.requestStart() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
@@ -138,8 +145,9 @@ private struct RoutinePreview: View {
     }
 }
 
-/// La fila de botones fija abajo, encima de la barra de pestañas: uno secundario a su tamaño y el
-/// principal con el resto del ancho, o solo el principal a todo el ancho. Píldoras de cristal
+/// La fila de botones fija abajo, encima de la barra de pestañas: el secundario y el principal a
+/// partes iguales (se distinguen por el estilo, no por el tamaño: repaso de la HIG, 2026-10-28), o
+/// solo el principal a todo el ancho. Píldoras de cristal
 /// (`.glassPill`) sin fondo detrás: las tarjetas pasan por debajo al desplazarse.
 struct BottomActions<Secondary: View, Primary: View>: View {
     @ViewBuilder let secondary: Secondary
@@ -177,8 +185,8 @@ struct SummaryRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).scaledFont(15, .semibold).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
-            Text(subtitle).scaledFont(12).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
+            Text(title).scaledFont(15, .semibold).foregroundStyle(isSkipped ? Theme.textSecondary : Theme.text)
+            Text(subtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
         }
         .card(background: isSkipped ? Theme.skipTint : Theme.surface)
     }

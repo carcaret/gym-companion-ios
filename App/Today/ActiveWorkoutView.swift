@@ -18,19 +18,19 @@ struct ActiveWorkoutView: View {
                     // con ese rol la lista quita la fila antes de que se confirme.
                     .swipeActions(edge: .trailing) {
                         Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
-                            .tint(Theme.red)
+                            .tint(Theme.actionRed)
                     }
                     // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna. Sin otro
                     // ejercicio en el catálogo, cambiar no se ofrece.
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         if model.canSwap {
                             Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
-                                .tint(Theme.accent)
+                                .tint(Theme.actionBlue)
                         }
                         Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
                             Task { await model.toggleSkip(at: index) }
                         }
-                        .tint(Theme.textMuted)
+                        .tint(Theme.actionGray)
                     }
                     // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes de ejecutarla.
@@ -56,18 +56,15 @@ struct ActiveWorkoutView: View {
         .screenBackground()
         .keyboardDismissal()
         // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un
-        // recuadro encima de las tarjetas).
-        .navigationSubtitle(TodayText.inProgress)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(Theme.gold).accessibilityLabel("Récord") }
-            }
-        }
+        // recuadro encima de las tarjetas) y si hay récord, con el trofeo plano de SF Symbols. En su
+        // cápsula de la barra, el trofeo parecía un botón (repaso de la HIG, 2026-10-28).
+        .navigationSubtitle(model.hasRecord
+            ? Text("\(TodayText.inProgress) · \(Image(systemName: "trophy.fill")) \(TodayText.record)")
+            : Text(TodayText.inProgress))
         .safeAreaInset(edge: .bottom) {
             BottomActions {
-                Button { model.openAddPicker() } label: { Label(TodayText.addExercise, systemImage: "plus") }
+                Button { model.openAddPicker() } label: { Text(TodayText.addExercise).frame(maxWidth: .infinity) }
                     .buttonStyle(.glassPill(.secondary))
-                    .fixedSize()
                     .accessibilityIdentifier("add-exercise")
             } primary: {
                 Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
@@ -130,8 +127,8 @@ struct ExercisePickerSheet: View {
                             if let title = section.title { Text(title) }
                         }
                     }
-                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, con su alerta.
-                    // Con el teclado abierto, la alerta se perdía al cerrarse la búsqueda (2026-10-27).
+                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, en su pantalla
+                    // (repaso de la HIG, 2026-10-28: antes, una alerta con un campo).
                     if let label = picker.searchCreateLabel {
                         Button(label) { Task { await model.createFromSearch() } }
                             .accessibilityIdentifier("create-from-search")
@@ -143,6 +140,7 @@ struct ExercisePickerSheet: View {
             }
             .searchable(text: $model.pickerQuery, prompt: TodayText.searchPlaceholder)
             .screenBackground()
+            .keyboardDismissal()
             .navigationTitle(model.picker?.title ?? "")
             .navigationSubtitle(model.picker?.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
@@ -150,15 +148,54 @@ struct ExercisePickerSheet: View {
                 // Solo para elegir: la ✕ de iOS 26, sin ✓.
                 ToolbarItem(placement: .cancellationAction) { Button(role: .close) { model.closePicker() } }
             }
-            .alert(TodayText.createTitle, isPresented: $model.isCreatePresented) {
-                TextField(TodayText.createNamePlaceholder, text: $model.createName)
-                Button(TodayText.cancel, role: .cancel) {}
-                Button(TodayText.createConfirm) { Task { await model.createExercise() } }
-            } message: {
-                Text(model.createMessage ?? TodayText.createNameLabel)
-            }
+            .navigationDestination(isPresented: $model.isCreatePresented) { CreateExerciseForm(model: model) }
         }
         // Siempre grande: a media altura, al cerrarse el teclado la hoja se encogía, la fila se
         // movía bajo el dedo e iOS cancelaba el toque (vídeo del CI y el iPhone, 2026-10-27).
+    }
+}
+
+/// Crear un ejercicio nuevo sin nada buscado, empujado en el selector: el nombre y el grupo, como el
+/// editor del catálogo. Se vuelve con la flecha; la ✓ lo crea y lo añade.
+private struct CreateExerciseForm: View {
+    @Bindable var model: TodayModel
+    @FocusState private var nameFocused: Bool
+
+    var body: some View {
+        Form {
+            Section {
+                TextField(TodayText.createNamePlaceholder, text: $model.createName)
+                    .focused($nameFocused)
+                    .submitLabel(.done)
+                    .onSubmit { Task { await model.createExercise() } }
+                    .accessibilityIdentifier("create-name")
+            } header: {
+                Text(TodayText.createNameLabel)
+            } footer: {
+                // Ya existe: lo dice aquí, debajo del nombre.
+                if let message = model.createMessage { Text(message).foregroundStyle(Theme.gold) }
+            }
+            Section(CatalogText.groupLabel) {
+                Picker(CatalogText.groupLabel, selection: $model.createGroup) {
+                    Text(CatalogText.noGroup).tag(MuscleGroup?.none)
+                    ForEach(MuscleGroup.all, id: \.self) { group in
+                        Text(GroupText.name(group)).tag(MuscleGroup?.some(group))
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
+        .screenBackground()
+        .keyboardDismissal()
+        .navigationTitle(TodayText.createTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(role: .confirm) { Task { await model.createExercise() } }
+                    .disabled(model.createName.trimmingWhitespace().isEmpty)
+                    .accessibilityIdentifier("create-confirm")
+            }
+        }
+        .onAppear { nameFocused = true }
     }
 }

@@ -46,9 +46,9 @@ final class ScreenshotTests: XCTestCase {
         capture(app, "13-hoy-tarjeta")
 
         // Un toque en la penúltima barra de «Últimas sesiones»: su bocadillo.
-        let strip = app.descendants(matching: .any)["history-strip"].firstMatch
-        XCTAssertTrue(strip.appears(timeout: 10))
-        strip.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.4)).tap()
+        let bars = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'strip-bar-'"))
+        XCTAssertTrue(bars.firstMatch.appears(timeout: 10))
+        bars.element(boundBy: bars.count - 2).tap()
         capture(app, "15-hoy-tira-bocadillo")
 
         app.buttons["finish-workout"].tap()
@@ -71,7 +71,7 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["session-done"].appears(timeout: 10))
         XCTAssertTrue(app.buttons["weight-plus"].firstMatch.appears(timeout: 10))
         capture(app, "22-historial-editando")
-        // Sin cambios, «Cancelar» cierra la hoja sin preguntar.
+        // Sin cambios, la ✕ cierra la hoja sin preguntar.
         app.buttons["session-cancel"].tap()
         XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 10))
 

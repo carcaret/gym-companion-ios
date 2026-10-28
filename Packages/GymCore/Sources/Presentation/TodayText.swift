@@ -8,15 +8,21 @@ public enum TodayText {
     // debajo, de subtítulo, en qué punto está (decisión del usuario, 2026-10-27; la PWA ponía
     // «Rutina de …» y «Entreno …»).
     public static let previewStatus = "Vista previa"
+    /// La vista previa de una rutina sin ejercicios, la primera vez (repaso de la HIG, 2026-10-28).
+    public static let emptyRoutineTitle = "Empieza el entreno y añade ejercicios"
+    public static let emptyRoutineMessage = "Lo que añadas se queda en la rutina para la próxima vez."
     /// El subtítulo de la barra en el entreno en curso (el `.workout-status` de la PWA).
     public static let inProgress = "En curso"
+    /// Junto a «En curso» cuando el entreno ya tiene un récord.
+    public static let record = "récord"
     public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 
-    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros).
+    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros); vacía, "Sin ejercicios".
     public static func routineSummary(_ names: [String]) -> String {
+        guard !names.isEmpty else { return Plural.noExercises }
         let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "…" : "")
-        return "\(names.count) ejercicios · \(preview)"
+        return "\(Plural.exercises(names.count)) · \(preview)"
     }
 
     public static func pendingSwapNote(to: String, from: String) -> String {
@@ -39,7 +45,7 @@ public enum TodayText {
     // Botones
     public static let start = "Iniciar entreno"
     public static let finish = "Finalizar entreno"
-    public static let addExercise = "Ejercicio"
+    public static let addExercise = "Añadir ejercicio"
 
     // Selectores de ejercicio
     public static let swapTitle = "Cambiar ejercicio"
@@ -61,7 +67,6 @@ public enum TodayText {
     public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
-    public static let createConfirm = "Crear y añadir"
     public static let cancel = "Cancelar"
 
     // Quitar

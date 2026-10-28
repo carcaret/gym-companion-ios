@@ -3,6 +3,10 @@ import Domain
 /// Lo que dice VoiceOver en la tarjeta de un ejercicio (2026-10-27): el nombre de cada parámetro,
 /// qué sube o baja cada botón y cómo va cada serie. Lo que se ve son iconos y números.
 public enum CardAccessibilityText {
+    /// Lo que se abre y se cierra (`CardDisclosure`).
+    public static let expanded = "Desplegado"
+    public static let collapsed = "Plegado"
+
     public static func name(_ parameter: LogParameter) -> String {
         switch parameter {
         case .weight: "Peso"

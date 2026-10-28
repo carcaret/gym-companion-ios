@@ -167,8 +167,8 @@ public final class SyncModel {
 
     // MARK: - Configuración
 
-    /// "Probar conexión" con lo que hay escrito, sin guardar nada. El resultado no es un aviso: va
-    /// debajo del botón. Sin repo o sin token no hay nada que probar (el botón está desactivado).
+    /// Probar la conexión con lo que hay escrito, sin guardar nada. El resultado no es un aviso: va
+    /// debajo de los campos. Sin repo o sin token no hay nada que probar (la ✓ está apagada).
     public func testConnection(repository name: String, branch: String, path: String, token: String) async -> Notice? {
         guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return nil }
         return switch await repository.testConnection(location, token: token) {

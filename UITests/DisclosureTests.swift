@@ -1,6 +1,6 @@
 import XCTest
 
-/// Las tarjetas que se abren son `DisclosureGroup`: VoiceOver dice si están desplegadas (antes
+/// Las tarjetas que se abren (`CardDisclosure`): VoiceOver dice si están desplegadas (antes
 /// decía «seleccionado» al abrirlas).
 final class DisclosureTests: XCTestCase {
     override func setUp() {

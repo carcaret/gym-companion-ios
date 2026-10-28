@@ -335,7 +335,7 @@ public actor TrainingRepository {
         (settings.location, token)
     }
 
-    /// Botón "Probar conexión": pregunta a GitHub sin tocar los datos.
+    /// Probar la conexión (al guardar los ajustes): pregunta a GitHub sin tocar los datos.
     public func testConnection(_ location: SyncLocation, token: String) async -> ConnectionResult {
         do {
             _ = try await remote.fetch(location, token: token)

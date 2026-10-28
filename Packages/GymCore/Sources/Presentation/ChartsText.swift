@@ -3,6 +3,8 @@ import Domain
 /// Los textos de la pestaña Gráficas (`views/charts.js`).
 public enum ChartsText {
     public static let title = "Gráficas"
+    /// El eje de las fechas, para VoiceOver.
+    public static let dateAxis = "Fecha"
     public static let from = "Desde"
     public static let to = "Hasta"
     public static let exercise = "Ejercicio"

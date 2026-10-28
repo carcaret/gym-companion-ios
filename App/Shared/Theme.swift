@@ -5,19 +5,21 @@ import SwiftUI
 /// con borde fino y el color de cada día. La app va siempre en oscuro.
 enum Theme {
     // Fondos y superficies
-    static let background = Color(hex: 0x0F0F11)      // --bg-deep
-    static let surface = Color(hex: 0x181A20)         // --surface: tarjeta
-    static let surface2 = Color(hex: 0x1E2028)        // --surface-2: anidada o elevada
-    static let cardSolid = Color(hex: 0x1C1E26)       // --bg-card-solid
+    // Los que tienen que leerse están en `Palette`, donde sus tests comprueban el contraste.
+    static let background = Color(Palette.background) // --bg-deep
+    static let surface = Color(Palette.surface)       // --surface: tarjeta
+    static let surface2 = Color(Palette.surface2)     // --surface-2: anidada o elevada
+    static let cardSolid = Color(Palette.cardSolid)   // --bg-card-solid
     static let input = Color.white.opacity(0.05)      // --bg-input
     static let border = Color.white.opacity(0.09)     // --border
     static let borderLight = Color.white.opacity(0.06)
     static let borderStrong = Color.white.opacity(0.16)
 
     // Texto
-    static let text = Color(hex: 0xD4D4D4)
-    static let textSecondary = Color(hex: 0xD4D4D4).opacity(0.6)
-    static let textMuted = Color(hex: 0xD4D4D4).opacity(0.35)
+    static let text = Color(Palette.text)
+    /// También lo apagado (saltado, sin datos): un gris más tenue no se leía (repaso de la HIG,
+    /// 2026-10-28).
+    static let textSecondary = Color(Palette.text).opacity(Palette.secondaryTextOpacity)
 
     // Colores
     static let accent = Color(hex: 0x569CD6)
@@ -36,6 +38,20 @@ enum Theme {
     static let orange = Color(hex: 0xCE9178)
     static let gold = Color(hex: 0xDCDCAA)
     static let focus = Color(hex: 0xE8B84B)           // la serie que se está editando
+
+    // Un color, un significado (repaso de la HIG, 2026-10-28): verde es solo «sincronizado» o
+    // «bien»; rojo, solo error o lo que borra.
+    /// Por debajo del objetivo (antes, verde).
+    static let below = Color(hex: 0xCE9178)
+    static let belowTint = Color(hex: 0xCE9178).opacity(0.14)
+    /// Por encima del objetivo: el azul de cumplido, más fuerte (antes, rojo, como un error).
+    static let aboveText = Color(hex: 0xCFE6FB)
+    static let aboveTint = Color(hex: 0x569CD6).opacity(0.28)
+
+    /// Fondos de las acciones de deslizar, con el texto blanco de iOS.
+    static let actionBlue = Color(Palette.actionBlue)
+    static let actionRed = Color(Palette.actionRed)
+    static let actionGray = Color(Palette.actionGray)
 
     // Radios
     /// Las tarjetas, con las esquinas de las secciones de lista de iOS 26 (la PWA usaba 14): así las
@@ -56,6 +72,10 @@ enum Theme {
 }
 
 extension Color {
+    init(_ rgb: RGB) {
+        self.init(red: Double(rgb.r) / 255, green: Double(rgb.g) / 255, blue: Double(rgb.b) / 255)
+    }
+
     init(hex: UInt32) {
         self.init(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
     }

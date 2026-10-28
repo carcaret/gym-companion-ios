@@ -25,6 +25,8 @@ public final class WatchModel {
         public let reps: String
         /// Saltado hoy: se pinta atenuado.
         public let isSkipped: Bool
+        /// "Saltado", debajo del nombre: no basta con que se vea más apagado.
+        public let status: String?
         public let previous: [PreviousRow]
         /// "Primera vez", si no hay sesiones anteriores.
         public let noPrevious: String?
@@ -79,6 +81,7 @@ public final class WatchModel {
                 weight: WatchText.weight(exercise.weight),
                 reps: WatchText.reps(exercise.reps),
                 isSkipped: exercise.skipped,
+                status: exercise.skipped ? WatchText.skipped : nil,
                 previous: exercise.previous.map { PreviousRow(date: WatchText.date($0.date), reps: WatchText.reps($0.reps)) },
                 noPrevious: exercise.previous.isEmpty ? WatchText.firstTime : nil
             )

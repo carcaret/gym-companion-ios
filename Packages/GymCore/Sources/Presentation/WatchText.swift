@@ -5,6 +5,7 @@ public enum WatchText {
     public static let waiting = "Abre Gym en el iPhone"
     public static let noWorkout = "Sin entreno en curso"
     public static let firstTime = "Primera vez"
+    public static let skipped = "Saltado"
 
     /// "12·12·11·10": las reps de cada serie, aunque se repitan; una serie sin reps, "—".
     public static func reps(_ reps: [Int?]) -> String {

@@ -81,6 +81,9 @@ struct WatchModelTests {
         model.receive(workout([exercise("Press Banca", skipped: true), exercise("Remo")]))
         guard case .workout(let pages) = model.content else { Issue.record("sin entreno"); return }
         #expect(pages.map(\.isSkipped) == [true, false])
+        // Lo dice con un texto, que también lee VoiceOver: antes solo se veía más apagado (repaso
+        // de la HIG, 2026-10-28).
+        #expect(pages.map(\.status) == ["Saltado", nil])
     }
 
     @Test("empieza en el primer ejercicio")

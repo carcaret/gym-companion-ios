@@ -45,7 +45,7 @@ struct SyncIndicator: View {
         switch sync.status.state {
         case .ok: Theme.green
         case .pending: Theme.gold
-        case .disabled: Theme.textMuted
+        case .disabled: Theme.textSecondary
         }
     }
 
@@ -77,7 +77,8 @@ private struct SyncToolbar<Action: View>: ViewModifier {
     func body(content: Content) -> some View {
         content.toolbar {
             if hasAction {
-                ToolbarItem(placement: .topBarTrailing) { action }
+                // Sin teñir, como la flecha de volver (`RootView.navigationStack`).
+                ToolbarItem(placement: .topBarTrailing) { action.tint(Theme.text) }
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -95,6 +96,7 @@ struct SyncPresentation: ViewModifier {
     let noticeDuration: Duration
     /// El de la raíz se apaga mientras la hoja de los ajustes está abierta: lo pinta la hoja.
     let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -113,8 +115,14 @@ struct SyncPresentation: ViewModifier {
                         .gesture(DragGesture(minimumDistance: 10).onChanged { drag in
                             if drag.translation.height < -10 { sync.notice = nil }
                         })
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .onTapGesture { sync.notice = nil }
+                        .accessibilityAction(named: Notice.dismissLabel) { sync.notice = nil }
+                        // Con «Reducir movimiento», aparece fundido en vez de bajar.
+                        .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+                        // Un error espera a que lo cierren; lo demás se va solo (repaso de la HIG,
+                        // 2026-10-28: «Sin conexión…» se iba a los 2,5 s).
                         .task(id: notice) {
+                            guard !notice.staysUntilDismissed else { return }
                             try? await Task.sleep(for: noticeDuration)
                             if sync.notice == notice { sync.notice = nil }
                         }
@@ -168,7 +176,7 @@ struct NoticeView: View {
 }
 
 /// El icono y el texto de un aviso, con el color de su tipo: en el aviso que flota y, en los
-/// ajustes, debajo de «Probar conexión».
+/// ajustes, debajo de los campos.
 struct NoticeLabel: View {
     let notice: Notice
 
