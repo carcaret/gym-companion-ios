@@ -1,3 +1,4 @@
+import Presentation
 import SwiftUI
 
 /// Lo que se abre y se cierra (tarjetas de ejercicio, filas de Progreso): se toca toda la cabecera,
@@ -80,7 +81,7 @@ struct DisclosureHeader<Label: View>: View {
             .contentShape(.rect)
         }
         .buttonStyle(DimmedButtonStyle())
-        .accessibilityValue(isExpanded ? Text("Desplegado") : Text("Plegado"))
+        .accessibilityValue(isExpanded ? CardAccessibilityText.expanded : CardAccessibilityText.collapsed)
         if let identifier {
             button.accessibilityIdentifier(identifier)
         } else {

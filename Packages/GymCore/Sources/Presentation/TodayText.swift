@@ -15,10 +15,11 @@ public enum TodayText {
     public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 
-    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros).
+    /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros); vacía, "Sin ejercicios".
     public static func routineSummary(_ names: [String]) -> String {
+        guard !names.isEmpty else { return Plural.noExercises }
         let preview = names.prefix(3).joined(separator: ", ") + (names.count > 3 ? "…" : "")
-        return "\(names.count) ejercicios · \(preview)"
+        return "\(Plural.exercises(names.count)) · \(preview)"
     }
 
     public static func pendingSwapNote(to: String, from: String) -> String {

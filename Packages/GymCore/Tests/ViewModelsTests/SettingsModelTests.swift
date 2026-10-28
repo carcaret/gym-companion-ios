@@ -121,7 +121,10 @@ struct SettingsConnectionTests {
         await settings.harness.remote.fail(fetch: .status(401))
         settings.model.token = "ghp_otro"
         await settings.model.save()
-        #expect(settings.model.connectionResult?.text.contains("401") == true)
+        // Cambiado con la aprobación del usuario (repaso de la HIG F2, 2026-10-28): el error ya no
+        // lleva el código («Error 401 — …»), sino qué pasa y qué revisar. En la PWA, contiene "401".
+        #expect(settings.model.connectionResult == SyncText.connectionError(status: 401))
+        #expect(settings.model.connectionResult?.text.contains("token") == true)
         #expect(settings.model.connectionResult?.kind == .error)
         #expect(settings.sync.isSettingsPresented, "Con error, la hoja sigue abierta")
         #expect(await settings.harness.credentials.token == SyncFixtures.token, "No se guarda nada")

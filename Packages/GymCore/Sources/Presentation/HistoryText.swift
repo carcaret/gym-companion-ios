@@ -17,8 +17,9 @@ public enum HistoryText {
 
     /// "3 ejercicios · Press Banca · Curl Bíceps · Remo +2" (los tres primeros).
     public static func sessionSummary(_ names: [String]) -> String {
+        guard !names.isEmpty else { return Plural.noExercises }
         let preview = names.prefix(3).joined(separator: " · ") + (names.count > 3 ? " +\(names.count - 3)" : "")
-        return "\(names.count) ejercicios · \(preview)"
+        return "\(Plural.exercises(names.count)) · \(preview)"
     }
 
     /// El detalle de una sesión: la rutina de título y la fecha larga debajo, de subtítulo («lun, 8

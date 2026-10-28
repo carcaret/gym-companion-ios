@@ -22,7 +22,7 @@ struct HistoryStripView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Últimas sesiones").sectionLabelStyle()
+                Text(StatsText.recentSessions).sectionLabelStyle()
                 Spacer()
                 if let delta = strip.deltaText {
                     Text(delta)
@@ -52,6 +52,8 @@ struct HistoryStripView: View {
                     .opacity(selected == nil || selected == index ? 1 : 0.4)
                     .cornerRadius(2)
                     .accessibilityLabel(tooltip(bar))
+                    // En cada barra y no en la gráfica: en un contenedor pisaba lo de dentro.
+                    .accessibilityIdentifier("strip-bar-\(index)")
                     .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         if selected == index { bubble(bar) }
                     }
@@ -71,7 +73,6 @@ struct HistoryStripView: View {
             }
         }
         .chartLegend(.hidden)
-        .accessibilityIdentifier("history-strip")
         .chartPlotStyle { $0.frame(height: Self.plotHeight) }
         .chartOverlay { proxy in
             GeometryReader { geometry in

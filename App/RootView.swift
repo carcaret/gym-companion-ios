@@ -54,13 +54,13 @@ struct RootView: View {
     private var tabs: some View {
         // Por `select`, que distingue tocar otra pestaña de volver a tocar la activa.
         TabView(selection: Binding(get: { navigation.selectedTab }, set: { navigation.select($0) })) {
-            Tab("Rutinas", systemImage: "dumbbell", value: AppTab.routines) {
+            Tab(TodayText.selectorTitle, systemImage: "dumbbell", value: AppTab.routines) {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
-            Tab("Historial", systemImage: "clock", value: AppTab.history) {
+            Tab(HistoryText.title, systemImage: "clock", value: AppTab.history) {
                 stack(.history) { HistoryScreen(model: root.history, sync: root.sync, noticeDuration: root.noticeDuration) }
             }
-            Tab("Progreso", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
+            Tab(StatsText.title, systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
                     ProgressScreen(model: root.progress)
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
@@ -73,7 +73,7 @@ struct RootView: View {
                         .accessibilityIdentifier("catalog-button")
                 }
             }
-            Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
+            Tab(ChartsText.title, systemImage: "chart.bar", value: AppTab.charts) {
                 stack(.charts) { ChartsScreen(model: root.charts) }
             }
         }
