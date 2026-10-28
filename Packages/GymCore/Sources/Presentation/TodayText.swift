@@ -8,6 +8,9 @@ public enum TodayText {
     // debajo, de subtítulo, en qué punto está (decisión del usuario, 2026-10-27; la PWA ponía
     // «Rutina de …» y «Entreno …»).
     public static let previewStatus = "Vista previa"
+    /// La vista previa de una rutina sin ejercicios, la primera vez (repaso de la HIG, 2026-10-28).
+    public static let emptyRoutineTitle = "Empieza el entreno y añade ejercicios"
+    public static let emptyRoutineMessage = "Lo que añadas se queda en la rutina para la próxima vez."
     /// El subtítulo de la barra en el entreno en curso (el `.workout-status` de la PWA).
     public static let inProgress = "En curso"
     /// Junto a «En curso» cuando el entreno ya tiene un récord.

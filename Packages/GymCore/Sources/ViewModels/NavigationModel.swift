@@ -2,7 +2,7 @@ import Domain
 import Observation
 
 /// Las pestañas de la app, en el orden de la barra.
-public enum AppTab: Hashable, Sendable, CaseIterable {
+public enum AppTab: String, Hashable, Sendable, CaseIterable {
     case routines, history, progress, charts
 }
 
@@ -23,6 +23,13 @@ public final class NavigationModel {
     public private(set) var reselection: Reselection?
 
     public init() {}
+
+    /// La pestaña de la última vez (`SceneStorage`), al abrir la app: no es un toque. Un nombre que
+    /// no es de ninguna pestaña no cambia nada.
+    public func restore(_ rawValue: String?) {
+        guard let tab = rawValue.flatMap(AppTab.init(rawValue:)) else { return }
+        selectedTab = tab
+    }
 
     /// Tocar una pestaña.
     public func select(_ tab: AppTab) {

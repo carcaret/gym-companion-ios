@@ -94,7 +94,7 @@ final class HistoryTests: XCTestCase {
         wait(for: [gone], timeout: 5)
     }
     /// El detalle es de solo lectura y se corrige con «Editar», en una hoja (2026-10-27): con cambios
-    /// no se cierra deslizando, y «Cancelar» pregunta y, al descartar, deja lo guardado.
+    /// no se cierra deslizando, y la ✕ pregunta y, al descartar, deja lo guardado.
     @MainActor
     func testEditarYCancelarDescarta() {
         let app = openFirstSessionCard()
@@ -123,7 +123,7 @@ final class HistoryTests: XCTestCase {
         XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
     }
 
-    /// «OK» guarda y vuelve a solo lectura con lo cambiado.
+    /// La ✓ guarda y vuelve a solo lectura con lo cambiado.
     @MainActor
     func testEditarYOKGuarda() {
         let app = openFirstSessionCard()

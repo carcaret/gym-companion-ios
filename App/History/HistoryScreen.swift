@@ -36,7 +36,7 @@ struct HistoryScreen: View {
     @ViewBuilder
     private var list: some View {
         if model.rows.isEmpty {
-            ContentUnavailableView(HistoryText.empty, systemImage: "list.clipboard")
+            ContentUnavailableView(HistoryText.empty, systemImage: "list.clipboard", description: Text(HistoryText.emptyMessage))
         } else {
             // Por meses, como Fotos o Fitness (2026-10-27).
             List(model.sections) { section in
@@ -141,7 +141,7 @@ private struct SessionCards: View {
     }
 }
 
-/// La hoja de editar una sesión: «Cancelar» y «OK», y con cambios no se cierra deslizando.
+/// La hoja de editar una sesión: la ✕ y la ✓, y con cambios no se cierra deslizando.
 private struct SessionEditor: View {
     @Bindable var model: HistoryModel
 

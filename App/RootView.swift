@@ -11,6 +11,8 @@ struct RootView: View {
     /// Lo empujado con `NavigationLink(value:)` en cada pestaña (catálogo, elegir ejercicio). El
     /// detalle del historial, la vista previa y las gráficas de Progreso los lleva su modelo.
     @State private var paths: [AppTab: NavigationPath] = [:]
+    /// La pestaña visible, para volver a ella si iOS cierra la app (repaso de la HIG, 2026-10-28).
+    @SceneStorage("pestana") private var savedTab: String?
 
     init(root: CompositionRoot) {
         self.root = root
@@ -81,6 +83,8 @@ struct RootView: View {
         // vuelve a la de entrada (decisión del usuario, 2026-10-25). Nunca en el `onAppear` de la
         // pantalla: ese salta también al empezar a deslizar para volver, y cerraba el detalle de
         // golpe en mitad del gesto.
+        .onAppear { navigation.restore(savedTab) }
+        .onChange(of: navigation.selectedTab) { _, tab in savedTab = tab.rawValue }
         .onChange(of: navigation.reselection) { _, reselection in
             guard let tab = reselection?.tab else { return }
             paths[tab] = NavigationPath()

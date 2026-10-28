@@ -80,6 +80,12 @@ public final class ProgressModel {
         }
     }
 
+    /// Si hay algo que comparar: con todo sin recorrido (o sin entrenos), la pantalla dice cuál es el
+    /// siguiente paso (repaso de la HIG, 2026-10-28).
+    public var hasProgress: Bool {
+        allRows.contains { $0.status != .noTrack }
+    }
+
     /// Plegada, solo los estancados (que responden "¿qué toco?"); desplegada, todos.
     public var visibleRows: [ExerciseRow] {
         isExpanded ? allRows : allRows.filter { $0.status == .stalled }

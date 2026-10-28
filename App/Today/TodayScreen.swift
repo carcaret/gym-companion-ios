@@ -118,6 +118,13 @@ private struct RoutinePreview: View {
             }
             .padding()
         }
+        // Sin ejercicios (la primera vez): qué hacer, en vez de una pantalla en blanco.
+        .overlay {
+            if model.previewCards.isEmpty {
+                ContentUnavailableView(TodayText.emptyRoutineTitle, systemImage: "dumbbell",
+                                       description: Text(TodayText.emptyRoutineMessage))
+            }
+        }
         .safeAreaInset(edge: .bottom) {
             BottomActions(primary: {
                 Button { Task { await model.requestStart() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }

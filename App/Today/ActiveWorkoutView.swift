@@ -140,6 +140,7 @@ struct ExercisePickerSheet: View {
             }
             .searchable(text: $model.pickerQuery, prompt: TodayText.searchPlaceholder)
             .screenBackground()
+            .keyboardDismissal()
             .navigationTitle(model.picker?.title ?? "")
             .navigationSubtitle(model.picker?.subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)

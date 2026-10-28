@@ -59,4 +59,18 @@ struct NavigationModelTests {
         navigation.select(.routines)
         #expect(navigation.reselection == nil)
     }
+
+    /// Al volver a abrir la app después de que iOS la cerrase, la pestaña de antes (repaso de la
+    /// HIG, 2026-10-28). Se guarda por su nombre; uno que ya no exista no cambia nada.
+    @Test("vuelve a la pestaña guardada sin contar como volver a tocarla")
+    func restore() {
+        let model = NavigationModel()
+        model.restore(AppTab.history.rawValue)
+        #expect(model.selectedTab == .history)
+        #expect(model.reselection == nil)
+        model.restore("otra")
+        #expect(model.selectedTab == .history)
+        model.restore(nil)
+        #expect(model.selectedTab == .history)
+    }
 }

@@ -17,6 +17,22 @@ struct ExercisePageView: View {
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(Theme.textSecondary)
             }
+            // Sin apagar: es lo que explica por qué lo demás sí lo está.
+            if let status = page.status {
+                Text(status)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.text)
+            }
+            details
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // Sin tocar los puntos de página que watchOS pinta a la derecha.
+        .padding(.trailing, 14)
+    }
+
+    /// Lo de hoy y las sesiones anteriores, atenuado si está saltado.
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(page.weight)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(Theme.accentLight)
@@ -46,9 +62,6 @@ struct ExercisePageView: View {
             }
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        // Sin tocar los puntos de página que watchOS pinta a la derecha.
-        .padding(.trailing, 14)
         .opacity(page.isSkipped ? 0.45 : 1)
     }
 }

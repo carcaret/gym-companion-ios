@@ -4,6 +4,8 @@ import Domain
 public enum HistoryText {
     public static let title = "Historial"
     public static let empty = "No hay sesiones registradas"
+    /// El siguiente paso, debajo (repaso de la HIG, 2026-10-28).
+    public static let emptyMessage = "Cuando termines un entreno, saldrá aquí."
     public static let incomplete = "Incompleto"
     public static let completeWorkout = "Completar entreno"
     // Editar una sesión (2026-10-27)
@@ -12,7 +14,7 @@ public enum HistoryText {
     public static let discardConfirm = "Descartar cambios"
     public static let keepEditing = "Seguir editando"
     /// La sesión cambió por otro lado mientras se editaba (el entreno en curso, otra rutina hoy,
-    /// lo bajado de GitHub): «OK» no la pisa.
+    /// lo bajado de GitHub): la ✓ no la pisa.
     public static let changedWhileEditing = Notice("La sesión ha cambiado mientras la editabas. Vuelve a editarla.", .warning)
 
     /// "3 ejercicios · Press Banca · Curl Bíceps · Remo +2" (los tres primeros).

@@ -19,6 +19,15 @@ struct ProgressScreen: View {
             }
             .padding(16)
         }
+        // Sin nada que comparar: qué hacer, en vez de «Nada estancado · 0 progresando» y barras a
+        // cero (repaso de la HIG, 2026-10-28).
+        .overlay {
+            if !model.hasProgress {
+                ContentUnavailableView(StatsText.emptyTitle, systemImage: "chart.line.uptrend.xyaxis",
+                                       description: Text(StatsText.emptyMessage))
+                    .background(Theme.background)
+            }
+        }
         .navigationTitle(StatsText.title)
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
         .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {

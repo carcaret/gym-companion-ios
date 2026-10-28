@@ -176,7 +176,7 @@ struct NoticeView: View {
 }
 
 /// El icono y el texto de un aviso, con el color de su tipo: en el aviso que flota y, en los
-/// ajustes, debajo de «Probar conexión».
+/// ajustes, debajo de los campos.
 struct NoticeLabel: View {
     let notice: Notice
 

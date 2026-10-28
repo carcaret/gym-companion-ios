@@ -61,7 +61,7 @@ public enum SyncText {
     public static let keepRemoteLabel = "Usar los de GitHub"
     public static let cancelLabel = "Cancelar"
 
-    // "Probar conexión": el resultado va debajo del botón, en el formulario, no en un aviso
+    // Probar la conexión al guardar los ajustes: el resultado va debajo de los campos, no en un aviso
     public static let connected = Notice("Conexión exitosa", .success)
     public static let invalidRemoteContent = Notice("Conectado, pero el fichero no es un db.json válido", .error)
 

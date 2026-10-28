@@ -7,6 +7,9 @@ public enum StatsText {
     public static let exercisesTitle = "Ejercicios"
     public static let groupsTitle = "Grupos musculares"
     public static let recentSessions = "Últimas sesiones"
+    /// Sin nada que comparar (repaso de la HIG, 2026-10-28).
+    public static let emptyTitle = "Aún no hay progreso"
+    public static let emptyMessage = "Termina un par de entrenos y aquí verás qué avanza y qué se estanca."
     public static let openCharts = "Ver en Gráficas"
     // Las etiquetas sueltas empiezan en mayúscula, como en iOS (repaso de la HIG, 2026-10-28).
     public static let direct = "Directo"

@@ -44,7 +44,7 @@ struct ExerciseCardView: View {
                 if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
                 if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
             }
-            // Lo cambiado al editar el historial, en amarillo, hasta «OK» o «Cancelar».
+            // Lo cambiado al editar el historial, en amarillo, hasta la ✓ o la ✕.
             Text(card.subtitle)
                 .scaledFont(12)
                 .foregroundStyle(card.isDirty ? Theme.focus : Theme.textSecondary)

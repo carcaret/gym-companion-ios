@@ -71,7 +71,7 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["session-done"].appears(timeout: 10))
         XCTAssertTrue(app.buttons["weight-plus"].firstMatch.appears(timeout: 10))
         capture(app, "22-historial-editando")
-        // Sin cambios, «Cancelar» cierra la hoja sin preguntar.
+        // Sin cambios, la ✕ cierra la hoja sin preguntar.
         app.buttons["session-cancel"].tap()
         XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 10))
 

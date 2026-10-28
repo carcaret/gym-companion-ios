@@ -3,7 +3,7 @@ import UIKit
 
 extension View {
     /// En una pantalla con campos de texto: el teclado se cierra al desplazar la pantalla. Sin botón
-    /// "OK" encima del teclado: tocar fuera de un campo ya lo cierra (decisión del usuario, 2026-10-25).
+    /// encima del teclado: tocar fuera de un campo ya lo cierra (decisión del usuario, 2026-10-25).
     func keyboardDismissal() -> some View {
         scrollDismissesKeyboard(.interactively)
     }

@@ -7,7 +7,7 @@ import Presentation
 /// a la más antigua, y el detalle de una. El detalle es de solo lectura y se corrige con «Editar»,
 /// en una hoja, como un contacto o un evento del Calendario (2026-10-27; la PWA tenía un «Guardar»
 /// por tarjeta, y cerrarla o volver tiraba lo corregido sin avisar): los cambios van sobre una copia
-/// de la sesión, «OK» guarda lo cambiado y «Cancelar» con cambios pregunta antes de tirarlos.
+/// de la sesión, la ✓ guarda lo cambiado y la ✕ con cambios pregunta antes de tirarlos.
 @MainActor
 @Observable
 public final class HistoryModel {
@@ -44,11 +44,11 @@ public final class HistoryModel {
     /// La copia de los ejercicios de la sesión mientras se edita; `nil` = solo lectura.
     private var drafts: [ExerciseLog]?
     /// La sesión tal como estaba al tocar «Editar»: con qué se comparan los cambios, y si al
-    /// pulsar «OK» ya no es así, la sesión cambió por otro lado y no se pisa.
+    /// pulsar la ✓ ya no es así, la sesión cambió por otro lado y no se pisa.
     private var editBase: [ExerciseLog]?
-    /// Los errores que marcó el último «OK», por posición.
+    /// Los errores que marcó la última ✓, por posición.
     private var validationErrors: [Int: [LogValidationError]] = [:]
-    /// «Cancelar» con cambios: «Descartar cambios» o «Seguir editando».
+    /// La ✕ con cambios: «Descartar cambios» o «Seguir editando».
     public var isDiscardPromptPresented = false
     public private(set) var focusedSeries: (log: Int, series: Int)?
     public private(set) var deletePrompt: DeletePrompt?
@@ -218,7 +218,7 @@ public final class HistoryModel {
         focusedSeries = nil
     }
 
-    /// «Cancelar»: sin cambios sale al momento; con cambios, pregunta.
+    /// La ✕: sin cambios sale al momento; con cambios, pregunta.
     public func cancelEditing() {
         commitTyping()
         guard hasChanges else { return endEditing() }
@@ -236,7 +236,7 @@ public final class HistoryModel {
         isDiscardPromptPresented = false
     }
 
-    /// «OK»: si algo no vale, se marca, se abre la primera tarjeta con errores y no se guarda; si
+    /// La ✓: si algo no vale, se marca, se abre la primera tarjeta con errores y no se guarda; si
     /// vale, se guardan de una vez las tarjetas cambiadas, y solo esas (las demás conservan sus
     /// series vacías). Sin cambios, no se escribe nada. Si la sesión cambió por otro lado mientras
     /// se editaba, no se pisa: se dice y se sale de editar.

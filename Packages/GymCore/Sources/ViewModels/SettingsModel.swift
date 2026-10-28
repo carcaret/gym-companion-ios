@@ -4,7 +4,7 @@ import Observation
 import Presentation
 
 /// Los ajustes de sincronización (`views/settings.js` de la PWA), en la hoja que abre el indicador:
-/// dónde está el `db.json` de GitHub y el token. «Guardar» prueba lo escrito y, si va bien, guarda y
+/// dónde está el `db.json` de GitHub y el token. La ✓ prueba lo escrito y, si va bien, guarda y
 /// cierra la hoja, como al añadir una cuenta de correo (2026-10-27; la PWA tenía «Probar conexión»
 /// aparte). La sincronización la hace `SyncModel`.
 @MainActor
