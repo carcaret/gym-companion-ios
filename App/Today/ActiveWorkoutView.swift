@@ -103,7 +103,7 @@ struct ExercisePickerSheet: View {
     @Bindable var model: TodayModel
 
     var body: some View {
-        AppNavigationStack {
+        NavigationStack {
             List {
                 if let picker = model.picker {
                     if picker.offersOneOff {
@@ -188,11 +188,9 @@ private struct CreateExerciseForm: View {
         .screenBackground()
         .keyboardDismissal()
         .navigationTitle(TodayText.createTitle)
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(role: .confirm) { Task { await model.createExercise() } }
-                    .confirmTint()
+                ConfirmButton { Task { await model.createExercise() } }
                     .disabled(model.createName.trimmingWhitespace().isEmpty)
                     .accessibilityIdentifier("create-confirm")
             }

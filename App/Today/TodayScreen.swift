@@ -13,13 +13,10 @@ struct TodayScreen: View {
             switch model.stage {
             // La vista previa y el entreno terminado entran empujados sobre el selector: se vuelve
             // con la flecha de la barra o deslizando desde el borde, como en cualquier app de iOS.
-            // El selector, con el título grande que se encoge al desplazar, como la entrada de
-            // las demás pestañas. El entreno en curso, en pequeño: un título largo con «En curso»
-            // debajo, y el sitio es para las tarjetas (decisión del usuario, 2026-10-27).
             case .selector, .preview, .completed:
-                selector.navigationTitle(TodayText.selectorTitle).navigationBarTitleDisplayMode(.large)
+                selector.navigationTitle(TodayText.selectorTitle)
             case .active:
-                ActiveWorkoutView(model: model).navigationTitle(model.title).navigationBarTitleDisplayMode(.inline)
+                ActiveWorkoutView(model: model).navigationTitle(model.title)
             }
         }
         .navigationDestination(isPresented: Binding(get: { isPushed }, set: { if !$0 { model.backToSelector() } })) {
@@ -35,7 +32,6 @@ struct TodayScreen: View {
             .syncToolbar()
             .navigationTitle(model.title)
             .navigationSubtitle(model.subtitle ?? "")
-            .navigationBarTitleDisplayMode(.inline)
             .screenBackground()
         }
     }

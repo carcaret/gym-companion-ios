@@ -38,12 +38,14 @@ struct RootView: View {
         .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
                           isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
-            AppNavigationStack { SettingsScreen(model: root.settings) }
+            NavigationStack { SettingsScreen(model: root.settings) }
                 .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
         }
         // Para la nube de cada pantalla (`syncToolbar`).
         .environment(root.sync)
-        .tint(Theme.accentLight)
+        // Sin `.tint`: el azul de la app es el color de acento (`AccentColor`) y el sistema lo pone
+        // donde toca. En iOS 26 la barra va en monocromo (la ✕, la flecha de volver, «Editar») y la
+        // ✓ con el color; un `.tint` aquí teñía también la barra (repaso de la HIG, 2026-10-28).
         .preferredColorScheme(.dark)
         // La app está solo en español: selectores de fecha y ejes de las gráficas también.
         .environment(\.locale, Locale(identifier: "es_ES"))
@@ -107,8 +109,11 @@ struct RootView: View {
     }
 
     private func navigationStack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
-        AppNavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
-            content().screenBackground()
+        NavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
+            // Título pequeño en toda la app (decisión del usuario, 2026-10-28): lo empujado lo hereda.
+            content()
+                .navigationBarTitleDisplayMode(.inline)
+                .screenBackground()
         }
     }
 }

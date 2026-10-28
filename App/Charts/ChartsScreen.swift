@@ -91,7 +91,6 @@ private struct ExercisePicker: View {
         }
         .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: ChartsText.searchPlaceholder)
         .navigationTitle(ChartsText.exercise)
-        .navigationBarTitleDisplayMode(.inline)
         .screenBackground()
         .keyboardDismissal()
     }

@@ -77,8 +77,7 @@ private struct SyncToolbar<Action: View>: ViewModifier {
     func body(content: Content) -> some View {
         content.toolbar {
             if hasAction {
-                // Sin teñir, como la flecha de volver (`RootView.navigationStack`).
-                ToolbarItem(placement: .topBarTrailing) { action.tint(Theme.text) }
+                ToolbarItem(placement: .topBarTrailing) { action }
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
             }
             ToolbarItem(placement: .topBarTrailing) {
