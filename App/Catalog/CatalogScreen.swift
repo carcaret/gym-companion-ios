@@ -104,12 +104,22 @@ private struct CatalogEditor: View {
                 }
             }
             .navigationTitle(CatalogText.editorTitle)
+            .interactiveDismissDisabled(model.hasChanges)
             .screenBackground()
             .keyboardDismissal()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
-                ToolbarItem(placement: .cancellationAction) { Button(role: .close) { model.cancelEditing() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    // Con cambios, pregunta antes de tirarlos, como las demás hojas.
+                    Button(role: .close) { model.requestCancel() }
+                        .accessibilityIdentifier("catalog-cancel")
+                        .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
+                                            titleVisibility: .visible) {
+                            Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
+                            Button(SyncText.cancelLabel, role: .cancel) { model.keepEditing() }
+                        }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) { Task { await model.save() } }
                         .disabled(!model.canSave)
