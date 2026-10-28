@@ -117,7 +117,7 @@ struct BlueBarTests {
     }
 }
 
-@Suite("buildBelowTargetScale — la intensidad del verde sale del volumen, no del objetivo")
+@Suite("buildGreenScale — la intensidad del verde sale del volumen, no del objetivo")
 struct BelowTargetScaleTests {
     @Test("grupo vacío → rango neutro")
     func empty() { #expect(BarColor.belowTargetScale([]) == BelowTargetScale(useE1RM: false, range: 0...0)) }
