@@ -111,12 +111,12 @@ private struct ExercisePicker: View {
 }
 
 /// Una gráfica de línea con sus puntos. Un toque enseña el valor del punto más cercano en un
-/// bocadillo, que se va solo a los 3 s o con otro toque en el mismo, como «Últimas sesiones»
-/// (repaso de la HIG, 2026-10-28): con la selección por arrastre, dentro de una lista que se
-/// desplaza había que mantener el dedo.
+/// bocadillo, que se va solo a los 3 s o con otro toque en el mismo, y un toque en otro punto lo
+/// cambia directamente, como «Últimas sesiones» (`TapSelection`; repaso de la HIG, 2026-10-28):
+/// con la selección por arrastre, dentro de una lista que se desplaza había que mantener el dedo.
 private struct ProgressChart: View {
     let chart: ChartsModel.Chart
-    @State private var selectedDate: Date?
+    @State private var selection = TapSelection<LocalDate>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let bubbleDuration: Duration = .seconds(3)
@@ -165,10 +165,11 @@ private struct ProgressChart: View {
                 }
             }
         }
-        .task(id: selectedDate) {
-            guard selectedDate != nil else { return }
-            try? await Task.sleep(for: Self.bubbleDuration)
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selectedDate = nil }
+        .task(id: selection.selected) {
+            guard let shown = selection.selected else { return }
+            // Cancelado por otro toque, no cierra nada: el bocadillo que se ve ya es otro.
+            guard (try? await Task.sleep(for: Self.bubbleDuration)) != nil else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selection.expire(shown) }
         }
         .chartYScale(domain: chart.valueRange)
         .chartXScale(range: .plotDimension(padding: 24))
@@ -185,18 +186,16 @@ private struct ProgressChart: View {
     }
 
     private var nearest: ChartPoint? {
-        selectedDate.flatMap(point(nearestTo:))
+        selection.selected.flatMap { date in chart.points.first { $0.date == date } }
     }
 
     private func point(nearestTo date: Date) -> ChartPoint? {
         chart.points.min { abs($0.date.date.timeIntervalSince(date)) < abs($1.date.date.timeIntervalSince(date)) }
     }
 
-    /// Un toque en el punto que ya se ve lo cierra.
     private func tap(_ date: Date?) {
-        guard let date, let point = point(nearestTo: date) else { return }
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) {
-            selectedDate = nearest?.date == point.date ? nil : point.date.date
+            selection.tap(date.flatMap(point(nearestTo:))?.date)
         }
     }
 }
