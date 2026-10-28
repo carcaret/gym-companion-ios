@@ -28,7 +28,8 @@ struct RootView: View {
             }
         }
         .alert(DataErrorText.saveTitle, isPresented: Bindable(root.model).isSaveErrorPresented) {
-            Button(DataErrorText.understood) {}
+            Button(DataErrorText.notNow, role: .cancel) {}
+            Button(DataErrorText.retry) { Task { await root.model.retrySave() } }
         } message: {
             Text(DataErrorText.saveMessage)
         }

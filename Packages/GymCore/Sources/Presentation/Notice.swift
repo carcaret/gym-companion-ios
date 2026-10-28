@@ -15,6 +15,13 @@ public struct Notice: Hashable, Sendable {
         self.text = text
         self.kind = kind
     }
+
+    /// Un error no se va solo: espera a que se cierre (repaso de la HIG, 2026-10-28). Lo demás se
+    /// va a los pocos segundos.
+    public var staysUntilDismissed: Bool { kind == .error }
+
+    /// La acción de VoiceOver que cierra el aviso (con el dedo, se desliza hacia arriba o se toca).
+    public static let dismissLabel = "Cerrar aviso"
 }
 
 /// Los textos de la sincronización, los mismos que la PWA (`app.js`, `views/settings.js`,

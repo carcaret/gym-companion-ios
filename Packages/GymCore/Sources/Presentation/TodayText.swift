@@ -63,7 +63,6 @@ public enum TodayText {
     public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
-    public static let createConfirm = "Crear y añadir"
     public static let cancel = "Cancelar"
 
     // Quitar

@@ -7,5 +7,6 @@ public enum DataErrorText {
 
     public static let saveTitle = "No se pudo guardar en el iPhone"
     public static let saveMessage = "El último cambio se ve, pero no se ha guardado: si cierras la app, se perderá. Comprueba que el iPhone tiene espacio libre."
-    public static let understood = "Entendido"
+    /// Con «Reintentar» (repaso de la HIG, 2026-10-28; antes, solo «Entendido»).
+    public static let notNow = "Ahora no"
 }

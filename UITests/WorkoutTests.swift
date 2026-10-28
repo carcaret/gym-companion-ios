@@ -68,6 +68,30 @@ final class WorkoutTests: XCTestCase {
         XCTAssertEqual(add.height, finish.height, accuracy: 1)
     }
 
+    /// Crear un ejercicio sin buscar es una pantalla con el nombre y el grupo, no una alerta con un
+    /// campo (repaso de la HIG, 2026-10-28). La ✓ lo crea y entra en el entreno.
+    @MainActor
+    func testCrearUnEjercicioEnSuPantalla() {
+        let app = startWorkout()
+        app.buttons["add-exercise"].tap()
+        let create = app.buttons["create-exercise"]
+        XCTAssertTrue(create.appears(timeout: 10))
+        create.tap()
+        XCTAssertTrue(app.navigationBars["Crear nuevo ejercicio"].appears(timeout: 10))
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        let confirm = app.buttons["create-confirm"]
+        XCTAssertFalse(confirm.isEnabled, "Sin nombre, la ✓ sale apagada")
+
+        let name = app.textFields["create-name"]
+        XCTAssertTrue(name.appears(timeout: 5))
+        name.tap()
+        name.typeText("Press Arnold")
+        XCTAssertTrue(confirm.isEnabled)
+        confirm.tap()
+
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'card-press_arnold'")).firstMatch.appears(timeout: 10))
+    }
+
     /// Con el entreno de hoy terminado, empezar otra rutina pregunta antes de sustituirlo
     /// (2026-10-27; la PWA lo borraba sin decir nada). «Cancelar» lo deja y «Sustituir» empieza.
     @MainActor

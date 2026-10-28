@@ -519,3 +519,35 @@ struct BestRecentPreloadTests {
         #expect(log.actualReps == [10, 10, 10])
     }
 }
+
+// Propio de la app (repaso de la HIG, 2026-10-28): crear un ejercicio sin nada buscado es una
+// pantalla con el nombre y el grupo, como el editor del catálogo, y no una alerta con un campo.
+@MainActor
+@Suite("Crear un ejercicio desde el selector")
+struct CreateExerciseScreenTests {
+    @Test("el ejercicio nuevo entra en el catálogo con el grupo elegido")
+    func withGroup() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        today.model.openAddPicker()
+        today.model.openCreate()
+        today.model.createName = "Press Arnold"
+        today.model.createGroup = .hombros
+        await today.model.createExercise()
+        #expect(today.app.data?.catalog[ExerciseID(ExerciseID.slug(from: "Press Arnold"))]?.group == .hombros)
+    }
+
+    @Test("al abrirla, nombre y grupo vacíos")
+    func startsEmpty() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        today.model.openAddPicker()
+        today.model.openCreate()
+        today.model.createName = "Algo"
+        today.model.createGroup = .pecho
+        today.model.isCreatePresented = false
+        today.model.openCreate()
+        #expect(today.model.createName.isEmpty)
+        #expect(today.model.createGroup == nil)
+    }
+}

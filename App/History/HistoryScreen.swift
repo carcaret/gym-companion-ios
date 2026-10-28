@@ -51,6 +51,18 @@ struct HistoryScreen: View {
                                 Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
                                     .tint(Theme.actionRed)
                             }
+                            // Colgado de su fila, como quitar un ejercicio del entreno (repaso de la
+                            // HIG, 2026-10-28): el botón de deslizar desaparece al tocarlo, la fila no.
+                            // `presenting` le pasa el aviso a la acción: SwiftUI cierra el globo (y lo
+                            // descarta) antes de ejecutarla.
+                            .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(
+                                get: { model.deletePrompt?.date == row.date }, set: { if !$0 { model.cancelDelete() } }
+                            ), titleVisibility: .visible, presenting: model.deletePrompt) { prompt in
+                                Button(HistoryText.deleteSession, role: .destructive) { Task { await model.confirmDelete(prompt) } }
+                                Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
+                            } message: { prompt in
+                                Text(prompt.message)
+                            }
                             .accessibilityIdentifier("history-\(row.date.iso)")
                     }
                 }
@@ -63,17 +75,6 @@ struct HistoryScreen: View {
             .scrollBounceBehavior(.always)
             // La vibración al pasar el umbral ya la pone iOS (comprobado en el iPhone, 2026-10-27).
             .refreshable { await sync.pullToRefresh() }
-            // Alerta y no confirmationDialog: el botón de deslizar desaparece al tocarlo y el globo
-            // no tendría de qué salir. `presenting` le pasa el aviso a la acción, porque SwiftUI
-            // cierra la alerta (y la descarta) antes de ejecutarla.
-            .alert(model.deletePrompt?.title ?? "", isPresented: Binding(
-                get: { model.deletePrompt != nil }, set: { if !$0 { model.cancelDelete() } }
-            ), presenting: model.deletePrompt) { prompt in
-                Button(HistoryText.deleteConfirm, role: .destructive) { Task { await model.confirmDelete(prompt) } }
-                Button(HistoryText.cancel, role: .cancel) { model.cancelDelete() }
-            } message: { prompt in
-                Text(prompt.message)
-            }
         }
     }
 }

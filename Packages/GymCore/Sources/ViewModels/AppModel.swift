@@ -52,6 +52,14 @@ public final class AppModel {
         }
     }
 
+    /// «Reintentar» en la alerta de «No se pudo guardar»: vuelve a guardar lo que se ve. Si sigue
+    /// fallando, lo vuelve a decir, porque lo ha pedido el usuario.
+    public func retrySave() async {
+        guard let data else { return }
+        await update(data)
+        if saveError != nil { isSaveErrorPresented = true }
+    }
+
     /// Terminar el entreno: se guarda y se sube ya.
     public func finishWorkout(_ newData: TrainingData) async -> UploadResult {
         data = newData

@@ -29,6 +29,9 @@ public enum HistoryText {
     public static func deleteMessage(_ date: LocalDate) -> String {
         "Se eliminará el entreno del \(DateText.long(date)). Esta acción no se puede deshacer."
     }
+    /// La acción de deslizar la fila.
     public static let deleteConfirm = "Borrar"
+    /// El botón del globo que lo confirma (repaso de la HIG, 2026-10-28).
+    public static let deleteSession = "Borrar entreno"
     public static let cancel = "Cancelar"
 }

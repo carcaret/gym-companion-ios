@@ -127,8 +127,8 @@ struct ExercisePickerSheet: View {
                             if let title = section.title { Text(title) }
                         }
                     }
-                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, con su alerta.
-                    // Con el teclado abierto, la alerta se perdía al cerrarse la búsqueda (2026-10-27).
+                    // Con algo buscado que no existe, se crea de un toque; sin búsqueda, en su pantalla
+                    // (repaso de la HIG, 2026-10-28: antes, una alerta con un campo).
                     if let label = picker.searchCreateLabel {
                         Button(label) { Task { await model.createFromSearch() } }
                             .accessibilityIdentifier("create-from-search")
@@ -147,15 +147,54 @@ struct ExercisePickerSheet: View {
                 // Solo para elegir: la ✕ de iOS 26, sin ✓.
                 ToolbarItem(placement: .cancellationAction) { Button(role: .close) { model.closePicker() } }
             }
-            .alert(TodayText.createTitle, isPresented: $model.isCreatePresented) {
-                TextField(TodayText.createNamePlaceholder, text: $model.createName)
-                Button(TodayText.cancel, role: .cancel) {}
-                Button(TodayText.createConfirm) { Task { await model.createExercise() } }
-            } message: {
-                Text(model.createMessage ?? TodayText.createNameLabel)
-            }
+            .navigationDestination(isPresented: $model.isCreatePresented) { CreateExerciseForm(model: model) }
         }
         // Siempre grande: a media altura, al cerrarse el teclado la hoja se encogía, la fila se
         // movía bajo el dedo e iOS cancelaba el toque (vídeo del CI y el iPhone, 2026-10-27).
+    }
+}
+
+/// Crear un ejercicio nuevo sin nada buscado, empujado en el selector: el nombre y el grupo, como el
+/// editor del catálogo. Se vuelve con la flecha; la ✓ lo crea y lo añade.
+private struct CreateExerciseForm: View {
+    @Bindable var model: TodayModel
+    @FocusState private var nameFocused: Bool
+
+    var body: some View {
+        Form {
+            Section {
+                TextField(TodayText.createNamePlaceholder, text: $model.createName)
+                    .focused($nameFocused)
+                    .submitLabel(.done)
+                    .onSubmit { Task { await model.createExercise() } }
+                    .accessibilityIdentifier("create-name")
+            } header: {
+                Text(TodayText.createNameLabel)
+            } footer: {
+                // Ya existe: lo dice aquí, debajo del nombre.
+                if let message = model.createMessage { Text(message).foregroundStyle(Theme.gold) }
+            }
+            Section(CatalogText.groupLabel) {
+                Picker(CatalogText.groupLabel, selection: $model.createGroup) {
+                    Text(CatalogText.noGroup).tag(MuscleGroup?.none)
+                    ForEach(MuscleGroup.all, id: \.self) { group in
+                        Text(GroupText.name(group)).tag(MuscleGroup?.some(group))
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
+        .screenBackground()
+        .keyboardDismissal()
+        .navigationTitle(TodayText.createTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(role: .confirm) { Task { await model.createExercise() } }
+                    .disabled(model.createName.trimmingWhitespace().isEmpty)
+                    .accessibilityIdentifier("create-confirm")
+            }
+        }
+        .onAppear { nameFocused = true }
     }
 }

@@ -117,6 +117,8 @@ public final class TodayModel {
     public private(set) var pickerOneOff = false
     public var isCreatePresented = false
     public var createName = ""
+    /// El grupo del ejercicio nuevo, en su pantalla (como en el editor del catálogo).
+    public var createGroup: MuscleGroup?
     /// El mensaje de la alerta de crear: por qué se ha vuelto a abrir (`TodayText.alreadyExists`).
     public private(set) var createMessage: String?
     public private(set) var removalPrompt: RemovalPrompt?
@@ -471,10 +473,11 @@ public final class TodayModel {
         return data
     }
 
-    /// "Crear nuevo ejercicio" desde el selector, sin nada buscado: la alerta, vacía y sin mensaje
-    /// de error.
+    /// "Crear nuevo ejercicio" desde el selector, sin nada buscado: su pantalla, vacía y sin mensaje
+    /// de error (repaso de la HIG, 2026-10-28; antes, una alerta con un campo).
     public func openCreate() {
         createName = ""
+        createGroup = nil
         createMessage = nil
         isCreatePresented = true
     }
@@ -483,11 +486,12 @@ public final class TodayModel {
     public func createFromSearch() async {
         guard picker?.searchCreateLabel != nil else { return }
         createName = pickerQuery.trimmingWhitespace()
+        createGroup = nil
         await createExercise()
     }
 
-    /// "Crear": siempre entra en la rutina. Si ya existe, la alerta se vuelve a abrir con el nombre
-    /// y lo dice en su mensaje.
+    /// "Crear": siempre entra en la rutina. Si ya existe, la pantalla sigue abierta con el nombre y
+    /// lo dice.
     public func createExercise() async {
         let name = createName.trimmingWhitespace()
         guard !name.isEmpty else {
@@ -497,7 +501,6 @@ public final class TodayModel {
         let id = ExerciseID(ExerciseID.slug(from: name))
         guard data.catalog[id] == nil else {
             createMessage = TodayText.alreadyExists
-            // La alerta de la vista se cierra sola al pulsar: se vuelve a abrir con el nombre.
             isCreatePresented = true
             return
         }
@@ -506,7 +509,8 @@ public final class TodayModel {
         pickerPurpose = nil
         createName = ""
         var withExercise = data
-        withExercise.catalog = Catalog(withExercise.catalog.all + [Exercise(id: id, name: name)])
+        withExercise.catalog = Catalog(withExercise.catalog.all + [Exercise(id: id, name: name, group: createGroup)])
+        createGroup = nil
         guard let updated = adding(id, oneOff: false, to: withExercise) else { return }
         await app.update(updated)
     }

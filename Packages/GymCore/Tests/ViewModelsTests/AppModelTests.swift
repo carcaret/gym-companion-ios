@@ -74,6 +74,28 @@ struct AppModelDataErrorTests {
         #expect(model.isSaveErrorPresented, "Tras guardar bien, el siguiente fallo vuelve a avisar")
     }
 
+    /// La alerta ofrece reintentar, no solo «Entendido» (repaso de la HIG, 2026-10-28).
+    @Test("si un cambio no se pudo guardar, «Reintentar» lo vuelve a guardar y, si falla, vuelve a avisar")
+    func retrySave() async {
+        let harness = SyncHarness(configured: false)
+        let model = AppModel(repository: harness.repository())
+        await model.start()
+        await harness.local.fail(saving: true)
+        await model.update(SyncFixtures.finishedWorkout())
+        model.isSaveErrorPresented = false
+
+        await model.retrySave()
+        #expect(model.saveError != nil)
+        #expect(model.isSaveErrorPresented, "Lo pidió el usuario: si sigue fallando, se lo dice")
+
+        model.isSaveErrorPresented = false
+        await harness.local.fail()
+        await model.retrySave()
+        #expect(model.saveError == nil)
+        #expect(!model.isSaveErrorPresented)
+        #expect(await harness.local.data == SyncFixtures.finishedWorkout())
+    }
+
     @Test("si no puede leer los datos, se puede reintentar")
     func retry() async {
         let harness = SyncHarness(configured: false)
