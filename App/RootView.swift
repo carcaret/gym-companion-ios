@@ -63,15 +63,13 @@ struct RootView: View {
                 stack(.progress) {
                     ProgressScreen(model: root.progress)
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
-                        // El catálogo, siempre a la vista en la barra (2026-10-27; antes, una tarjeta
-                        // al final de la lista).
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
-                                    .accessibilityLabel(CatalogText.cardTitle)
-                                    .accessibilityIdentifier("catalog-button")
-                            }
-                        }
+                } action: {
+                    // El catálogo, siempre a la vista en la barra (2026-10-27; antes, una tarjeta al
+                    // final de la lista), a la izquierda de la nube: el borde izquierdo es para volver
+                    // (repaso de la HIG, 2026-10-28).
+                    NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
+                        .accessibilityLabel(CatalogText.cardTitle)
+                        .accessibilityIdentifier("catalog-button")
                 }
             }
             Tab("Gráficas", systemImage: "chart.bar", value: AppTab.charts) {
@@ -95,10 +93,23 @@ struct RootView: View {
     }
 
     private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
+        navigationStack(tab) { content().syncToolbar() }
+    }
+
+    /// Con una acción de la pantalla de entrada a la izquierda de la nube.
+    private func stack(_ tab: AppTab, @ViewBuilder _ content: () -> some View, @ViewBuilder action: () -> some View) -> some View {
+        navigationStack(tab) { content().syncToolbar(action: action) }
+    }
+
+    /// La flecha de volver y los botones de la barra, sin teñir: en iOS 26 el color es para el fondo
+    /// de la acción principal, no para símbolos ni texto (repaso de la HIG, 2026-10-28). El
+    /// contenido conserva el azul de la raíz. La nube lleva sus propios colores.
+    private func navigationStack(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
         NavigationStack(path: Binding(get: { paths[tab] ?? NavigationPath() }, set: { paths[tab] = $0 })) {
             content()
+                .tint(Theme.accentLight)
                 .screenBackground()
-                .syncToolbar()
         }
+        .tint(Theme.text)
     }
 }

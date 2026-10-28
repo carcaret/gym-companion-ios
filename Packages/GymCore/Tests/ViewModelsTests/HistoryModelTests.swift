@@ -803,14 +803,17 @@ struct BarColorsE2ETests {
         return nil
     }
 
+    // Lo que en la PWA es verde, en la app es naranja: el color de «por debajo del objetivo» en
+    // toda la app (aprobado por el usuario el 2026-10-28, repaso de la HIG B4). En la PWA, estos
+    // dos tests esperan que domine el verde (G > B y G > R); aquí, el rojo (R > G y R > B).
     @Test("sesión cumplida → barra AZUL (B > G); sesión por debajo → barra VERDE (G > B)")
     func blueAndGreen() async throws {
         let bars = try await stripOfFirstCard(data()).1.bars
         let blue = try #require(color(bars[4]))
-        let green = try #require(color(bars[3]))
+        let below = try #require(color(bars[3]))
         #expect(blue.b > blue.g)
-        #expect(green.g > green.b)
-        #expect(green.g > green.r)
+        #expect(below.r > below.g)
+        #expect(below.r > below.b)
     }
 
     @Test("barra activa con reps en objetivo (precarga [12,11,10]) → AZUL")
@@ -827,8 +830,8 @@ struct BarColorsE2ETests {
         await today.model.chooseRep(8, series: 2, at: 0)
         let bar = try #require(today.model.activeCards[0].strip?.bars.last)
         let c = try #require(color(bar))
-        #expect(c.g > c.b)
-        #expect(c.g > c.r)
+        #expect(c.r > c.g)
+        #expect(c.r > c.b)
     }
 }
 

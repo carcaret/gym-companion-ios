@@ -73,7 +73,7 @@ struct DisclosureHeader<Label: View>: View {
                     // Solo el giro: con `.animation(_:value:)` también se animaba su posición, y en
                     // la `List` la flecha se quedaba a medio camino, lejos de la cabecera.
                     .animation(animates || reduceMotion ? nil : .snappy) { $0.rotationEffect(.degrees(isExpanded ? 90 : 0)) }
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .padding(padding)
             .frame(minHeight: minHeight)

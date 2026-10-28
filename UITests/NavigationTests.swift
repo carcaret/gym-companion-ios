@@ -170,8 +170,13 @@ final class NavigationTests: XCTestCase {
 
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
-        // El catálogo, en la barra de Progreso.
-        app.buttons["catalog-button"].tap()
+        // El catálogo, en la barra de Progreso, a la izquierda de la nube: el borde izquierdo es
+        // para volver (repaso de la HIG, 2026-10-28).
+        let catalog = app.buttons["catalog-button"]
+        let indicator = app.buttons["sync-indicator"]
+        XCTAssertGreaterThan(catalog.frame.minX, app.windows.firstMatch.frame.midX, "El catálogo va a la derecha")
+        XCTAssertLessThanOrEqual(catalog.frame.maxX, indicator.frame.minX, "El catálogo va a la izquierda de la nube")
+        catalog.tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         assertSyncIndicator(app, "en el catálogo")
     }

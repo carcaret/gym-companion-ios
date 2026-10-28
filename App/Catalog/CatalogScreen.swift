@@ -32,7 +32,7 @@ struct CatalogScreen: View {
                 } header: {
                     HStack(spacing: 6) {
                         Text(section.title)
-                        Text("\(section.rows.count)").foregroundStyle(Theme.textMuted)
+                        Text("\(section.rows.count)").foregroundStyle(Theme.textSecondary)
                     }
                 }
             }

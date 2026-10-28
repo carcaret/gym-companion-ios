@@ -62,7 +62,7 @@ struct ProgressScreen: View {
                 legend(StatsText.referenceBand(model.referenceBand), Color.white.opacity(0.07), border: Color.white.opacity(0.14))
             }
             .scaledFont(11)
-            .foregroundStyle(Theme.textMuted)
+            .foregroundStyle(Theme.textSecondary)
         }
     }
 
@@ -74,7 +74,7 @@ struct ProgressScreen: View {
                 .accessibilityAddTraits(.isHeader)
             Spacer()
             // Más pequeña que el título: es un dato de la sección, no otro título.
-            Text(StatsText.window(weeks: ProgressModel.weeks)).scaledFont(13).foregroundStyle(Theme.textMuted)
+            Text(StatsText.window(weeks: ProgressModel.weeks)).scaledFont(13).foregroundStyle(Theme.textSecondary)
         }
     }
 
@@ -153,7 +153,7 @@ private struct ExerciseProgressRow: View {
                             Text(weight).scaledFont(14, .semibold).foregroundStyle(Theme.accentLight)
                         }
                     }
-                    Text(row.phrase).scaledFont(12).foregroundStyle(noTrack ? Theme.textMuted : Theme.textSecondary)
+                    Text(row.phrase).scaledFont(12).foregroundStyle(Theme.textSecondary)
                 }
             }
             .padding(.vertical, 4)

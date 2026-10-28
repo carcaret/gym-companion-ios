@@ -18,19 +18,19 @@ struct ActiveWorkoutView: View {
                     // con ese rol la lista quita la fila antes de que se confirme.
                     .swipeActions(edge: .trailing) {
                         Button(card.removeLabel, systemImage: "trash") { Task { await model.requestRemoval(at: index) } }
-                            .tint(Theme.red)
+                            .tint(Theme.actionRed)
                     }
                     // A la derecha, solo las opciones: deslizar del todo no ejecuta ninguna. Sin otro
                     // ejercicio en el catálogo, cambiar no se ofrece.
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         if model.canSwap {
                             Button(TodayText.swapLabel, systemImage: "arrow.left.arrow.right") { model.openSwapPicker(at: index) }
-                                .tint(Theme.accent)
+                                .tint(Theme.actionBlue)
                         }
                         Button(card.skipLabel, systemImage: card.isSkipped ? "arrow.uturn.backward" : "forward.end") {
                             Task { await model.toggleSkip(at: index) }
                         }
-                        .tint(Theme.textMuted)
+                        .tint(Theme.actionGray)
                     }
                     // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes de ejecutarla.
@@ -56,13 +56,11 @@ struct ActiveWorkoutView: View {
         .screenBackground()
         .keyboardDismissal()
         // El título dice la rutina («Entreno …») y el subtítulo, que está en curso (en la PWA, un
-        // recuadro encima de las tarjetas).
-        .navigationSubtitle(TodayText.inProgress)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                if model.hasRecord { Image(systemName: "trophy.fill").foregroundStyle(Theme.gold).accessibilityLabel("Récord") }
-            }
-        }
+        // recuadro encima de las tarjetas) y si hay récord, con el trofeo plano de SF Symbols. En su
+        // cápsula de la barra, el trofeo parecía un botón (repaso de la HIG, 2026-10-28).
+        .navigationSubtitle(model.hasRecord
+            ? Text("\(TodayText.inProgress) · \(Image(systemName: "trophy.fill")) \(TodayText.record)")
+            : Text(TodayText.inProgress))
         .safeAreaInset(edge: .bottom) {
             BottomActions {
                 Button { model.openAddPicker() } label: { Text(TodayText.addExercise).frame(maxWidth: .infinity) }

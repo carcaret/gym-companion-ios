@@ -178,8 +178,8 @@ struct SummaryRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).scaledFont(15, .semibold).foregroundStyle(isSkipped ? Theme.textMuted : Theme.text)
-            Text(subtitle).scaledFont(12).foregroundStyle(isSkipped ? Theme.textMuted : Theme.textSecondary)
+            Text(title).scaledFont(15, .semibold).foregroundStyle(isSkipped ? Theme.textSecondary : Theme.text)
+            Text(subtitle).scaledFont(12).foregroundStyle(Theme.textSecondary)
         }
         .card(background: isSkipped ? Theme.skipTint : Theme.surface)
     }
