@@ -40,14 +40,14 @@ struct ExerciseCardView: View {
             HStack(spacing: 8) {
                 Text(card.title)
                     .scaledFont(15, .semibold)
-                    .foregroundStyle(card.isSkipped ? Theme.textMuted : Theme.text)
+                    .foregroundStyle(card.isSkipped ? Theme.textSecondary : Theme.text)
                 if card.isVolumeRecord { RecordBadge(text: TodayText.volumeRecord) }
                 if card.isE1RMRecord { RecordBadge(text: TodayText.e1rmRecord) }
             }
             // Lo cambiado al editar el historial, en amarillo, hasta «OK» o «Cancelar».
             Text(card.subtitle)
                 .scaledFont(12)
-                .foregroundStyle(card.isDirty ? Theme.focus : card.isSkipped ? Theme.textMuted : Theme.textSecondary)
+                .foregroundStyle(card.isDirty ? Theme.focus : Theme.textSecondary)
                 .lineLimit(2)
         }
     }
@@ -219,8 +219,8 @@ private struct RoundIconButton: View {
     }
 }
 
-/// Una celda de serie: azul si llega al objetivo, verde si se queda corta, dorada la que se edita
-/// y roja con error (`.series-cell-chip`).
+/// Una celda de serie: azul si llega al objetivo, naranja si se queda corta, dorada la que se edita
+/// y roja con error (`.series-cell-chip`; en la PWA, corta era verde).
 private struct SeriesCellView: View {
     let cell: ExerciseCard.SeriesCell
     let index: Int
@@ -229,7 +229,7 @@ private struct SeriesCellView: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textMuted)
+            Text(cell.label).scaledFont(11).foregroundStyle(Theme.textSecondary)
             if let onTap {
                 Button(action: onTap) { valueText }
                     .buttonStyle(.plain)
@@ -261,14 +261,14 @@ private struct SeriesCellView: View {
         if cell.isFocused { return (Theme.focus, Theme.focus.opacity(0.12), Theme.focus) }
         switch cell.state {
         case .done: return (Theme.accentSoft, Theme.accentTint, Theme.accent.opacity(0.5))
-        case .filled: return (Theme.greenSoft, Theme.greenTint, Theme.greenSoft.opacity(0.5))
+        case .filled: return (Theme.below, Theme.belowTint, Theme.below.opacity(0.5))
         case .empty: return (Theme.text, Theme.input, Theme.border)
         }
     }
 }
 
-/// Un chip de reps (`.chip-strip .chip`): verde por debajo del objetivo, azul en el objetivo y
-/// rojo por encima; el elegido, relleno.
+/// Un chip de reps (`.chip-strip .chip`): naranja por debajo del objetivo, azul en el objetivo y
+/// azul más fuerte por encima, que no es un error (en la PWA, verde y rojo); el elegido, relleno.
 private struct ChipButtonStyle: ButtonStyle {
     let chip: ExerciseCard.Chip
 
@@ -277,16 +277,28 @@ private struct ChipButtonStyle: ButtonStyle {
             .scaledFont(13, .semibold)
             .foregroundStyle(color)
             .frame(maxWidth: .infinity, minHeight: 32)
-            .background(chip.isCurrent ? color.opacity(0.15) : .clear, in: .rect(cornerRadius: Theme.radiusTag))
-            .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(chip.isCurrent ? color : color.opacity(0.3)) }
+            .background(background, in: .rect(cornerRadius: Theme.radiusTag))
+            .overlay { RoundedRectangle(cornerRadius: Theme.radiusTag).strokeBorder(chip.isCurrent ? border : border.opacity(0.3)) }
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
     }
 
     private var color: Color {
         switch chip.relation {
-        case .below: Theme.greenSoft
+        case .below: Theme.below
         case .atTarget: Theme.accentSoft
-        case .above: Theme.danger
+        case .above: Theme.aboveText
+        }
+    }
+
+    private var border: Color {
+        chip.relation == .above ? Theme.accent : color
+    }
+
+    /// Por encima, siempre con algo de fondo: es lo que lo separa del azul del objetivo.
+    private var background: Color {
+        switch chip.relation {
+        case .above: chip.isCurrent ? Theme.aboveTint : Theme.accentTint
+        case .below, .atTarget: chip.isCurrent ? color.opacity(0.15) : .clear
         }
     }
 }

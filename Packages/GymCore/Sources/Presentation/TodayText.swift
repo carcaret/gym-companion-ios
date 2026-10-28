@@ -10,6 +10,8 @@ public enum TodayText {
     public static let previewStatus = "Vista previa"
     /// El subtítulo de la barra en el entreno en curso (el `.workout-status` de la PWA).
     public static let inProgress = "En curso"
+    /// Junto a «En curso» cuando el entreno ya tiene un récord.
+    public static let record = "récord"
     public static let completedSubtitle = "Terminado"
     public static let completedStatus = "Entreno completado"
 

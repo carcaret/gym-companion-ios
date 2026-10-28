@@ -33,14 +33,14 @@ struct ChartsScreen: View {
                     // ejercicio elegido (la lista entera va en el color del texto).
                     LabeledContent(ChartsText.exercise) {
                         Text(model.selectedName ?? ChartsText.chooseExercise)
-                            .foregroundStyle(model.selectedName == nil ? Theme.textMuted : Theme.text)
+                            .foregroundStyle(model.selectedName == nil ? Theme.textSecondary : Theme.text)
                     }
                 }
                 .accessibilityIdentifier("chart-exercise")
             }
             .listRowBackground(Theme.surface)
             if model.charts.isEmpty {
-                Section { Text(ChartsText.empty).foregroundStyle(Theme.textMuted) }
+                Section { Text(ChartsText.empty).foregroundStyle(Theme.textSecondary) }
                     .listRowBackground(Theme.surface)
             } else {
                 ForEach(model.charts, id: \.label) { chart in
@@ -132,7 +132,7 @@ private struct ProgressChart: View {
             }
             if let selected = nearest {
                 RuleMark(x: .value("Fecha", selected.date.date))
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.textSecondary)
                     // Dentro de la gráfica: fuera de ella, la fila de la lista cortaba la mitad de
                     // arriba. Con el aspecto del bocadillo de «Últimas sesiones».
                     .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {

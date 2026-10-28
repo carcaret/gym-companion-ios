@@ -4,6 +4,11 @@ import Testing
 
 // Port de tests/unit/bar-colors.test.js: color de cada barra de la tira. Azul = objetivo cumplido
 // (o peso distinto), verde = mismo peso sin cumplir; la intensidad, relativa a su grupo.
+//
+// Cambio aprobado por el usuario el 2026-10-28 (repaso de la HIG, B4): lo que la PWA pinta en verde
+// la app lo pinta en naranja, el color de «por debajo del objetivo» en toda la app. Los tests
+// conservan el nombre de la PWA («verde»); cambian los colores esperados (`belowVivid`,
+// `belowFloor`) y, en el último, que domine el rojo en vez del verde.
 
 private func makeLog(weight: Double = 100, series: Int = 3, expected: Int = 10, actual: [Int?] = []) -> ExerciseLog {
     ExerciseLog(exerciseID: "press", series: series, targetReps: expected, actualReps: actual, weight: weight)
@@ -11,12 +16,12 @@ private func makeLog(weight: Double = 100, series: Int = 3, expected: Int = 10, 
 
 private let blueFloor = "rgb(30,58,80)"
 private let blueVivid = "rgb(86,156,214)"
-private let greenVivid = "rgb(93,202,165)"
-private let greenFloor = "rgb(36,86,70)"
-private let noGreen = GreenScale(useE1RM: false, range: 0...0)
+private let belowVivid = "rgb(206,145,120)"
+private let belowFloor = "rgb(103,72,60)"
+private let noBelowTarget = BelowTargetScale(useE1RM: false, range: 0...0)
 
-private func color(_ log: ExerciseLog, _ blueRange: ClosedRange<Double>, _ green: GreenScale, _ reference: Double? = nil) -> RGB {
-    BarColor.color(log, blueRange: blueRange, greenScale: green, referenceWeight: reference)
+private func color(_ log: ExerciseLog, _ blueRange: ClosedRange<Double>, _ green: BelowTargetScale, _ reference: Double? = nil) -> RGB {
+    BarColor.color(log, blueRange: blueRange, belowTargetScale: green, referenceWeight: reference)
 }
 
 @Suite("computeRepShortfall")
@@ -60,23 +65,23 @@ struct RepShortfallTests {
 @Suite("isGreenBar")
 struct IsGreenBarTests {
     @Test("objetivo cumplido → nunca verde")
-    func met() { #expect(!BarColor.isGreen(makeLog(expected: 10, actual: [10, 10, 10]))) }
+    func met() { #expect(!BarColor.isBelowTarget(makeLog(expected: 10, actual: [10, 10, 10]))) }
 
     @Test("objetivo no cumplido, sin peso de referencia → verde")
-    func short() { #expect(BarColor.isGreen(makeLog(expected: 10, actual: [10, 10, 8]))) }
+    func short() { #expect(BarColor.isBelowTarget(makeLog(expected: 10, actual: [10, 10, 8]))) }
 
     @Test("objetivo no cumplido, mismo peso que la referencia → verde")
-    func sameWeight() { #expect(BarColor.isGreen(makeLog(weight: 60, expected: 10, actual: [10, 10, 8]), referenceWeight: 60)) }
+    func sameWeight() { #expect(BarColor.isBelowTarget(makeLog(weight: 60, expected: 10, actual: [10, 10, 8]), referenceWeight: 60)) }
 
     @Test("objetivo no cumplido, peso distinto de la referencia → no verde (azul)")
     func otherWeight() {
         let log = makeLog(weight: 60, expected: 10, actual: [10, 10, 8])
-        #expect(!BarColor.isGreen(log, referenceWeight: 80))
-        #expect(!BarColor.isGreen(log, referenceWeight: 40))
+        #expect(!BarColor.isBelowTarget(log, referenceWeight: 80))
+        #expect(!BarColor.isBelowTarget(log, referenceWeight: 40))
     }
 
     @Test("peso 0 en ambos (corporal) → cuenta como mismo peso")
-    func bodyweight() { #expect(BarColor.isGreen(makeLog(weight: 0, expected: 10, actual: [10, 10, 9]), referenceWeight: 0)) }
+    func bodyweight() { #expect(BarColor.isBelowTarget(makeLog(weight: 0, expected: 10, actual: [10, 10, 9]), referenceWeight: 0)) }
 }
 
 @Suite("computeBarColor — objetivo cumplido (o peso distinto) → AZUL, relativo al grupo azul")
@@ -85,21 +90,21 @@ struct BlueBarTests {
     private var metric: Double { log.primaryMetric }
 
     @Test("única barra azul del grupo → azul vívido (tope), sea cual sea su e1RM")
-    func single() { #expect(color(log, metric...metric, noGreen).text == blueVivid) }
+    func single() { #expect(color(log, metric...metric, noBelowTarget).text == blueVivid) }
 
     @Test("mínimo e1RM del grupo azul → suelo")
-    func floor() { #expect(color(log, metric...(metric + 100), noGreen).text == blueFloor) }
+    func floor() { #expect(color(log, metric...(metric + 100), noBelowTarget).text == blueFloor) }
 
     @Test("máximo e1RM del grupo azul → vívido")
-    func vivid() { #expect(color(log, (metric - 100)...metric, noGreen).text == blueVivid) }
+    func vivid() { #expect(color(log, (metric - 100)...metric, noBelowTarget).text == blueVivid) }
 
     @Test("e1RM intermedio → azul entre suelo y vívido")
-    func middle() { #expect(color(log, (metric - 50)...(metric + 50), noGreen) == RGB(r: 58, g: 107, b: 147)) }
+    func middle() { #expect(color(log, (metric - 50)...(metric + 50), noBelowTarget) == RGB(r: 58, g: 107, b: 147)) }
 
     @Test("más e1RM relativo al grupo → azul más claro (canal G sube)")
     func brighter() {
-        let low = color(log, metric...(metric + 100), noGreen)
-        let high = color(log, (metric - 100)...metric, noGreen)
+        let low = color(log, metric...(metric + 100), noBelowTarget)
+        let high = color(log, (metric - 100)...metric, noBelowTarget)
         #expect(high.g > low.g)
     }
 
@@ -107,21 +112,21 @@ struct BlueBarTests {
     func otherWeight() {
         let short = makeLog(weight: 60, expected: 10, actual: [10, 10, 8])
         let m = short.primaryMetric
-        #expect(color(short, m...m, noGreen, 80).text == blueVivid)
-        #expect(color(short, m...(m + 100), noGreen, 80).text == blueFloor)
+        #expect(color(short, m...m, noBelowTarget, 80).text == blueVivid)
+        #expect(color(short, m...(m + 100), noBelowTarget, 80).text == blueFloor)
     }
 }
 
-@Suite("buildGreenScale — la intensidad del verde sale del volumen, no del objetivo")
-struct GreenScaleTests {
+@Suite("buildBelowTargetScale — la intensidad del verde sale del volumen, no del objetivo")
+struct BelowTargetScaleTests {
     @Test("grupo vacío → rango neutro")
-    func empty() { #expect(BarColor.greenScale([]) == GreenScale(useE1RM: false, range: 0...0)) }
+    func empty() { #expect(BarColor.belowTargetScale([]) == BelowTargetScale(useE1RM: false, range: 0...0)) }
 
     @Test("volúmenes distintos → escala por volumen")
     func volumes() {
         let a = makeLog(weight: 68, series: 4, expected: 10, actual: [10, 10, 10, 9])
         let b = makeLog(weight: 68, series: 4, expected: 11, actual: [11, 10, 10, 10])
-        let scale = BarColor.greenScale([a, b])
+        let scale = BarColor.belowTargetScale([a, b])
         #expect(!scale.useE1RM)
         #expect(scale.range == (68 * 39)...(68 * 41))
     }
@@ -130,7 +135,7 @@ struct GreenScaleTests {
     func tie() {
         let a = makeLog(weight: 68, series: 3, expected: 13, actual: [12, 10, 10])
         let b = makeLog(weight: 68, series: 3, expected: 13, actual: [11, 11, 10])
-        let scale = BarColor.greenScale([a, b])
+        let scale = BarColor.belowTargetScale([a, b])
         #expect(scale.useE1RM)
         #expect(scale.range == b.primaryMetric...a.primaryMetric)
     }
@@ -138,12 +143,12 @@ struct GreenScaleTests {
 
 @Suite("computeBarColor — mismo peso y objetivo NO cumplido → VERDE, relativo al grupo verde")
 struct GreenBarTests {
-    private func scale(_ logs: [ExerciseLog]) -> GreenScale { BarColor.greenScale(logs) }
+    private func scale(_ logs: [ExerciseLog]) -> BelowTargetScale { BarColor.belowTargetScale(logs) }
 
     @Test("única barra verde del grupo → vívida (tope), por mal que fuera la sesión")
     func single() {
         let solo = makeLog(expected: 10, actual: [10, 6, 8])
-        #expect(color(solo, 0...0, scale([solo])).text == greenVivid)
+        #expect(color(solo, 0...0, scale([solo])).text == belowVivid)
     }
 
     @Test("caso real del jalón: más reps con objetivo más alto → la más vívida")
@@ -152,9 +157,9 @@ struct GreenBarTests {
         let ago14 = makeLog(weight: 68, series: 4, expected: 10, actual: [10, 10, 10, 9])
         let ago21 = makeLog(weight: 68, series: 4, expected: 11, actual: [11, 10, 10, 10])
         let s = scale([jul24, ago14, ago21])
-        #expect(color(ago21, 0...0, s, 68).text == greenVivid)
-        #expect(color(jul24, 0...0, s, 68).text == greenFloor)
-        #expect(color(ago14, 0...0, s, 68).text == greenFloor)
+        #expect(color(ago21, 0...0, s, 68).text == belowVivid)
+        #expect(color(jul24, 0...0, s, 68).text == belowFloor)
+        #expect(color(ago14, 0...0, s, 68).text == belowFloor)
     }
 
     @Test("un objetivo inflado no da color: manda lo ejecutado")
@@ -162,8 +167,8 @@ struct GreenBarTests {
         let inflado = makeLog(weight: 68, series: 3, expected: 20, actual: [10, 10, 10])
         let sano = makeLog(weight: 68, series: 3, expected: 10, actual: [10, 10, 9])
         let s = scale([inflado, sano])
-        #expect(color(inflado, 0...0, s, 68).text == greenVivid)
-        #expect(color(sano, 0...0, s, 68).text == greenFloor)
+        #expect(color(inflado, 0...0, s, 68).text == belowVivid)
+        #expect(color(sano, 0...0, s, 68).text == belowFloor)
     }
 
     @Test("más series = más trabajo = más vívida")
@@ -171,8 +176,8 @@ struct GreenBarTests {
         let tres = makeLog(weight: 68, series: 3, expected: 10, actual: [10, 10, 9])
         let cinco = makeLog(weight: 68, series: 5, expected: 10, actual: [10, 10, 10, 10, 9])
         let s = scale([tres, cinco])
-        #expect(color(cinco, 0...0, s, 68).text == greenVivid)
-        #expect(color(tres, 0...0, s, 68).text == greenFloor)
+        #expect(color(cinco, 0...0, s, 68).text == belowVivid)
+        #expect(color(tres, 0...0, s, 68).text == belowFloor)
     }
 
     @Test("empate de volumen → desempata el pico de la mejor serie (e1RM)")
@@ -180,8 +185,8 @@ struct GreenBarTests {
         let pico12 = makeLog(weight: 68, series: 3, expected: 13, actual: [12, 10, 10])
         let pico11 = makeLog(weight: 68, series: 3, expected: 13, actual: [11, 11, 10])
         let s = scale([pico12, pico11])
-        #expect(color(pico12, 0...0, s, 68).text == greenVivid)
-        #expect(color(pico11, 0...0, s, 68).text == greenFloor)
+        #expect(color(pico12, 0...0, s, 68).text == belowVivid)
+        #expect(color(pico11, 0...0, s, 68).text == belowFloor)
     }
 
     @Test("mismo trabajo y mismo pico → mismo color (empate real)")
@@ -208,13 +213,13 @@ struct GreenBarTests {
     func metSameWeight() {
         let met = makeLog(weight: 60, expected: 10, actual: [10, 10, 10])
         let m = met.primaryMetric
-        #expect(color(met, m...m, noGreen, 60).text == blueVivid)
+        #expect(color(met, m...m, noBelowTarget, 60).text == blueVivid)
     }
 
     @Test("peso 0 en ambos (corporal) → cuenta como mismo peso → verde")
     func bodyweight() {
         let bw = makeLog(weight: 0, expected: 10, actual: [10, 10, 9])
-        #expect(color(bw, 0...0, scale([bw]), 0).text == greenVivid)
+        #expect(color(bw, 0...0, scale([bw]), 0).text == belowVivid)
     }
 }
 
@@ -225,9 +230,10 @@ struct BarColorContrastTests {
         let met = makeLog(expected: 10, actual: [10, 10, 10])
         let short = makeLog(expected: 10, actual: [10, 10, 8])
         let m = met.primaryMetric
-        let azul = color(met, m...m, noGreen)
-        let verde = color(short, 0...0, BarColor.greenScale([short]))
+        let azul = color(met, m...m, noBelowTarget)
+        let naranja = color(short, 0...0, BarColor.belowTargetScale([short]))
         #expect(azul.b > azul.g)
-        #expect(verde.g > verde.b)
+        // En la PWA, `verde.g > verde.b`; en naranja domina el rojo (aprobado el 2026-10-28).
+        #expect(naranja.r > naranja.b)
     }
 }

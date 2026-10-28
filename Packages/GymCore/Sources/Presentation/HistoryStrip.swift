@@ -65,12 +65,12 @@ public enum HistoryStrip {
         let real = shown.filter { !$0.log.skipped }
         let levels = Self.levels(real.map(\.log))
         var blueLevels: [Double] = []
-        var greenLogs: [ExerciseLog] = []
+        var belowTargetLogs: [ExerciseLog] = []
         for (item, level) in zip(real, levels) {
-            if BarColor.isGreen(item.log, referenceWeight: current.weight) { greenLogs.append(item.log) } else { blueLevels.append(level) }
+            if BarColor.isBelowTarget(item.log, referenceWeight: current.weight) { belowTargetLogs.append(item.log) } else { blueLevels.append(level) }
         }
         let blueRange = blueLevels.isEmpty ? 0...0 : blueLevels.min()!...blueLevels.max()!
-        let greenScale = BarColor.greenScale(greenLogs)
+        let belowTargetScale = BarColor.belowTargetScale(belowTargetLogs)
 
         var levelIndex = 0
         let bars = Array(repeating: StripBar(kind: .empty, dateLabel: ""), count: columns - shown.count) + shown.map { item in
@@ -78,7 +78,7 @@ public enum HistoryStrip {
             guard !item.log.skipped else { return StripBar(kind: .skipped, dateLabel: label) }
             let level = levels[levelIndex]
             levelIndex += 1
-            let color = BarColor.color(item.log, blueRange: blueRange, greenScale: greenScale, referenceWeight: current.weight, blueMetric: level)
+            let color = BarColor.color(item.log, blueRange: blueRange, belowTargetScale: belowTargetScale, referenceWeight: current.weight, blueMetric: level)
             let height = max(6, Int((level * 100 + 0.5).rounded(.down)))
             return StripBar(kind: .session(height: height, color: color, isCurrent: item.isCurrent, tooltip: tooltip(item.log)), dateLabel: label)
         }

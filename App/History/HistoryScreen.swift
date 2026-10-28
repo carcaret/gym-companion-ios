@@ -49,7 +49,7 @@ struct HistoryScreen: View {
                                 // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
                                 // tocarlo y la quita antes de que se confirme. El rojo, a mano.
                                 Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
-                                    .tint(Theme.red)
+                                    .tint(Theme.actionRed)
                             }
                             .accessibilityIdentifier("history-\(row.date.iso)")
                     }
@@ -187,7 +187,7 @@ private struct HistoryRowView: View {
         HStack(spacing: 14) {
             VStack(spacing: 2) {
                 Text(row.day).scaledFont(20, .bold).monospacedDigit().foregroundStyle(Theme.text)
-                Text(row.month).scaledFont(11, .semibold).tracking(0.4).foregroundStyle(Theme.textMuted)
+                Text(row.month).scaledFont(11, .semibold).tracking(0.4).foregroundStyle(Theme.textSecondary)
             }
             .frame(minWidth: 40)
             Rectangle().fill(Theme.border).frame(width: 1, height: 32)

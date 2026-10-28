@@ -45,7 +45,7 @@ struct SyncIndicator: View {
         switch sync.status.state {
         case .ok: Theme.green
         case .pending: Theme.gold
-        case .disabled: Theme.textMuted
+        case .disabled: Theme.textSecondary
         }
     }
 
@@ -77,7 +77,8 @@ private struct SyncToolbar<Action: View>: ViewModifier {
     func body(content: Content) -> some View {
         content.toolbar {
             if hasAction {
-                ToolbarItem(placement: .topBarTrailing) { action }
+                // Sin teñir, como la flecha de volver (`RootView.navigationStack`).
+                ToolbarItem(placement: .topBarTrailing) { action.tint(Theme.text) }
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
             }
             ToolbarItem(placement: .topBarTrailing) {
