@@ -9,6 +9,8 @@ struct WorkoutPage: View {
     @Bindable var model: WatchModel
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     @State private var crown = 0.0
+    /// La corona es de esta página: sin el foco, no le llega.
+    @FocusState private var isCrownFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -31,6 +33,7 @@ struct WorkoutPage: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .focusable()
+            .focused($isCrownFocused)
             .digitalCrownRotation(
                 $crown, from: 0, through: Double(max(model.exercises.count - 1, 1)), by: 1,
                 sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true
@@ -41,7 +44,10 @@ struct WorkoutPage: View {
             .onChange(of: model.exerciseIndex) { _, index in
                 if Int(crown.rounded()) != index { crown = Double(index) }
             }
-            .onAppear { crown = Double(model.exerciseIndex) }
+            .onAppear {
+                crown = Double(model.exerciseIndex)
+                isCrownFocused = true
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 3) {

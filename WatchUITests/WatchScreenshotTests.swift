@@ -18,8 +18,8 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
         capture(app, "70-reloj-entreno")
 
-        for _ in 0..<10 where !app.staticTexts["Curl Bíceps"].exists {
-            XCUIDevice.shared.rotateDigitalCrown(delta: 0.15)
+        for _ in 0..<15 where !app.staticTexts["Curl Bíceps"].exists {
+            XCUIDevice.shared.rotateDigitalCrown(delta: 0.1)
         }
         XCTAssertTrue(app.staticTexts["Curl Bíceps"].appears(timeout: 5))
         capture(app, "71-reloj-siguiente")
