@@ -21,8 +21,10 @@ final class WatchScreenshotTests: XCTestCase {
         // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía, así que se
         // mira cuál se ve. Deslizar es lo mismo que la corona, que mueve el `ScrollView` sola.
         XCTAssertTrue(app.staticTexts["Press Banca"].isHittable)
+        XCTAssertFalse(app.staticTexts["Curl Bíceps"].isHittable, "se ve más de un ejercicio a la vez")
         app.staticTexts["Press Banca"].swipeUp()
         XCTAssertTrue(app.staticTexts["Curl Bíceps"].becomesHittable(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Press Banca"].isHittable, "se ve más de un ejercicio a la vez")
         capture(app, "71-reloj-siguiente")
 
         let rest = app.buttons[AccessibilityID.watchRest]

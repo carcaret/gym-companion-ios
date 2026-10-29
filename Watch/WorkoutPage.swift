@@ -36,6 +36,9 @@ struct WorkoutPage: View {
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollPosition(id: exercisePosition)
+                // watchOS pinta el contenido también en el margen de abajo: sin recortar, el
+                // siguiente ejercicio asoma debajo del que se ve.
+                .clipShape(Rectangle())
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .toolbar {
