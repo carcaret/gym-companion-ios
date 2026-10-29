@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-App nativa de iOS (SwiftUI) de [gym-companion](https://github.com/carcaret/gym-companion), la PWA que sustituye. Responde en español de España. La migración de la PWA (épica #1) está hecha salvo #15 (el paso definitivo, que depende del usuario); #17 (HealthKit) y #18 (iCloud) son para el futuro.
+App nativa de iOS (SwiftUI) de [gym-companion](https://github.com/carcaret/gym-companion), la PWA que sustituye. Responde en español de España. La migración de la PWA (épica #1) está hecha salvo #15 (el paso definitivo, que depende del usuario); #17 (HealthKit: el reloj como app de entreno) está hecha a falta de comprobarla con el reloj en la mano (`docs/pendiente-nas.md`), y #18 (iCloud) es para el futuro.
 
 ## Cómo se trabaja
 
-La migración se planificó en la issue **#1** ("Migrar Gym Companion a app nativa iOS") y sus sub-issues #2–#18, con todo el contexto (decisiones, arquitectura, entorno, cadena de despliegue, estructura de la PWA y qué tests portar en cada una). **Antes de #15, #17 o #18, leer #1 entera** y la sub-issue concreta.
+La migración se planificó en la issue **#1** ("Migrar Gym Companion a app nativa iOS") y sus sub-issues #2–#18, con todo el contexto (decisiones, arquitectura, entorno, cadena de despliegue, estructura de la PWA y qué tests portar en cada una). **Antes de #15 o #18, leer #1 entera** y la sub-issue concreta.
 
 - **Autonomía**: el usuario no quiere aprobar nada. Una rama y un PR por cambio (`Closes #N` si tiene issue); con el CI en verde, Claude revisa el diff y fusiona él mismo. **Nunca push directo a `master`**, aunque sea un arreglo pequeño, salvo que el usuario lo pida de forma explícita para ese cambio (decisión del usuario, 2026-10-26: los push directos de ese día fueron una excepción). Antes de fusionar, la rama al día con `master`: así el árbol fusionado es el probado y master no repite los tests (job `gate`). Solo se pregunta lo imprescindible (borrar o debilitar un test, decisiones de producto no deducibles, acciones con el iPhone o el Watch en la mano), de una en una.
 - **Sin guarradas**: arquitectura hexagonal por capas (un módulo por capa), cada regla con su test, y cuestionar el criterio del usuario cuando no sea el correcto.
@@ -21,7 +21,7 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
                              lectura de lo tecleado. Depende de Domain
   Sources/Application/       casos de uso y, en Ports/, un fichero por puerto (Clock, TrainingDataStore,
                              SyncSettingsStore, CredentialStore, RemoteTrainingDataSource, BackgroundActivity,
-                             WatchPublisher); TrainingRepository, el actor que guarda y sincroniza con la
+                             WatchPublisher, WorkoutRecorder, RestAlert, WatchWorkoutLauncher); TrainingRepository, el actor que guarda y sincroniza con la
                              política de la PWA, y WatchRelay, que envía al reloj lo que cambia. Depende de Domain
   Sources/ViewModels/        estado de cada pantalla (@Observable, @MainActor): AppModel (datos y aviso único),
                              SyncModel, NavigationModel, TodayModel, HistoryModel, ChartsModel, ProgressModel,
@@ -35,7 +35,10 @@ Packages/GymCore/            paquete Swift, un módulo por capa (las dependencia
   Sources/AppleAdapters/     los que solo existen en Apple, tras `#if canImport` (KeychainCredentialStore,
                              UIKitBackgroundActivity, ConnectivityMonitor); en Linux compila vacío
   Sources/WatchAdapters/     el enlace con el reloj (WatchConnectivity): el que envía, en iOS, y el que recibe, en
-                             watchOS (que no tiene UIKit, por eso no va en AppleAdapters); en Linux compila vacío
+                             watchOS (que no tiene UIKit, por eso no va en AppleAdapters), y la vibración del
+                             descanso (WatchKitRestAlert); en Linux compila vacío
+  Sources/HealthAdapters/    Salud (HealthKit): la sesión de entreno del reloj (HealthKitWorkoutRecorder) y abrir
+                             el reloj desde el iPhone (HealthKitWatchLauncher); en Linux compila vacío
   Sources/GymCoreTesting/    para los tests: dobles de los puertos (InMemoryTrainingDataStore, InMemoryRemote...),
                              tests de contrato que pasa todo adaptador de un puerto con estado, un fichero por
                              puerto (<Puerto>Doubles, <Puerto>Contract), y el arnés de la sincronización
@@ -51,9 +54,12 @@ App/                         app iOS: vistas SwiftUI finas por pantalla (Today/,
 UITests/                     XCUITest: pocos flujos y las capturas de pantalla; AppNavigation (arrancar con `-demo`
                              y los recorridos que se repiten), Waiting y Capture (estos dos, también en
                              WatchUITests/). Los identificadores, los de App/Shared/AccessibilityID.swift
-Watch/                       app del reloj (#16, solo lectura): WatchRootView (un ejercicio por página, con la
-                             corona), ExercisePageView y WatchCompositionRoot. Diseñada para el Series 10 de 46 mm.
-                             Con `-demo` o `-demo-sin-entreno` enseña datos de ejemplo (WatchDemo, capturas del CI)
+Watch/                       app del reloj (#16, #17), la app de entreno: WatchRootView (según la fase; midiendo,
+                             tres páginas: música, entreno y controles), un fichero por componente, WatchAppDelegate
+                             (el entreno cuando lo abre el iPhone) y WatchCompositionRoot. Diseñada para el Series
+                             10 de 46 mm. Con `-demo` mide un entreno de mentira con datos de ejemplo, o
+                             `-demo-sin-entreno` (WatchDemo, capturas del CI)
+Entitlements/                los de HealthKit de cada app; los firma el CI (no van en el proyecto)
 WatchUITests/                las capturas del reloj
 project.yml                  XcodeGen (el .xcodeproj no se versiona)
 scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Tests)
@@ -62,13 +68,13 @@ docs/decisiones-ui.md        las decisiones de interfaz, con su porqué
 docs/pendiente-nas.md        lo que queda por comprobar desde el NAS o con el iPhone en la mano
 ```
 
-- Solo `Adapters` (lo que compila en Linux: Foundation, FoundationNetworking), `AppleAdapters` (Security, UIKit, Network) y `WatchAdapters` (WatchConnectivity), estos dos siempre tras `#if canImport`, importan frameworks; `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
-- Puertos (`Application/Ports`): `Clock`, `TrainingDataStore`, `SyncSettingsStore`, `CredentialStore`, `RemoteTrainingDataSource`, `BackgroundActivity`, `WatchPublisher`. Cada adaptador de un puerto con estado (`TrainingDataStore`, `SyncSettingsStore`, `CredentialStore`, `RemoteTrainingDataSource`) pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y sus dobles también (`DoublesContractTests`); los casos de uso se prueban con los dobles en memoria. El adaptador traduce lo suyo: el mensaje del commit lo escribe el de GitHub, no el caso de uso.
+- Solo `Adapters` (lo que compila en Linux: Foundation, FoundationNetworking), `AppleAdapters` (Security, UIKit, Network), `WatchAdapters` (WatchConnectivity, WatchKit) y `HealthAdapters` (HealthKit), estos tres siempre tras `#if canImport`, importan frameworks; `Domain`, `Presentation`, `Application` y `ViewModels` no importan frameworks de Apple. Todo el paquete se prueba en el NAS y en un job de Linux del CI, que es quien lo vigila. Por eso los ViewModels viven en el paquete y no en `App/`: sus tests no necesitan simulador.
+- Puertos (`Application/Ports`): `Clock`, `TrainingDataStore`, `SyncSettingsStore`, `CredentialStore`, `RemoteTrainingDataSource`, `BackgroundActivity`, `WatchPublisher`, `WorkoutRecorder`, `RestAlert`, `WatchWorkoutLauncher`. Cada adaptador de un puerto con estado (`TrainingDataStore`, `SyncSettingsStore`, `CredentialStore`, `RemoteTrainingDataSource`) pasa su test de contrato de `GymCoreTesting` (p. ej. `@Test(arguments: TrainingDataStoreContract.allCases)`), y sus dobles también (`DoublesContractTests`); los casos de uso se prueban con los dobles en memoria. El adaptador traduce lo suyo: el mensaje del commit lo escribe el de GitHub, no el caso de uso.
 - Datos en el iPhone: `Application Support/GymCompanion/training-data.json`, formato propio versionado (`StoredTrainingData`, `version`), escrito de forma atómica. Se conserva al reinstalar encima (lo que hace ios-signer). Al lado, `sync.json` (repo, rama, ruta y si hay cambios sin subir); el token de GitHub va al Llavero.
 - Sincronización (#7): `TrainingRepository` es la única puerta a los datos. Lo local manda; cada cambio se guarda y se sube a los 500 ms (nada con un entreno en curso; al terminarlo, al momento); al arrancar, al volver a la app o al volver la red, sube lo pendiente o aplica lo remoto si es distinto; un 409/422 es un conflicto que elige el usuario. `PWAFormat.json(from:)` escribe el `db.json` byte a byte como `JSON.stringify(db, null, 2)` de la PWA. Con la app vacía, configurar GitHub baja los datos (no sube la app vacía encima).
-- Un adaptador que solo exista en Apple va en `AppleAdapters`, o en su propio módulo si es grande (como `WatchAdapters`; HealthKit, cuando llegue), para que el resto del paquete siga compilando en Linux.
+- Un adaptador que solo exista en Apple va en `AppleAdapters`, o en su propio módulo si es grande (como `WatchAdapters` y `HealthAdapters`), para que el resto del paquete siga compilando en Linux.
 - `App/CompositionRoot.swift` es el único sitio que crea adaptadores concretos (en el reloj, `Watch/WatchCompositionRoot.swift`); los de la demo, a través de `App/Demo/DemoEnvironment.swift`, que solo usa él.
-- Reloj (#16): solo lectura, manda el iPhone. `AppModel` pasa cada cambio de los datos a `WatchRelay`, que calcula el `WatchSnapshot` del día y lo envía si cambió (`updateApplicationContext`: solo lo último). El reloj lo pinta con `WatchModel`; un entreno de otro día ya no está en curso. ios-signer instala la app del reloj directamente en el reloj (#2), no a través del iPhone.
+- Reloj (#16, #17): la app de entreno; los datos los manda el iPhone. `AppModel` pasa cada cambio de los datos a `WatchRelay`, que calcula el `WatchSnapshot` del día (el plan de hoy y las sesiones de referencia) y lo envía si cambió (`updateApplicationContext`: solo lo último). El reloj lo pinta con `WatchModel`, que mide la sesión de Salud (`WorkoutRecorder`) y lleva el descanso (`RestTimer`, en tiempo del entreno; la vibración la programa `RestAlert`); un entreno de otro día ya no está en curso. «Empezar» en el iPhone abre el reloj (`WatchWorkoutLauncher`, que el reloj recibe en `WatchAppDelegate.handle`); terminar en el iPhone termina en el reloj (el snapshot pasa de tener entreno a no tenerlo: lo viejo que llega al abrir no termina nada), y terminar en el reloj deja el del iPhone abierto. ios-signer instala la app del reloj directamente en el reloj (#2), no a través del iPhone. Cómo es y por qué, en `docs/decisiones-ui.md`.
 - Reglas de negocio en `Domain` (p. ej. lo que cambia al empezar, añadir, quitar o terminar un entreno: `TrainingData+Workout`); lo que es texto para la interfaz, en `Presentation` (p. ej. «60 kg» es `LogText.weight`). Los ViewModels solo guardan el estado de la pantalla (qué está abierto, qué se teclea) y llaman a las dos; las vistas no calculan ni montan textos.
 - El modelo no calca `db.json`: el log no copia el nombre del ejercicio, las rutinas son entidades, las fechas son `LocalDate`. La traducción a `db.json` es cosa del adaptador (#6, #7).
 - Fechas: el "hoy" es el día local (`Clock`), no el UTC que usaba la PWA.
@@ -115,7 +121,7 @@ Para comprobar un despliegue: el run en `GET /repos/carcaret/gym-companion-ios/a
 - `CURRENT_PROJECT_VERSION` lo pone el workflow (número de ejecución); `MARKETING_VERSION` se sube a mano.
 - El repo es público (las máquinas macOS de Actions son gratis solo así): nada de secretos ni datos personales en el código.
 - Límites de la cuenta gratuita de Apple: sin iCloud/CloudKit ni notificaciones push; cada target extra (widget, Apple Watch) gasta uno de los 10 identificadores de app por semana. Si un día hace falta algo de eso, la salida es la cuenta de pago (TestFlight).
-- **Capacidades (HealthKit, App Groups...)**: plumesign las activa según los entitlements del binario, así que hay que firmar ad hoc en CI con el `.entitlements` (`codesign --force --sign - --entitlements …`); ver #3.
+- **Capacidades (HealthKit, App Groups...)**: plumesign las activa según los entitlements del binario, así que el job `release-build` firma ad hoc con los de `Entitlements/` (`codesign --force --sign - --entitlements …`), de dentro afuera (primero el reloj), y falla si alguno no los lleva; ver #3. Una capacidad nueva va en esos ficheros. Las compilaciones del simulador no los llevan: la demo no toca Salud.
 - Un solo usuario y un solo aparato, como la PWA: nada de sincronización multi-aparato ni CRDT.
 
 ## Trampas de SwiftUI

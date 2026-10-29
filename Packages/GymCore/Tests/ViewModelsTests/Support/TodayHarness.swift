@@ -12,9 +12,12 @@ struct TodayHarness {
     let sync: SyncModel
     let model: TodayModel
 
-    static func make(_ data: TrainingData = PWATestDB.data, configured: Bool = false) async -> TodayHarness {
+    static func make(
+        _ data: TrainingData = PWATestDB.data, configured: Bool = false, watchLauncher: (any WatchWorkoutLauncher)? = nil
+    ) async -> TodayHarness {
         let base = await AppHarness.start(SyncHarness(local: data, configured: configured))
-        return TodayHarness(harness: base.harness, app: base.app, sync: base.sync, model: TodayModel(app: base.app, clock: base.clock))
+        return TodayHarness(harness: base.harness, app: base.app, sync: base.sync,
+                            model: TodayModel(app: base.app, clock: base.clock, watchLauncher: watchLauncher))
     }
 
     var today: LocalDate { SyncFixtures.today }

@@ -119,26 +119,31 @@ extension Collection where Element == Session {
         }
     }
 
+    /// La mejor sesión terminada (no saltada) del ejercicio en la misma ventana que pinta la gráfica
+    /// (las últimas `weeks` semanas hasta `today`, sin contar `today`): más peso; a igualdad, más
+    /// volumen; a igualdad, la más reciente. Es de donde sale el plan (`bestRecentSeed`) y la
+    /// referencia que enseña el reloj.
+    public func bestRecentSession(for exercise: ExerciseID, today: LocalDate, weeks: Int = RecentWindow.weeks) -> ExerciseSession? {
+        let sessions = recentSessions(for: exercise, anchor: today, weeks: weeks, excluding: today).filter { !$0.log.skipped }
+        guard var best = sessions.last else { return nil }
+        for session in sessions.dropLast().reversed()
+        where session.log.weight > best.log.weight || (session.log.weight == best.log.weight && session.log.volume > best.log.volume) {
+            best = session
+        }
+        return best
+    }
+
     /// Con qué valores arranca un ejercicio al planificar la sesión de `today`.
     ///
-    /// 1. La mejor sesión terminada (no saltada) de la misma ventana que pinta la gráfica (las
-    ///    últimas `weeks` semanas): más peso; a igualdad, más volumen; a igualdad, la más reciente.
+    /// 1. La mejor sesión reciente (`bestRecentSession`).
     /// 2. Si no hay ninguna (ejercicio "dormido"), la vez más reciente que se hizo, terminada o no:
     ///    la más reciente y no la de más peso, para no resucitar pesos antiguos.
     /// 3. Si nunca se hizo, `LogSeed.defaults`.
     ///
     /// La sesión de `today` nunca cuenta (es la que se está planificando).
     public func bestRecentSeed(for exercise: ExerciseID, today: LocalDate? = nil, weeks: Int = RecentWindow.weeks) -> LogSeed {
-        if let today {
-            let sessions = recentSessions(for: exercise, anchor: today, weeks: weeks, excluding: today)
-                .filter { !$0.log.skipped }
-            if var best = sessions.last?.log {
-                for log in sessions.dropLast().reversed().map(\.log)
-                where log.weight > best.weight || (log.weight == best.weight && log.volume > best.volume) {
-                    best = log
-                }
-                return LogSeed(best)
-            }
+        if let today, let best = bestRecentSession(for: exercise, today: today, weeks: weeks) {
+            return LogSeed(best.log)
         }
         for session in sortedChronologically().reversed() where session.date != today {
             if let log = session.logs.first(where: { $0.exerciseID == exercise && !$0.skipped }) {

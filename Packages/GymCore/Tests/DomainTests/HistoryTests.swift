@@ -678,3 +678,35 @@ struct IsWorkoutActiveTests {
     @Test("múltiples entries, solo la de hoy importa")
     func onlyToday() { #expect([completed("2026-03-28"), open(today, "DIA2")].isWorkoutActive(on: today)) }
 }
+
+// Propio de la app: la elección de la semilla, con su fecha (es la referencia del reloj).
+@Suite("La mejor sesión reciente")
+struct BestRecentSessionTests {
+    private let today: LocalDate = "2024-05-01"
+
+    @Test("la de más peso de la ventana, con su fecha")
+    func heaviest() {
+        let history = [
+            completed("2024-04-08", "DIA1", dataLog("prensa", series: 4, expected: 12, actual: [12, 12, 12, 14], weight: 180)),
+            completed("2024-04-22", "DIA1", dataLog("prensa", series: 4, expected: 10, actual: [10, 10, 10, 10], weight: 200)),
+        ]
+        let best = history.bestRecentSession(for: "prensa", today: today)
+        #expect(best?.date == "2024-04-22")
+        #expect(best?.log.weight == 200)
+    }
+
+    @Test("sin sesiones terminadas en la ventana, ninguna (aunque las haya más antiguas)")
+    func none() {
+        let history = [
+            completed("2024-01-01", "DIA1", dataLog("press_banca", series: 3, expected: 10, actual: [10, 10, 10], weight: 80)),
+            open("2024-04-22", "DIA1", dataLog("press_banca", series: 3, expected: 10, actual: [10, 10, 10], weight: 90)),
+        ]
+        #expect(history.bestRecentSession(for: "press_banca", today: today) == nil)
+    }
+
+    @Test("la de hoy no cuenta")
+    func excludesToday() {
+        let history = [completed(today, "DIA1", dataLog("press_banca", series: 3, expected: 10, actual: [10, 10, 10], weight: 80))]
+        #expect(history.bestRecentSession(for: "press_banca", today: today) == nil)
+    }
+}

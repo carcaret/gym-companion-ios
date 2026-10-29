@@ -310,6 +310,19 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
+      # Salud (#17): plumesign activa en cada App ID las capacidades que lleva su binario (#3), y se
+      # compila sin firmar. Se firma ad hoc con los entitlements, de dentro afuera: primero el
+      # reloj, que va dentro de la app del iPhone. Si alguno no los lleva, falla.
+      - name: Firmar ad hoc con los entitlements
+        run: |
+          app=build/Build/Products/Release-iphoneos/GymCompanion.app
+          watch="$app/Watch/GymCompanionWatch.app"
+          codesign --force --sign - --entitlements Entitlements/GymCompanionWatch.entitlements "$watch"
+          codesign --force --sign - --entitlements Entitlements/GymCompanion.entitlements "$app"
+          for bundle in "$watch" "$app"; do
+            codesign -d --entitlements - --xml "$bundle" | grep -q com.apple.developer.healthkit
+          done
+
       - name: Empaquetar .ipa
         run: |
           mkdir -p Payload

@@ -3,6 +3,7 @@ import AppleAdapters
 import Application
 import Domain
 import Foundation
+import HealthAdapters
 import Presentation
 import ViewModels
 import WatchAdapters
@@ -41,7 +42,8 @@ struct CompositionRoot {
         model = AppModel(repository: repository, watch: demo.isDemo ? nil : WatchRelay(publisher: WatchConnectivityPublisher(), clock: clock))
         sync = SyncModel(repository: repository, app: model, noticeDuration: demo.noticeDuration)
         navigation = NavigationModel()
-        today = TodayModel(app: model, clock: clock)
+        // Empezar el entreno abre el reloj para que lo mida (en la demo no: no hay reloj).
+        today = TodayModel(app: model, clock: clock, watchLauncher: demo.isDemo ? nil : HealthKitWatchLauncher())
         history = HistoryModel(app: model, clock: clock)
         charts = ChartsModel(app: model, clock: clock)
         progress = ProgressModel(app: model, clock: clock)

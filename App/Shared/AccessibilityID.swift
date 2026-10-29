@@ -2,6 +2,12 @@
 /// `UITests` (`project.yml`): cambiar uno aquí cambia los dos lados, y un nombre que ya no existe no
 /// compila.
 enum AccessibilityID {
+    // El reloj
+    static let watchStart = "watch-start"
+    static let watchRest = "watch-rest"
+    static let watchFinish = "watch-finish"
+    static let watchDone = "watch-done"
+
     // Rutinas y entreno
     static let startWorkout = "start-workout"
     static let finishWorkout = "finish-workout"

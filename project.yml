@@ -37,6 +37,8 @@ targets:
         product: AppleAdapters
       - package: GymCore
         product: WatchAdapters
+      - package: GymCore
+        product: HealthAdapters
       # La app del reloj va dentro (Watch/); ios-signer la instala directamente en el reloj (#2).
       - target: GymCompanionWatch
     info:
@@ -51,6 +53,10 @@ targets:
         UIUserInterfaceStyle: Dark   # siempre en oscuro, como la PWA
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        # Salud (#17): el iPhone abre el reloj al empezar el entreno. Los entitlements van en
+        # Entitlements/ y los firma el CI (ver build.yml).
+        NSHealthShareUsageDescription: Gym lee el pulso y las kcal del entreno para enseñártelos en el reloj.
+        NSHealthUpdateUsageDescription: Gym guarda cada entreno en Salud como fuerza tradicional.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion
@@ -74,9 +80,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: GymCompanion
-  # App del reloj (#16): solo lectura, lo que le envía el iPhone. Comparte con la app los datos de
-  # ejemplo de las capturas, los argumentos de arranque, los colores y el icono (el catálogo de la app
-  # lo trae para iOS y watchOS).
+  # App del reloj (#16, #17): la app de entreno. Mide el entreno en Salud y enseña lo que le envía el
+  # iPhone. Comparte con la app los datos de ejemplo de las capturas, los argumentos de arranque, los
+  # identificadores de accesibilidad, los colores y el icono (el catálogo de la app lo trae para iOS y
+  # watchOS).
   GymCompanionWatch:
     type: application
     platform: watchOS
@@ -84,6 +91,7 @@ targets:
       - Watch
       - App/Demo/DemoData.swift
       - App/Shared/LaunchArgument.swift
+      - App/Shared/AccessibilityID.swift
       - App/Shared/Theme.swift
       - App/Assets.xcassets
     dependencies:
@@ -92,11 +100,15 @@ targets:
       - package: GymCore
         product: Presentation
       - package: GymCore
+        product: Application
+      - package: GymCore
         product: ViewModels
       - package: GymCore
         product: Adapters
       - package: GymCore
         product: WatchAdapters
+      - package: GymCore
+        product: HealthAdapters
     info:
       path: Watch/Info.plist
       properties:
@@ -107,6 +119,10 @@ targets:
         WKApplication: true
         # plumesign lo reescribe con el team ID, igual que el identificador del bundle.
         WKCompanionAppBundleIdentifier: com.carcaret.gymcompanion
+        # La sesión de entreno sigue con la pantalla apagada y la app vuelve al levantar la muñeca.
+        WKBackgroundModes: [workout-processing]
+        NSHealthShareUsageDescription: Gym lee el pulso y las kcal del entreno para enseñártelos.
+        NSHealthUpdateUsageDescription: Gym guarda cada entreno en Salud como fuerza tradicional.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.watchkitapp
@@ -118,9 +134,10 @@ targets:
   GymCompanionWatchUITests:
     type: bundle.ui-testing
     platform: watchOS
-    # Lo mismo que en los tests del iPhone: las esperas (`appears(timeout:)`), las capturas y los
-    # argumentos de arranque.
-    sources: [WatchUITests, UITests/Waiting.swift, UITests/Capture.swift, App/Shared/LaunchArgument.swift]
+    # Lo mismo que en los tests del iPhone: las esperas (`appears(timeout:)`), las capturas, los
+    # argumentos de arranque y los identificadores de accesibilidad.
+    sources: [WatchUITests, UITests/Waiting.swift, UITests/Capture.swift, App/Shared/LaunchArgument.swift,
+              App/Shared/AccessibilityID.swift]
     dependencies:
       - target: GymCompanionWatch
     settings:
