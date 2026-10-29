@@ -44,7 +44,7 @@ public struct Catalog: Hashable, Sendable {
             exercise.name = name(of: id)
             if !needle.isEmpty, !exercise.name.searchFolded.contains(needle) { continue }
             exercise.secondaryGroups = SecondaryGroups.resolve(exercise, id: id)
-            let group = exercise.group.flatMap { $0.isKnown ? $0 : nil }
+            let group = exercise.knownGroup
             byGroup[group, default: []].append(exercise)
         }
         let order: [MuscleGroup?] = MuscleGroup.all.map { $0 } + [nil]

@@ -79,8 +79,9 @@ public final class SettingsModel {
         guard canSave else { return }
         connectionResult = nil
         await run(.saving) {
+            // Lo que no conecta es un error; conectar, un éxito (no se compara el texto).
             let result = await sync.testConnection(repository: repository, branch: branch, path: path, token: token)
-            guard result == SyncText.connected else {
+            guard let result, result.kind == .success else {
                 connectionResult = result
                 return
             }
@@ -97,7 +98,7 @@ public final class SettingsModel {
     }
 
     /// «Descartar cambios». No depende del diálogo, que SwiftUI cierra antes de la acción.
-    public func discardAndClose() {
+    public func discardChanges() {
         isDiscardPromptPresented = false
         sync.isSettingsPresented = false
     }

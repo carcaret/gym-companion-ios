@@ -41,7 +41,7 @@ struct ExerciseProgressRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Group {
                     Text(ProgressText.recentSessions).sectionLabelStyle()
-                    Text(row.recentReps.joined(separator: "  ·  "))
+                    Text(row.recentRepsText)
                         .scaledFont(13).monospacedDigit()
                         .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                 }

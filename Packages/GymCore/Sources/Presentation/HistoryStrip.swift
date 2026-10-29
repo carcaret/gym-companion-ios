@@ -25,6 +25,36 @@ public struct StripBar: Hashable, Sendable {
     public let kind: Kind
     /// "1/6"; vacío en los huecos.
     public let dateLabel: String
+
+    public init(kind: Kind, dateLabel: String) {
+        self.kind = kind
+        self.dateLabel = dateLabel
+    }
+
+    /// Solo las sesiones tienen detalle: un toque en una vacía o saltada cuenta como fuera.
+    public var isSelectable: Bool {
+        if case .session = kind { return true }
+        return false
+    }
+
+    public var isCurrent: Bool {
+        if case .session(_, _, true, _) = kind { return true }
+        return false
+    }
+
+    /// El bocadillo al tocarla: el peso y las reps destacados y debajo el e1RM (las dos líneas del
+    /// tooltip de la PWA, al revés). `nil` si no hay detalle.
+    public var bubble: (main: String, secondary: String?)? {
+        guard case .session(_, _, _, let tooltip) = kind, !tooltip.isEmpty else { return nil }
+        let lines = tooltip.split(separator: "\n").map(String.init)
+        return lines.count > 1 ? (lines[1], lines[0]) : (lines[0], nil)
+    }
+
+    /// Para VoiceOver: el detalle en una línea, o la fecha.
+    public var accessibilityText: String {
+        if case .session(_, _, _, let tooltip) = kind { return tooltip.split(separator: "\n").joined(separator: " · ") }
+        return dateLabel
+    }
 }
 
 /// La tira "Últimas sesiones" de un ejercicio.
@@ -43,14 +73,14 @@ public struct HistoryStripContent: Hashable, Sendable {
 /// últimas sesiones terminadas (6 semanas, 6 como mucho) más la de hoy, con la altura según la
 /// métrica principal y el color según `BarColor`.
 public enum HistoryStrip {
-    static let columns = 6
+    static let columns = RecentWindow.maxSessions
     /// Techo de las barras sin lastre cuando la tira las mezcla con lastradas.
     static let unloadedCeiling = 0.5
 
     /// `nil` si no hay ninguna sesión que pintar.
     public static func make(history: [Session], exercise: ExerciseID, current: ExerciseLog, anchor: LocalDate) -> HistoryStripContent? {
         struct Item { let date: LocalDate; let log: ExerciseLog; let isCurrent: Bool }
-        var items = history.recentSessions(for: exercise, anchor: anchor, maxSessions: 6, weeks: 6, excluding: anchor)
+        var items = history.recentSessions(for: exercise, anchor: anchor, excluding: anchor)
             .map { Item(date: $0.date, log: $0.log, isCurrent: false) }
         let hasCurrent = current.primaryMetric > 0
         if hasCurrent { items.append(Item(date: anchor, log: current, isCurrent: true)) }
@@ -118,9 +148,9 @@ public enum HistoryStrip {
     /// "60 kg · 12-11-10". Los kilos, como en el resto de la app: con espacio y coma decimal (la
     /// PWA ponía "84kg" y "73.3kg"; cambio aprobado por el usuario, 2026-10-27).
     public static func tooltip(_ log: ExerciseLog) -> String {
-        let first = log.estimatedOneRepMax > 0 ? "e1RM \(LogText.kilograms(log.roundedEstimatedOneRepMax)) kg" : ""
+        let first = log.estimatedOneRepMax > 0 ? "e1RM \(LogText.weight(log.roundedEstimatedOneRepMax))" : ""
         let reps = log.actualReps.contains { $0 != nil } ? LogText.reps(log.actualReps) : ""
-        let second = [log.weight > 0 ? "\(LogText.kilograms(log.weight)) kg" : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
+        let second = [log.weight > 0 ? LogText.weight(log.weight) : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
         return [first, second].filter { !$0.isEmpty }.joined(separator: "\n")
     }
 }

@@ -78,7 +78,8 @@ public struct InMemoryRemote: RemoteTrainingDataSource {
     public struct Push: Hashable, Sendable {
         public let data: TrainingData
         public let replacing: RemoteVersion?
-        public let message: String
+        /// El día de la subida.
+        public let day: LocalDate
     }
 
     public actor Storage {
@@ -127,7 +128,7 @@ public struct InMemoryRemote: RemoteTrainingDataSource {
             return RemoteSnapshot(data: data, version: version)
         }
 
-        func push(_ new: TrainingData, replacing: RemoteVersion?, message: String) async throws(RemoteError) -> RemoteVersion {
+        func push(_ new: TrainingData, replacing: RemoteVersion?, day: LocalDate) async throws(RemoteError) -> RemoteVersion {
             await pushGate.pass()
             pushAttempts += 1
             if let pushFailure { throw pushFailure }
@@ -135,7 +136,7 @@ public struct InMemoryRemote: RemoteTrainingDataSource {
             counter += 1
             data = new
             version = RemoteVersion("sha_\(counter)")
-            pushes.append(Push(data: new, replacing: replacing, message: message))
+            pushes.append(Push(data: new, replacing: replacing, day: day))
             return version
         }
     }
@@ -151,8 +152,8 @@ public struct InMemoryRemote: RemoteTrainingDataSource {
     }
 
     public func push(_ data: TrainingData, to location: SyncLocation, token: String, replacing version: RemoteVersion?,
-                     message: String) async throws(RemoteError) -> RemoteVersion {
-        try await storage.push(data, replacing: version, message: message)
+                     on day: LocalDate) async throws(RemoteError) -> RemoteVersion {
+        try await storage.push(data, replacing: version, day: day)
     }
 }
 

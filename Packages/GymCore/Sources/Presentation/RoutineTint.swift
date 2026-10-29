@@ -8,10 +8,10 @@ public enum RoutineTint: Hashable, Sendable, CaseIterable {
     /// DIA1, DIA2 y DIA3 tienen el de su día, como en la PWA; otra rutina, el de su posición, de
     /// tres en tres. Una rutina que ya no existe no tiene color.
     public static func of(_ routine: RoutineID, in routines: [RoutineID]) -> RoutineTint? {
-        switch routine.rawValue {
-        case "DIA1": return .day1
-        case "DIA2": return .day2
-        case "DIA3": return .day3
+        switch routine {
+        case .day1: return .day1
+        case .day2: return .day2
+        case .day3: return .day3
         default:
             guard let index = routines.firstIndex(of: routine) else { return nil }
             return allCases[index % allCases.count]

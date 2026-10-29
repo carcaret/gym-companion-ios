@@ -134,7 +134,7 @@ struct HistoryFullTests {
         history.openFirstAndEdit()
         let original = history.model.cards[0].weight
         history.model.set(.weight, text: "999", at: 0)
-        history.model.cancelEditing()
+        history.model.requestClose()
         #expect(history.model.isDiscardPromptPresented)
         history.model.discardChanges()
         history.model.back()
@@ -487,7 +487,7 @@ struct HistoryValidationTests {
         history.model.toggleCard(0)
         history.model.startEditing()
         #expect(history.model.cards[0].cells[0].text == "10")
-        history.model.cancelEditing()
+        history.model.requestClose()
         // Rellenar no cuenta como cambio: sale sin preguntar.
         #expect(!history.model.isDiscardPromptPresented)
         history.model.startEditing()
@@ -512,7 +512,7 @@ struct HistoryValidationTests {
         history.openFirstAndEdit()
         let original = history.model.cards[0].weight
         history.model.set(.weight, text: "999", at: 0)
-        history.model.cancelEditing()
+        history.model.requestClose()
         #expect(history.model.isDiscardPromptPresented)
         history.model.discardChanges()
         #expect(!history.model.isEditing)
@@ -543,7 +543,7 @@ struct HistoryEditingTests {
     func cancelClean() async {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
-        history.model.cancelEditing()
+        history.model.requestClose()
         #expect(!history.model.isEditing)
         #expect(!history.model.isDiscardPromptPresented)
     }
@@ -553,7 +553,7 @@ struct HistoryEditingTests {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
         history.model.set(.weight, text: "88", at: 0)
-        history.model.cancelEditing()
+        history.model.requestClose()
         history.model.keepEditing()
         #expect(history.model.isEditing)
         #expect(!history.model.isDiscardPromptPresented)
@@ -565,7 +565,7 @@ struct HistoryEditingTests {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
         history.model.type(.weight, text: "66", at: 0)
-        history.model.cancelEditing()
+        history.model.requestClose()
         #expect(history.model.isDiscardPromptPresented)
         history.model.keepEditing()
         history.model.type(.weight, text: "67", at: 0)
@@ -648,7 +648,7 @@ struct HistoryEditingTests {
         let history = await HistoryHarness.make()
         history.openFirstAndEdit()
         history.model.set(.weight, text: "999", at: 0)
-        history.model.cancelEditing()
+        history.model.requestClose()
         #expect(history.model.isDiscardPromptPresented)
         history.model.keepEditing()
         history.model.discardChanges()

@@ -80,7 +80,7 @@ struct SettingsScreen: View {
                     .accessibilityIdentifier("settings-close")
                     .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
                                         titleVisibility: .visible) {
-                        Button(FormText.discardConfirm, role: .destructive) { model.discardAndClose() }
+                        Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
                         Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
                     }
             }

@@ -12,6 +12,11 @@ public struct RoutineID: Hashable, Comparable, Sendable, ExpressibleByStringLite
 
     public var description: String { rawValue }
 
+    /// Las tres rutinas de la PWA (`ROUTINE_KEYS`).
+    public static let day1: RoutineID = "DIA1"
+    public static let day2: RoutineID = "DIA2"
+    public static let day3: RoutineID = "DIA3"
+
     public static func < (lhs: RoutineID, rhs: RoutineID) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
@@ -33,8 +38,8 @@ public struct Routine: Hashable, Sendable {
     /// cuando aún no se ha cargado nada. Sin referencias a días de la semana: se hacen cuando se
     /// puede, no un día fijo.
     public static let defaults: [Routine] = [
-        Routine(id: "DIA1", name: "Full Body - Día 1"),
-        Routine(id: "DIA2", name: "Full Body - Día 2"),
-        Routine(id: "DIA3", name: "Full Body - Día 3"),
+        Routine(id: .day1, name: "Full Body - Día 1"),
+        Routine(id: .day2, name: "Full Body - Día 2"),
+        Routine(id: .day3, name: "Full Body - Día 3"),
     ]
 }

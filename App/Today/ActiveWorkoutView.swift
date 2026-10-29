@@ -45,9 +45,7 @@ struct ActiveWorkoutView: View {
             }
             .onMove { source, destination in
                 guard let from = source.first else { return }
-                // `onMove` da la posición antes de la que se suelta; `reorder` quiere la final.
-                let to = destination > from ? destination - 1 : destination
-                Task { await model.reorder(from: from, to: to) }
+                Task { await model.moveCard(from: from, toOffset: destination) }
             }
         }
         .listStyle(.plain)

@@ -57,6 +57,26 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
 
     public var hasRecord: Bool { isVolumeRecord || isE1RMRecord }
 
+    /// Una fila de peso, series u objetivo, con su −/+ o su campo.
+    public struct ParameterRow: Hashable, Sendable {
+        public let parameter: LogParameter
+        public let label: String
+        public let value: String
+        /// Se teclea con decimales (el peso).
+        public let isDecimal: Bool
+        public let hasError: Bool
+    }
+
+    /// Peso, series y objetivo, en ese orden.
+    public var parameters: [ParameterRow] {
+        [ParameterRow(parameter: .weight, label: TodayText.weightLabel, value: LogText.kilograms(weight), isDecimal: true,
+                      hasError: errors.contains(.negativeWeight)),
+         ParameterRow(parameter: .series, label: TodayText.seriesLabel, value: "\(series)", isDecimal: false,
+                      hasError: errors.contains(.invalidSeries)),
+         ParameterRow(parameter: .targetReps, label: TodayText.targetRepsLabel, value: "\(targetReps)", isDecimal: false,
+                      hasError: errors.contains(.invalidTargetReps))]
+    }
+
     /// `anchor`: el día de la sesión (la tira la pone la última y los récords no la cuentan).
     init(log: ExerciseLog, data: TrainingData, isOpen: Bool, isEditable: Bool, anchor: LocalDate,
          focusedSeries: Int?, errors: [LogValidationError], showsRecords: Bool, isDirty: Bool = false) {
@@ -71,11 +91,11 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
         cells = (0..<max(0, log.series)).map { series in
             let value = series < log.actualReps.count ? log.actualReps[series] : nil
             let state: SeriesState = value.map { $0 >= log.targetReps ? .done : .filled } ?? .empty
-            return SeriesCell(label: TodayText.seriesLabel(series), text: value.map(String.init) ?? TodayText.emptyRep, value: value, state: state,
+            return SeriesCell(label: TodayText.seriesLabel(series), text: value.map(String.init) ?? LogText.emptyRep, value: value, state: state,
                               isFocused: focusedSeries == series, hasError: errors.contains { $0.repIndex == series })
         }
         if let focused = focusedSeries, focused < log.series {
-            let current = (focused < log.actualReps.count ? log.actualReps[focused] : nil) ?? log.targetReps
+            let current = log.repsOrTarget[focused]
             chips = RepChips.values(around: current).map { value in
                 Chip(value: value, isCurrent: value == current,
                      relation: value < log.targetReps ? .below : value == log.targetReps ? .atTarget : .above)

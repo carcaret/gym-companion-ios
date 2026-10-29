@@ -6,7 +6,7 @@ public enum LogText {
     /// objetivo, las reps de cada serie.
     public static func summary(_ log: ExerciseLog) -> String {
         var parts: [String] = []
-        if log.weight > 0 { parts.append("\(kilograms(log.weight)) kg") }
+        if log.weight > 0 { parts.append(weight(log.weight)) }
         parts.append("\(log.series)×\(log.targetReps)")
         if let detail = repsDetail(log.actualReps, series: log.series, target: log.targetReps) { parts.append(detail) }
         return parts.joined(separator: " · ")
@@ -21,14 +21,27 @@ public enum LogText {
         return reps(actual)
     }
 
+    /// La serie sin rellenar.
+    public static let emptyRep = "—"
+
     /// "10·8·10", y la serie vacía, "—": en todas partes igual (2026-10-27; la PWA separaba con
     /// "-", que con una serie vacía daba "10---8").
     public static func reps(_ reps: [Int?]) -> String {
-        reps.map { $0.map(String.init) ?? TodayText.emptyRep }.joined(separator: "·")
+        reps.map { $0.map(String.init) ?? emptyRep }.joined(separator: "·")
+    }
+
+    /// "60 kg", "52,5 kg".
+    public static func weight(_ kilograms: Double) -> String {
+        "\(Self.kilograms(kilograms)) kg"
     }
 
     /// Kilos con coma decimal y sin ceros de sobra, a 0,01 kg: "60", "52,5", "18,25".
     public static func kilograms(_ weight: Double) -> String {
+        decimal(weight)
+    }
+
+    /// Un número con coma decimal y sin ceros de sobra, a 0,01: "60", "52,5", "18,25".
+    public static func decimal(_ weight: Double) -> String {
         let hundredths = Int((abs(weight) * 100).rounded())
         let sign = weight < 0 && hundredths > 0 ? "-" : ""
         var fraction = String(hundredths % 100)

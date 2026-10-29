@@ -16,6 +16,21 @@ public struct WeekBucket: Hashable, Sendable {
     public let session: ExerciseSession?
 }
 
+extension Array where Element == Session {
+    /// Pone `session` en lugar de la que hay ese día; si no hay ninguna, no hace nada.
+    public mutating func replace(_ session: Session) {
+        guard let position = firstIndex(where: { $0.date == session.date }) else { return }
+        self[position] = session
+    }
+}
+
+/// La ventana de «Últimas sesiones»: lo que pinta la tira de cada ejercicio y de donde sale la
+/// semilla de un ejercicio nuevo en el entreno.
+public enum RecentWindow {
+    public static let maxSessions = 6
+    public static let weeks = 6
+}
+
 extension Collection where Element == Session {
     /// La sesión de ese día. (`getTodayEntry`.)
     public func session(on date: LocalDate) -> Session? {
@@ -55,12 +70,13 @@ extension Collection where Element == Session {
     /// de `anchor` cuenta entera desde su lunes), de la más antigua a la más reciente, como mucho
     /// las `maxSessions` últimas. Son las barras de la gráfica de cada ejercicio en Hoy.
     public func recentSessions(
-        for exercise: ExerciseID, anchor: LocalDate, maxSessions: Int = 6, weeks: Int = 6, excluding excluded: LocalDate? = nil
+        for exercise: ExerciseID, anchor: LocalDate, maxSessions: Int = RecentWindow.maxSessions, weeks: Int = RecentWindow.weeks,
+        excluding excluded: LocalDate? = nil
     ) -> [ExerciseSession] {
         let windowStart = anchor.weekStart.adding(days: -7 * (weeks - 1))
         let sessions = sortedChronologically().compactMap { session -> ExerciseSession? in
             guard session.completed, session.date != excluded, (windowStart...anchor).contains(session.date),
-                  let log = session.logs.first(where: { $0.exerciseID == exercise }) else { return nil }
+                  let log = session.log(of: exercise) else { return nil }
             return ExerciseSession(date: session.date, log: log)
         }
         return Array(sessions.suffix(maxSessions))
@@ -71,7 +87,7 @@ extension Collection where Element == Session {
     public func lastSessions(for exercise: ExerciseID, excluding excluded: LocalDate? = nil, limit: Int) -> [ExerciseSession] {
         let sessions = sortedNewestFirst().lazy.compactMap { session -> ExerciseSession? in
             guard session.completed, session.date != excluded,
-                  let log = session.logs.first(where: { $0.exerciseID == exercise }), !log.skipped else { return nil }
+                  let log = session.log(of: exercise), !log.skipped else { return nil }
             return ExerciseSession(date: session.date, log: log)
         }
         return Array(sessions.prefix(limit))
@@ -88,7 +104,7 @@ extension Collection where Element == Session {
             let weekEnd = weekStart.adding(days: 6)
             var best: ExerciseSession?
             for session in self where session.completed && session.date != excluded && (weekStart...weekEnd).contains(session.date) {
-                guard let log = session.logs.first(where: { $0.exerciseID == exercise }) else { continue }
+                guard let log = session.log(of: exercise) else { continue }
                 if let current = best, log.volume < current.log.volume || (log.volume == current.log.volume && session.date <= current.date) {
                     continue
                 }
@@ -107,9 +123,9 @@ extension Collection where Element == Session {
     /// 3. Si nunca se hizo, `LogSeed.defaults`.
     ///
     /// La sesión de `today` nunca cuenta (es la que se está planificando).
-    public func bestRecentSeed(for exercise: ExerciseID, today: LocalDate? = nil, weeks: Int = 6) -> LogSeed {
+    public func bestRecentSeed(for exercise: ExerciseID, today: LocalDate? = nil, weeks: Int = RecentWindow.weeks) -> LogSeed {
         if let today {
-            let sessions = recentSessions(for: exercise, anchor: today, maxSessions: 6, weeks: weeks, excluding: today)
+            let sessions = recentSessions(for: exercise, anchor: today, weeks: weeks, excluding: today)
                 .filter { !$0.log.skipped }
             if var best = sessions.last?.log {
                 for log in sessions.dropLast().reversed().map(\.log)

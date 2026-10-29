@@ -20,6 +20,8 @@ public final class ProgressModel {
         public let status: ProgressStatus
         /// Las reps de las últimas sesiones ("11-11-10").
         public let recentReps: [String]
+        /// "11·11·10  ·  12·11·10": las de cada sesión, separadas.
+        public var recentRepsText: String { ProgressText.recentReps(recentReps) }
         /// "Ver en Gráficas", solo si hay histórico que dibujar.
         public let canOpenCharts: Bool
         public let isOpen: Bool
@@ -72,7 +74,7 @@ public final class ProgressModel {
         return data.progressRows(for: ids, anchor: clock.today(), weeks: Self.weeks).map { progress in
             ExerciseRow(
                 exerciseID: progress.exerciseID, name: data.catalog.name(of: progress.exerciseID),
-                weight: progress.weight > 0 ? "\(LogText.kilograms(progress.weight)) kg" : nil,
+                weight: progress.weight > 0 ? LogText.weight(progress.weight) : nil,
                 phrase: ProgressText.phrase(progress), status: progress.status,
                 recentReps: progress.recentReps.map { LogText.reps($0) },
                 canOpenCharts: progress.status != .noTrack, isOpen: openRows.contains(progress.exerciseID)
@@ -102,7 +104,7 @@ public final class ProgressModel {
     }
 
     public func toggleRow(_ exercise: ExerciseID) {
-        if openRows.contains(exercise) { openRows.remove(exercise) } else { openRows.insert(exercise) }
+        openRows.toggle(exercise)
     }
 
     /// "Ver en Gráficas": las gráficas del ejercicio, empujadas dentro de Progreso. Son otras que
@@ -130,7 +132,7 @@ public final class ProgressModel {
             let name = GroupText.name(group.group)
             return GroupRow(
                 name: name, sets: group.sets, indirectSets: group.indirectSets, total: Int(jsRound(group.totalSets)),
-                exercises: group.exercises.map { ($0.name, "\($0.sets) · \($0.sessions)") },
+                exercises: group.exercises.map { ($0.name, ProgressText.setsAndSessions(sets: $0.sets, sessions: $0.sessions)) },
                 indirect: group.indirect.map { ($0.name, ProgressText.indirectSets($0.sets)) },
                 isOpen: openGroups.contains(name)
             )
@@ -148,6 +150,6 @@ public final class ProgressModel {
     }
 
     public func toggleGroup(_ name: String) {
-        if openGroups.contains(name) { openGroups.remove(name) } else { openGroups.insert(name) }
+        openGroups.toggle(name)
     }
 }

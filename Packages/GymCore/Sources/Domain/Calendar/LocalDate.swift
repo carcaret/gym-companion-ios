@@ -41,6 +41,14 @@ public struct LocalDate: Hashable, Comparable, Sendable {
         LocalDate(daysSinceEpoch: daysSinceEpoch + days)
     }
 
+    /// El mismo día `months` meses después (antes, si es negativo); si ese mes no tiene ese día, se
+    /// pasa al siguiente, como `setMonth` de JavaScript (31 de marzo − 1 mes → 3 de marzo).
+    public func adding(months: Int) -> LocalDate {
+        let total = year * 12 + (month - 1) + months
+        let first = LocalDate(year: Int((Double(total) / 12).rounded(.down)), month: (total % 12 + 12) % 12 + 1, day: 1)!
+        return first.adding(days: day - 1)
+    }
+
     /// Días desde `self` hasta `other` (negativo si `other` es anterior).
     public func days(until other: LocalDate) -> Int {
         other.daysSinceEpoch - daysSinceEpoch

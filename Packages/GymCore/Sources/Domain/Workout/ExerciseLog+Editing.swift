@@ -1,5 +1,5 @@
 /// Lo que se puede ajustar de un ejercicio con los botones −/+ o tecleando.
-public enum LogParameter: Sendable {
+public enum LogParameter: Hashable, Sendable {
     case weight, series, targetReps
 }
 
@@ -20,6 +20,24 @@ extension ExerciseLog {
         if weight < 20 { return 1 }
         if weight < 50 { return 2 }
         return 5
+    }
+
+    /// Un paso de los botones −/+ (`direction` = −1 o 1): en el peso, el escalón de su carga.
+    public mutating func step(_ parameter: LogParameter, direction: Int) {
+        let delta = parameter == .weight ? Double(direction) * Self.weightStep(for: weight) : Double(direction)
+        adjust(parameter, by: delta)
+    }
+
+    /// Las reps de cada serie: las vacías y las que faltan valen el objetivo.
+    public var repsOrTarget: [Int] {
+        (0..<max(0, series)).map { index in (index < actualReps.count ? actualReps[index] : nil) ?? targetReps }
+    }
+
+    /// El log con las series vacías rellenas con el objetivo (al empezar a editarlo).
+    public var prefilledWithTarget: ExerciseLog {
+        var log = self
+        log.actualReps = repsOrTarget
+        return log
     }
 
     /// Botones −/+. El peso se redondea a 0,1 kg y no baja de 0; las series no bajan de 1 (la

@@ -1,4 +1,13 @@
 extension Collection where Element == Routine {
+    public func routine(_ id: RoutineID) -> Routine? {
+        first { $0.id == id }
+    }
+
+    /// El nombre de la rutina; si no existe, su id.
+    public func name(of id: RoutineID) -> String {
+        routine(id)?.name ?? id.rawValue
+    }
+
     /// Las rutinas distintas de `routine` que llevan `exercise`, en su orden.
     public func others(than routine: RoutineID?, containing exercise: ExerciseID) -> [Routine] {
         filter { $0.id != routine && $0.exerciseIDs.contains(exercise) }

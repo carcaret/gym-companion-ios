@@ -35,7 +35,7 @@ struct GitHubTrainingDataSourceTests {
     func putRequest() async throws {
         let server = FakeGitHubServer()
         let version = try await GitHubTrainingDataSource(transport: server)
-            .push(TrainingDataStoreContract.sample, to: location, token: "ghp_secreto", replacing: nil, message: "Gym Companion update 2026-10-25")
+            .push(TrainingDataStoreContract.sample, to: location, token: "ghp_secreto", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
         let request = try #require(await server.requests.last)
         #expect(request.httpMethod == "PUT")
         #expect(request.url?.absoluteString == "https://api.github.com/repos/u/r/contents/datos/db.json")
@@ -50,7 +50,7 @@ struct GitHubTrainingDataSourceTests {
         #expect(Data(base64Encoded: content) == PWAFormat.json(from: TrainingDataStoreContract.sample))
 
         _ = try await GitHubTrainingDataSource(transport: server)
-            .push(TrainingData(), to: location, token: "ghp_secreto", replacing: version, message: "otra")
+            .push(TrainingData(), to: location, token: "ghp_secreto", replacing: version, on: LocalDate(year: 2026, month: 10, day: 25)!)
         let secondBody = try #require(await server.requests.last?.httpBody)
         let second = try #require(JSONValue(parsing: secondBody))
         #expect(second["sha"] == .string(version.rawValue))
@@ -61,13 +61,13 @@ struct GitHubTrainingDataSourceTests {
         let source = { (status: Int) in GitHubTrainingDataSource(transport: CannedTransport(status: status, body: #"{"message":"x"}"#)) }
         for status in [409, 422] {
             await #expect(throws: RemoteError.conflict) {
-                try await source(status).push(TrainingData(), to: location, token: "t", replacing: nil, message: "m")
+                try await source(status).push(TrainingData(), to: location, token: "t", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
             }
         }
         await #expect(throws: RemoteError.status(401)) { try await source(401).fetch(location, token: "t") }
         await #expect(throws: RemoteError.status(404)) { try await source(404).fetch(location, token: "t") }
         await #expect(throws: RemoteError.status(500)) {
-            try await source(500).push(TrainingData(), to: location, token: "t", replacing: nil, message: "m")
+            try await source(500).push(TrainingData(), to: location, token: "t", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
         }
     }
 
@@ -76,7 +76,7 @@ struct GitHubTrainingDataSourceTests {
         let source = GitHubTrainingDataSource(transport: CannedTransport(failure: URLError(.notConnectedToInternet)))
         await #expect(throws: RemoteError.unreachable) { try await source.fetch(location, token: "t") }
         await #expect(throws: RemoteError.unreachable) {
-            try await source.push(TrainingData(), to: location, token: "t", replacing: nil, message: "m")
+            try await source.push(TrainingData(), to: location, token: "t", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
         }
     }
 

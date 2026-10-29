@@ -160,7 +160,7 @@ struct TrainingRepositoryTests {
         let harness = SyncHarness(remote: F.adding(Exercise(id: "sentadilla", name: "Sentadilla")))
         let repository = harness.repository()
         _ = try await repository.start()
-        #expect(await repository.testConnection(SyncFixtures.location, token: "ghp_test") == .connected)
+        #expect(await repository.testConnection(SyncFixtures.location, token: "ghp_test") == nil)
         #expect(await repository.data == F.base)
         #expect(await harness.savedLocally == F.base)
     }

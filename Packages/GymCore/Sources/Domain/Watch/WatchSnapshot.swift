@@ -59,17 +59,14 @@ extension TrainingData {
     /// Lo que enseña el reloj el día `today`: el entreno sin terminar de ese día, si lo hay.
     public func watchSnapshot(today: LocalDate) -> WatchSnapshot {
         guard let session = history.session(on: today), !session.completed else { return WatchSnapshot(workout: nil) }
-        let routineName = routines.first { $0.id == session.routineID }?.name ?? session.routineID.rawValue
         return WatchSnapshot(workout: WatchSnapshot.Workout(
             date: today,
-            routineName: routineName,
+            routineName: routines.name(of: session.routineID),
             exercises: session.logs.map { log in
                 WatchSnapshot.Exercise(
                     name: catalog.name(of: log.exerciseID),
                     weight: log.weight,
-                    reps: (0..<log.series).map { index in
-                        log.actualReps.indices.contains(index) ? log.actualReps[index] ?? log.targetReps : log.targetReps
-                    },
+                    reps: log.repsOrTarget,
                     skipped: log.skipped,
                     previous: history.lastSessions(for: log.exerciseID, excluding: today, limit: WatchSnapshot.previousLimit)
                         .map { WatchSnapshot.Previous(date: $0.date, reps: $0.log.actualReps) }

@@ -85,9 +85,15 @@ extension TrainingData {
                     .sorted { $0.sets != $1.sets ? $0.sets > $1.sets : SpanishCollation.precedes($0.name, $1.name) }
             )
         }.sorted { a, b in
-            // A igualdad de series, por grupo; los sin grupo, como "(sin grupo)" en la PWA: delante.
-            a.totalSets != b.totalSets ? a.totalSets > b.totalSets
-                : SpanishCollation.precedes(a.group?.rawValue ?? "(", b.group?.rawValue ?? "(")
+            // A igualdad de series, por grupo; los sin grupo, delante (en la PWA, "(sin grupo)" iba
+            // antes que las letras).
+            guard a.totalSets == b.totalSets else { return a.totalSets > b.totalSets }
+            switch (a.group, b.group) {
+            case (nil, nil): return false
+            case (nil, _): return true
+            case (_, nil): return false
+            case let (a?, b?): return SpanishCollation.precedes(a.rawValue, b.rawValue)
+            }
         }
     }
 }

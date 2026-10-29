@@ -53,7 +53,7 @@ struct CatalogScreen: View {
         .screenBackground()
         .keyboardDismissal()
         .onDisappear { model.leave() }
-        .sheet(isPresented: Binding(get: { model.editor != nil }, set: { if !$0 { model.cancelEditing() } })) {
+        .sheet(isPresented: Binding(get: { model.editor != nil }, set: { if !$0 { model.closeEditor() } })) {
             CatalogEditor(model: model)
         }
     }
@@ -112,7 +112,7 @@ private struct CatalogEditor: View {
                 // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
                 ToolbarItem(placement: .cancellationAction) {
                     // Con cambios, pregunta antes de tirarlos, como las demás hojas.
-                    Button(role: .close) { model.requestCancel() }
+                    Button(role: .close) { model.requestClose() }
                         .accessibilityIdentifier("catalog-cancel")
                         .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
                                             titleVisibility: .visible) {

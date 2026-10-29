@@ -54,7 +54,7 @@ struct HistoryStripView: View {
                     .foregroundStyle(color(bar))
                     .opacity(selection.selected == nil || selection.selected == index ? 1 : 0.4)
                     .cornerRadius(2)
-                    .accessibilityLabel(tooltip(bar))
+                    .accessibilityLabel(bar.accessibilityText)
                     // En cada barra y no en la gráfica: en un contenedor pisaba lo de dentro.
                     .accessibilityIdentifier("strip-bar-\(index)")
                     .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
@@ -95,7 +95,7 @@ struct HistoryStripView: View {
     /// La barra de hoy, con el borde claro de la PWA encima.
     @ViewBuilder
     private func currentOutline(_ proxy: ChartProxy, _ plot: CGRect) -> some View {
-        if let index = strip.bars.firstIndex(where: { if case .session(_, _, true, _) = $0.kind { true } else { false } }),
+        if let index = strip.bars.firstIndex(where: \.isCurrent),
            let x = proxy.position(forX: Self.key(index)), let top = proxy.position(forY: height(strip.bars[index])) {
             UnevenRoundedRectangle(topLeadingRadius: 2, topTrailingRadius: 2)
                 .stroke(Theme.text.opacity(0.6), lineWidth: 1)
@@ -106,10 +106,7 @@ struct HistoryStripView: View {
 
     /// Solo las sesiones tienen detalle: un toque en una vacía o saltada cuenta como fuera.
     private func tap(_ key: String?) {
-        let session = key.flatMap(Int.init).flatMap { index -> Int? in
-            if case .session = strip.bars[index].kind { return index }
-            return nil
-        }
+        let session = key.flatMap(Int.init).flatMap { strip.bars[$0].isSelectable ? $0 : nil }
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) { selection.tap(session) }
     }
 
@@ -118,13 +115,11 @@ struct HistoryStripView: View {
     /// del usuario, 2026-10-27).
     @ViewBuilder
     private func bubble(_ bar: StripBar) -> some View {
-        if case .session(_, _, _, let tooltip) = bar.kind, !tooltip.isEmpty {
-            let lines = tooltip.split(separator: "\n").map(String.init)
-            let main = lines.count > 1 ? lines[1] : lines[0]
+        if let bubble = bar.bubble {
             VStack(alignment: .center, spacing: 2) {
-                Text(main).scaledFont(12, .semibold).foregroundStyle(Theme.text)
-                if lines.count > 1 {
-                    Text(lines[0]).scaledFont(11).foregroundStyle(Theme.textSecondary)
+                Text(bubble.main).scaledFont(12, .semibold).foregroundStyle(Theme.text)
+                if let secondary = bubble.secondary {
+                    Text(secondary).scaledFont(11).foregroundStyle(Theme.textSecondary)
                 }
             }
             .monospacedDigit()
@@ -148,12 +143,8 @@ struct HistoryStripView: View {
         switch bar.kind {
         case .empty: Theme.border.opacity(0.4)
         case .skipped: Theme.red.opacity(0.45)
-        case .session(_, let color, _, _): Color(red: Double(color.r) / 255, green: Double(color.g) / 255, blue: Double(color.b) / 255)
+        case .session(_, let color, _, _): Color(color)
         }
     }
 
-    private func tooltip(_ bar: StripBar) -> String {
-        if case .session(_, _, _, let tooltip) = bar.kind { return tooltip.replacingOccurrences(of: "\n", with: " · ") }
-        return bar.dateLabel
-    }
 }

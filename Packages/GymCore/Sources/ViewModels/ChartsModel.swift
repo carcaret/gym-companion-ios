@@ -72,7 +72,7 @@ public final class ChartsModel {
         self.clock = clock
         let today = clock.today()
         to = today
-        from = Self.monthsBefore(today, 6)
+        from = today.adding(months: -6)
     }
 
     private var data: TrainingData { app.data ?? TrainingData() }
@@ -87,7 +87,7 @@ public final class ChartsModel {
     /// Un atajo: hasta hoy.
     public func choose(preset: RangePreset) {
         let today = clock.today()
-        let start = preset.months.map { Self.monthsBefore(today, $0) } ?? data.history.sortedChronologically().first?.date ?? today
+        let start = preset.months.map { today.adding(months: -$0) } ?? data.history.sortedChronologically().first?.date ?? today
         setRange(from: start, to: today)
         self.preset = preset
     }
@@ -136,13 +136,5 @@ public final class ChartsModel {
             Chart(label: ChartsText.e1rmLabel, axisTitle: ChartsText.e1rmAxis, points: series.e1RM.first?.points ?? []),
             Chart(label: ChartsText.weightLabel, axisTitle: ChartsText.weightAxis, points: series.weight.first?.points ?? []),
         ]
-    }
-
-    /// `setMonth(getMonth() - n)` de JavaScript: el mismo día n meses antes; si ese mes no tiene
-    /// ese día, se pasa al siguiente.
-    static func monthsBefore(_ date: LocalDate, _ months: Int) -> LocalDate {
-        let total = date.year * 12 + (date.month - 1) - months
-        let first = LocalDate(year: total / 12, month: total % 12 + 1, day: 1)!
-        return first.adding(days: date.day - 1)
     }
 }

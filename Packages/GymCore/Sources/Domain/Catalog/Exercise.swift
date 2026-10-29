@@ -15,3 +15,10 @@ public struct Exercise: Hashable, Sendable {
         self.secondaryGroups = secondaryGroups
     }
 }
+
+extension Exercise {
+    /// Su grupo, solo si es uno de los que se pueden elegir (`MuscleGroup.all`).
+    public var knownGroup: MuscleGroup? {
+        group.flatMap { $0.isKnown ? $0 : nil }
+    }
+}

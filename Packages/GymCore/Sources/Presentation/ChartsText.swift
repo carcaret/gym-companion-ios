@@ -33,6 +33,6 @@ public enum ChartsText {
     /// "e1RM: 76,7 kg" o "e1RM: 76,7 kg · saltado (mantiene)" (el tooltip de la PWA): los kilos con coma decimal, como en el resto de la app (antes "76.7", sin
     /// unidad; decisión del usuario, 2026-10-27).
     public static func pointLabel(_ series: String, value: Double, carriedForward: Bool) -> String {
-        "\(series): \(LogText.kilograms(value)) kg" + (carriedForward ? " · saltado (mantiene)" : "")
+        "\(series): \(LogText.weight(value))" + (carriedForward ? " · saltado (mantiene)" : "")
     }
 }
