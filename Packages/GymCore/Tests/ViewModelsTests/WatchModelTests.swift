@@ -244,6 +244,15 @@ struct WatchModelTests {
         #expect(watch.model.metrics == WatchModel.Metrics(heartRate: "128", activeEnergy: "172", totalEnergy: "221"))
     }
 
+    @Test("la medida que llega mientras arranca la sesión no se pierde")
+    func metricsWhileStarting() async {
+        let watch = Watch(today: today)
+        watch.recorder.metricsOnStart = WorkoutMetrics(heartRate: 90, activeEnergy: 1, totalEnergy: 2)
+        await watch.model.receive(threeExercises)
+        await watch.model.start()
+        #expect(watch.model.metrics.heartRate == "90")
+    }
+
     // MARK: - El descanso
 
     @Test("sin tocar, el descanso está a cero y dice que se toque")

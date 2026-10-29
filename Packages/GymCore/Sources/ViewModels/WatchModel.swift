@@ -235,6 +235,8 @@ public final class WatchModel {
         }
         phase = .starting
         startError = nil
+        // Antes de empezar: la primera medida puede llegar mientras arranca.
+        metrics = Metrics(WorkoutMetrics())
         do {
             try await recorder.start()
         } catch {
@@ -243,7 +245,6 @@ public final class WatchModel {
             return
         }
         rest = RestTimer()
-        metrics = Metrics(WorkoutMetrics())
         tab = .workout
         phase = .recording
     }

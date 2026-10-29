@@ -12,6 +12,8 @@ public final class FakeWorkoutRecorder: WorkoutRecorder {
     public var elapsedTime: Duration = .zero
     /// Lo que devuelve `end()`.
     public var summary = WorkoutSummary(duration: .seconds(3000), activeEnergy: 412, totalEnergy: 520, averageHeartRate: 118)
+    /// Lo medido que llega mientras arranca, como puede pasar con Salud.
+    public var metricsOnStart: WorkoutMetrics?
     public var failsToStart = false
     public var failsToEnd = false
     public private(set) var starts = 0
@@ -24,6 +26,7 @@ public final class FakeWorkoutRecorder: WorkoutRecorder {
         starts += 1
         if failsToStart { throw Failure() }
         isRecording = true
+        if let metricsOnStart { onMetrics?(metricsOnStart) }
     }
 
     public func elapsed() -> Duration {

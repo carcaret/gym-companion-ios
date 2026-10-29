@@ -36,7 +36,7 @@ struct WorkoutPage: View {
             .focused($isCrownFocused)
             .digitalCrownRotation(
                 $crown, from: 0, through: Double(max(model.exercises.count - 1, 1)), by: 1,
-                sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true
+                sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true
             )
             .onChange(of: crown) { _, value in
                 model.showExercise(at: Int(value.rounded()))
