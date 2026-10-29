@@ -13,11 +13,11 @@ final class WatchScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Press Banca"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.staticTexts["Press Banca"].appears(timeout: 20))
         capture(app, "70-reloj-ejercicio")
 
         app.swipeUp()
-        XCTAssertTrue(app.staticTexts["Curl Bíceps"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Curl Bíceps"].appears(timeout: 10))
         capture(app, "71-reloj-siguiente")
     }
 
@@ -26,7 +26,7 @@ final class WatchScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo-sin-entreno"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Sin entreno en curso"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.staticTexts["Sin entreno en curso"].appears(timeout: 20))
         capture(app, "72-reloj-sin-entreno")
     }
 

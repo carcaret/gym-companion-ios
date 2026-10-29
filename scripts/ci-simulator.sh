@@ -121,7 +121,7 @@ case "$1" in
         ;;
 
     *)
-        echo "uso: $0 start <tipo> <runtime> | wait" >&2
+        echo "uso: $0 pick <iphone|watch> | start <tipo> <runtime> | wait" >&2
         exit 2
         ;;
 esac

@@ -1,4 +1,4 @@
-import Domain
+import Presentation
 import Testing
 
 @Suite("AppVersion")

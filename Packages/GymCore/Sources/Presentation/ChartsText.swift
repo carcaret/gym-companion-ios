@@ -1,5 +1,3 @@
-import Domain
-
 /// Los textos de la pestaña Gráficas (`views/charts.js`).
 public enum ChartsText {
     public static let title = "Gráficas"
@@ -9,7 +7,6 @@ public enum ChartsText {
     public static let to = "Hasta"
     public static let exercise = "Ejercicio"
     public static let chooseExercise = "Elegir"
-    public static let searchPlaceholder = "Buscar ejercicio…"
     public static let inRoutine = "En rutinas"
     public static let others = "Otros"
     public static let noResults = "Sin resultados"
@@ -33,8 +30,7 @@ public enum ChartsText {
         return months == 1 ? "1 mes" : "\(months) meses"
     }
 
-    /// "e1RM: 84" o "e1RM: 84 · saltado (mantiene)" (el tooltip de la PWA).
-    /// "e1RM: 76,7 kg": los kilos con coma decimal, como en el resto de la app (antes "76.7", sin
+    /// "e1RM: 76,7 kg" o "e1RM: 76,7 kg · saltado (mantiene)" (el tooltip de la PWA): los kilos con coma decimal, como en el resto de la app (antes "76.7", sin
     /// unidad; decisión del usuario, 2026-10-27).
     public static func pointLabel(_ series: String, value: Double, carriedForward: Bool) -> String {
         "\(series): \(LogText.kilograms(value)) kg" + (carriedForward ? " · saltado (mantiene)" : "")

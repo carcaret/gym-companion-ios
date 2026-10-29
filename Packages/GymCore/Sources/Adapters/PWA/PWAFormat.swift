@@ -23,8 +23,8 @@ public enum PWAFormat {
             Exercise(id: ExerciseID(id), name: exercise.name ?? id, group: exercise.grupo.flatMap { $0.isEmpty ? nil : MuscleGroup($0) },
                      secondaryGroups: exercise.secundarios?.map { MuscleGroup($0) })
         }
-        let known = Set(exercises.keys)
-        for log in history.flatMap(\.logs) where !known.contains(log.exercise_id) && !catalog.contains(where: { $0.id.rawValue == log.exercise_id }) {
+        var known = Set(exercises.keys)
+        for log in history.flatMap(\.logs) where known.insert(log.exercise_id).inserted {
             catalog.append(Exercise(id: ExerciseID(log.exercise_id), name: log.name ?? log.exercise_id))
         }
 

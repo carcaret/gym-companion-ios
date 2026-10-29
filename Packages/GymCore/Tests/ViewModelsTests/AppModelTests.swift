@@ -19,11 +19,9 @@ struct AppModelTests {
 
     @Test("si no puede leer los datos, se queda sin datos y con el error")
     func failure() async {
-        let repository = TrainingRepository(
-            store: FailingStore(), settings: InMemorySyncSettingsStore(), credentials: InMemoryCredentialStore(),
-            remote: InMemoryRemote(storage: .init()), clock: FixedClock(SyncFixtures.today), background: RecordingBackgroundActivity()
-        )
-        let model = AppModel(repository: repository)
+        let harness = SyncHarness(configured: false)
+        await harness.local.fail(loading: true)
+        let model = AppModel(repository: harness.repository())
         await model.start()
         #expect(model.data == nil)
         #expect(model.loadError != nil)
@@ -126,12 +124,6 @@ struct AppModelDataErrorTests {
         #expect(model.loadError == nil)
         #expect(await harness.local.data == remote)
     }
-}
-
-private struct FailingStore: TrainingDataStore {
-    struct Failure: Error {}
-    func load() async throws -> TrainingData? { throw Failure() }
-    func save(_ data: TrainingData) async throws {}
 }
 
 @MainActor

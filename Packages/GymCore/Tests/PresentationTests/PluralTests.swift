@@ -22,8 +22,8 @@ struct PluralTests {
     /// Concuerda con el total: «1 de 3 estancados» es «uno de los tres estancados».
     @Test("con un solo ejercicio, «estancado»")
     func stalled() {
-        #expect(StatsText.exercisesSubtitle(stalled: 1, total: 1, progressing: 0) == "1 de 1 estancado")
-        #expect(StatsText.exercisesSubtitle(stalled: 1, total: 3, progressing: 0) == "1 de 3 estancados")
+        #expect(ProgressText.exercisesSubtitle(stalled: 1, total: 1, progressing: 0) == "1 de 1 estancado")
+        #expect(ProgressText.exercisesSubtitle(stalled: 1, total: 3, progressing: 0) == "1 de 3 estancados")
     }
 
     /// Lo vio la captura de Progreso del CI: «1 sesiones, aún sin recorrido».

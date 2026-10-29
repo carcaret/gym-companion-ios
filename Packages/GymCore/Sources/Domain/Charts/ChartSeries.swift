@@ -48,8 +48,7 @@ extension Collection where Element == Session {
                     if let last = weightPoints.last { weightPoints.append(ChartPoint(date: session.date, value: last.value, isCarriedForward: true)) }
                     continue
                 }
-                let estimated = log.estimatedOneRepMax
-                if estimated > 0 { e1RMPoints.append(ChartPoint(date: session.date, value: jsRound(estimated * 10) / 10)) }
+                if log.estimatedOneRepMax > 0 { e1RMPoints.append(ChartPoint(date: session.date, value: log.roundedEstimatedOneRepMax)) }
                 if log.weight > 0 { weightPoints.append(ChartPoint(date: session.date, value: log.weight)) }
             }
             if !e1RMPoints.isEmpty { e1RM.append(ExerciseSeries(exerciseID: exercise, points: e1RMPoints)) }

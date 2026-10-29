@@ -1,5 +1,5 @@
-# Ficheros de tests/unit de la PWA ya portados (los comprueba scripts/pwa_tests.py en el CI).
-# Cada sub-issue añade los suyos.
+# Ficheros de tests/unit y tests/e2e de la PWA, todos portados (los comprueba
+# scripts/pwa_tests.py en el CI).
 dates.test.js
 formatting.test.js
 metrics.test.js

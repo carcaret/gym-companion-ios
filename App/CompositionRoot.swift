@@ -3,6 +3,7 @@ import AppleAdapters
 import Application
 import Domain
 import Foundation
+import Presentation
 import ViewModels
 import WatchAdapters
 
@@ -21,7 +22,7 @@ struct CompositionRoot {
     let progress: ProgressModel
     let catalog: CatalogModel
     let settings: SettingsModel
-    /// Lo que dura el aviso de abajo: 2,5 s, como el toast de la PWA. Con `-avisos-largos`, 10 s,
+    /// Lo que dura un aviso: 2,5 s, como el toast de la PWA. Con `-avisos-largos`, 10 s,
     /// para los tests de interfaz que lo buscan tras una animación larga (tirar para sincronizar):
     /// XCUITest espera a que la app se quede quieta y el aviso ya se había ido.
     let noticeDuration: Duration

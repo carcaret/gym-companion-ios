@@ -4,9 +4,8 @@ import Observation
 import Presentation
 
 /// La pestaña Gráficas (`views/charts.js` de la PWA): un rango de fechas (con atajos de meses, como
-/// la app Salud, o a mano), el ejercicio elegido
-/// (en su propia pantalla, con buscador y los de alguna rutina primero) y sus gráficas de 1RM
-/// estimado y de peso. Sin ejercicio elegido no se pinta nada.
+/// la app Salud, o a mano), el ejercicio elegido (en su propia pantalla, con buscador y los de alguna
+/// rutina primero) y sus gráficas de 1RM estimado y de peso. Sin ejercicio elegido no se pinta nada.
 @MainActor
 @Observable
 public final class ChartsModel {

@@ -47,8 +47,8 @@ jobs:
         run: scripts/ci-gate.sh
 
   core-linux:
-    # Domain y Application no pueden depender de frameworks de Apple: se prueban también en
-    # Linux, con la misma imagen que en el NAS.
+    # El paquete entero se prueba también en Linux, con la misma imagen que en el NAS: solo
+    # AppleAdapters y WatchAdapters, tras `#if canImport`, tocan frameworks de Apple.
     needs: gate
     if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
       # orden alfabético. SettingsTests va detrás de KeyboardTests: es el primer test que teclea y,
       # con el teclado sin estrenar, tarda más de 5 s en salir. NavigationTests, sin KeyboardTests
       # delante: con ellos, el gesto de volver de testDeslizarAMediasNoCierraElDetalleDelHistorial
-      # falló 3 de 4 veces. La 3: ScreenshotTests, HistoryTests, DynamicTypeTests y las nuevas.
+      # falló 3 de 4 veces. La 3, todas las demás (también las nuevas).
       PART_1: DisclosureTests KeyboardTests SettingsTests SyncMenuTests TypingTests
       PART_2: NavigationTests WorkoutTests
     steps:

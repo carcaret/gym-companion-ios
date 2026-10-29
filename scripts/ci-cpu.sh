@@ -5,6 +5,7 @@
 # espera a que la app deje de animar antes de cada toque.
 #
 #   ci-cpu.sh <fichero>   (en segundo plano; para al acabar el job)
+# Sin `-e`: el bucle no tiene que pararse porque falle una medida (un proceso que ya no existe).
 set -uo pipefail
 
 mkdir -p "$(dirname "$1")"

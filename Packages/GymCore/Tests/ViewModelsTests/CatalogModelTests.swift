@@ -131,9 +131,9 @@ struct CatalogTests {
         catalog.model.query = "jalon"
         catalog.model.leave()
         #expect(catalog.model.query.isEmpty)
-        #expect(StatsText.exercisesTitle == "Ejercicios")
+        #expect(ProgressText.exercisesTitle == "Ejercicios")
         // Como su pestaña (la PWA: «Estadísticas»; cambio aprobado por el usuario, 2026-10-27).
-        #expect(StatsText.title == "Progreso")
+        #expect(ProgressText.title == "Progreso")
     }
 
     @Test("renombrar un ejercicio se propaga al resto de la app")

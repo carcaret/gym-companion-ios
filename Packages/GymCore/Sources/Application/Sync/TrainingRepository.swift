@@ -1,80 +1,5 @@
 import Domain
 
-/// Estado del indicador de sincronización.
-public enum SyncState: Hashable, Sendable {
-    /// GitHub sin configurar.
-    case disabled
-    /// Todo subido.
-    case ok
-    /// Hay cambios sin subir (o subiéndose).
-    case pending
-}
-
-public struct SyncStatus: Hashable, Sendable {
-    public var state: SyncState
-    /// La última subida chocó con una versión remota que no era la conocida: hay que elegir.
-    public var conflict: Bool
-    /// Lo pendiente espera a propósito a que acabe el entreno en curso (no se sube nada durante
-    /// el entreno): no es que algo vaya mal.
-    public var waitingForWorkout: Bool
-
-    public init(state: SyncState, conflict: Bool = false, waitingForWorkout: Bool = false) {
-        self.state = state
-        self.conflict = conflict
-        self.waitingForWorkout = waitingForWorkout
-    }
-}
-
-/// Lo que pasa sin que nadie lo pida y la interfaz tiene que saber.
-public enum SyncEvent: Hashable, Sendable {
-    case status(SyncStatus)
-    /// Terminó bien una subida diferida (en la PWA, el toast "Guardado"; la app no avisa).
-    case autoSaved
-}
-
-public enum UploadResult: Hashable, Sendable {
-    case uploaded
-    case notConfigured
-    /// Hay que resolver el conflicto antes de subir.
-    case conflict
-    /// Sin red: no se pudo ni preguntar a GitHub.
-    case unreachable
-    /// GitHub respondió con un error.
-    case failed
-}
-
-public enum DownloadResult: Hashable, Sendable {
-    case applied(TrainingData)
-    case notConfigured
-    /// Sin red, con error o con un contenido que no es válido: lo local no se toca.
-    case failed
-}
-
-public enum ConnectionResult: Hashable, Sendable {
-    case connected
-    case status(Int)
-    case unreachable
-    /// Conecta, pero el fichero no es un `db.json` válido.
-    case invalidContent
-}
-
-public enum ConfigureResult: Hashable, Sendable {
-    /// La app estaba vacía: se han bajado los datos de GitHub.
-    case downloaded(TrainingData)
-    /// La app estaba vacía y no se pudo bajar nada (se queda configurada).
-    case downloadFailed
-    /// Había datos locales: se suben, como hacía la PWA.
-    case uploading
-}
-
-public enum SyncOutcome: Hashable, Sendable {
-    case nothing
-    case uploaded
-    /// Lo remoto era distinto y no había nada pendiente: sustituye a lo local.
-    case remoteApplied(TrainingData)
-    case failed
-}
-
 /// Los datos del usuario: los guarda en local al momento y los sincroniza con el `db.json` de
 /// GitHub con la misma política que la PWA (`src/store.js`, tests de `sync-canonicos.spec.js`):
 ///
@@ -89,6 +14,9 @@ public enum SyncOutcome: Hashable, Sendable {
 /// Mejoras sobre la PWA: las subidas van de una en una (dos a la vez daban un falso conflicto)
 /// y un cambio hecho mientras se sube sigue pendiente.
 public actor TrainingRepository {
+    /// Un cambio sin datos de verdad: lo guardado no se pudo leer y no se pisa.
+    public struct NotLoaded: Error {}
+
     private let store: any TrainingDataStore
     private let settingsStore: any SyncSettingsStore
     private let credentials: any CredentialStore
@@ -111,8 +39,6 @@ public actor TrainingRepository {
     /// 2026-10-27: se subía el vacío a GitHub y la recuperación bajaba ese vacío).
     private var isLoaded = false
 
-    /// Un cambio sin datos de verdad: lo guardado no se pudo leer y no se pisa.
-    public struct NotLoaded: Error {}
     private var scheduledUpload: Task<Void, Never>?
     private var runningUpload: Task<UploadResult, Never>?
 
@@ -240,7 +166,7 @@ public actor TrainingRepository {
 
     // MARK: - Subir
 
-    /// Conflicto → "Subir local → GitHub": se pregunta la versión actual y se sube encima.
+    /// Conflicto → «Usar los de este iPhone»: se pregunta la versión actual y se sube encima.
     public func keepLocal() async -> UploadResult {
         guard let target else { return .notConfigured }
         do {
@@ -306,7 +232,7 @@ public actor TrainingRepository {
 
     // MARK: - Bajar
 
-    /// Botón "Descargar de GitHub" y conflicto → "Bajar GitHub → local": lo remoto sustituye a lo
+    /// «Sustituir por los datos de GitHub» y conflicto → «Usar los de GitHub»: lo remoto sustituye a lo
     /// local, aunque hubiera algo pendiente.
     public func download() async -> DownloadResult {
         guard let target else { return .notConfigured }

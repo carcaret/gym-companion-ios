@@ -19,7 +19,7 @@ struct DataLoadErrorView: View {
         } actions: {
             // Lo más probable es reintentar: destacado, como la acción principal de las píldoras.
             Button(DataErrorText.retry) { run { await model.start() } }
-                .buttonStyle(.pill())
+                .buttonStyle(.pill)
                 .accessibilityIdentifier("data-retry")
             if sync.status.state != .disabled {
                 Button(SettingsText.download, role: .destructive) { isDownloadConfirmationPresented = true }
@@ -28,7 +28,7 @@ struct DataLoadErrorView: View {
                     .confirmationDialog(SyncText.downloadTitle, isPresented: $isDownloadConfirmationPresented,
                                         titleVisibility: .visible) {
                         Button(SyncText.downloadConfirm, role: .destructive) { run { await sync.download() } }
-                        Button(SyncText.cancelLabel, role: .cancel) {}
+                        Button(FormText.cancel, role: .cancel) {}
                     } message: {
                         Text(SyncText.downloadWarning)
                     }

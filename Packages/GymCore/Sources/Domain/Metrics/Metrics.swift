@@ -15,6 +15,9 @@ extension ExerciseLog {
 
     /// 1RM estimado (Epley) de la mejor serie: peso · (1 + reps/30). Solo cuentan series de 1 a 30
     /// reps (fuera de ahí la fórmula no es fiable); sin reps hechas, el objetivo. Sin peso, 0.
+    /// El 1RM estimado a 0,1 kg, como lo enseñan las gráficas y el bocadillo.
+    public var roundedEstimatedOneRepMax: Double { jsRound(estimatedOneRepMax * 10) / 10 }
+
     public var estimatedOneRepMax: Double {
         guard weight > 0 else { return 0 }
         let reps: [Int?] = actualReps.isEmpty ? [targetReps] : actualReps

@@ -7,7 +7,7 @@ quede nada, se borra este fichero.
 
 ## Cómo se trabajó fuera del NAS
 
-- Tests del paquete: `sh Packages/GymCore/test.sh` con Docker (`swift:6.3.3`), igual que en el
+- Tests del paquete: `sh Packages/GymCore/test.sh` con Docker (la imagen de Swift que dice `test.sh`), igual que en el
   NAS. La PWA se clonó en `~/git/gym-companion` para el cruce de tests y el `db.json` real.
 - La app (vistas SwiftUI, Llavero, XCUITest y capturas) solo la compila y prueba el CI (`app`).
 - Nada del NAS: ni `ios-signer`, ni su log, ni el iPhone.
@@ -64,7 +64,7 @@ Falta lo que necesita el iPhone o el NAS:
       una mano, cambiar un ejercicio, terminar. Mirar sobre todo:
   - que los campos de peso, series y objetivo aceptan lo tecleado al tocar fuera;
   - que arrastrar para reordenar funciona en la lista (mantener pulsada la tarjeta);
-  - que el aviso "Entreno guardado localmente" sale si no hay red al terminar.
+  - que, sin red al terminar, la nube se queda en amarillo y sube sola al volver la red.
 - [ ] Deslizar una tarjeta del entreno a la derecha enseña "Cambiar por otro" y "Saltar" sin hacer
       nada aunque se deslice del todo; a la izquierda, quitarla pide confirmación.
 - [ ] Ver que la PWA lee bien el entreno que sube la app (lo mismo que en #7, ahora con datos de un
@@ -72,9 +72,9 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #10 Historial
 
-- [ ] En el iPhone: abrir una sesión pasada, corregir un peso, "Guardar" y comprobar que el cambio
-      sube a GitHub (un commit nuevo en `db.json`). Cerrar la tarjeta sin guardar no debe cambiar
-      nada.
+- [ ] En el iPhone: abrir una sesión pasada, «Editar», corregir un peso, la ✓ y comprobar que el
+      cambio sube a GitHub (un commit nuevo en `db.json`). La ✕ con cambios pregunta antes de
+      tirarlos y no cambia nada.
 - [ ] Deslizar una sesión a la izquierda para borrarla pide confirmación.
 
 ### #11 Gráficas
@@ -96,10 +96,10 @@ Falta lo que necesita el iPhone o el NAS:
 ### #14 Ajustes
 
 - [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en los ajustes (menú del indicador → «Configurar GitHub»), repositorio
-      `carcaret/gym-companion`, rama `master`, ruta `db.json` y un PAT con permiso de escritura
-      en ese repo. Con la app vacía, "Guardar" baja los datos; comprobar que salen las 297+
+      `carcaret/gym-companion` y un PAT con permiso de escritura en ese repo (rama `master` y ruta
+      `db.json`, en «Avanzado», ya vienen puestas). Con la app vacía, la ✓ baja los datos; comprobar que salen las 297+
       sesiones en Historial.
-- [ ] Guardar los ajustes con un token malo da "GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama."
+- [ ] La ✓ con un token malo da "GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama."
 - [ ] Teclado (PR #32): escribir en un campo y tocar fuera lo cierra y vuelve la barra de
       pestañas; también desplazar la pantalla. Probarlo además en las
       reps del entreno, el buscador de Gráficas y el editor del Catálogo.

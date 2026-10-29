@@ -98,7 +98,7 @@ public final class HistoryModel {
         selectedDate = date
     }
 
-    /// "← Volver": a la lista, sin guardar lo que no se guardó.
+    /// Volver a la lista (la flecha de iOS o deslizar).
     public func back() {
         resetDetail()
         selectedDate = nil

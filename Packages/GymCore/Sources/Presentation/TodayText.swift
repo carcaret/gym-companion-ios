@@ -1,6 +1,5 @@
-import Domain
-
-/// Los textos de la pantalla Hoy, los mismos que la PWA (`views/hoy.js`).
+/// Los textos de la pestaña Rutinas. Salen de la PWA (`views/hoy.js`), con los cambios que anota cada
+/// uno.
 public enum TodayText {
     // Títulos
     public static let selectorTitle = "Rutinas"
@@ -60,14 +59,12 @@ public enum TodayText {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     public static func addTitle(_ routine: String) -> String { "Añadir a \(routine)" }
-    public static let searchPlaceholder = "Buscar ejercicio…"
     public static let oneOffToggle = "Solo esta sesión"
     public static let createExercise = "Crear nuevo ejercicio"
     public static let createTitle = "Crear nuevo ejercicio"
     public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"
-    public static let cancel = "Cancelar"
 
     // Quitar
     public static let removeTitle = "¿Quitar ejercicio?"

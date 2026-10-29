@@ -89,7 +89,7 @@ private struct ExercisePicker: View {
                 }
             }
         }
-        .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: ChartsText.searchPlaceholder)
+        .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: FormText.searchExercise)
         .navigationTitle(ChartsText.exercise)
         .screenBackground()
         .keyboardDismissal()

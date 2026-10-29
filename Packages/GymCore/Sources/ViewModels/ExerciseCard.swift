@@ -52,7 +52,7 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
     public let removeLabel: String
     /// Errores de validación que hay que marcar.
     public let errors: [LogValidationError]
-    /// Historial: hay cambios sin guardar (sale el botón "Guardar").
+    /// En el editor del Historial: hay cambios sin guardar (el resumen sale en dorado).
     public let isDirty: Bool
 
     public var hasRecord: Bool { isVolumeRecord || isE1RMRecord }

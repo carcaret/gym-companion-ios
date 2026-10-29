@@ -57,7 +57,7 @@ struct SettingsScreen: View {
                 .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
                                     titleVisibility: .visible) {
                     Button(SyncText.downloadConfirm, role: .destructive) { Task { await model.confirmDownload() } }
-                    Button(SyncText.cancelLabel, role: .cancel) {}
+                    Button(FormText.cancel, role: .cancel) {}
                 } message: {
                     Text(SyncText.downloadWarning)
                 }
@@ -81,7 +81,7 @@ struct SettingsScreen: View {
                     .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
                                         titleVisibility: .visible) {
                         Button(FormText.discardConfirm, role: .destructive) { model.discardAndClose() }
-                        Button(SyncText.cancelLabel, role: .cancel) { model.keepEditing() }
+                        Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
                     }
             }
             ToolbarItem(placement: .confirmationAction) {
