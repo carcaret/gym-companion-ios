@@ -36,8 +36,9 @@ struct WorkoutPage: View {
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollPosition(id: exercisePosition)
-                // watchOS pinta el contenido también en el margen de abajo: sin recortar, el
-                // siguiente ejercicio asoma debajo del que se ve.
+                // Hasta el borde de abajo: cada página mide lo que se ve (con el margen de watchOS
+                // medía 36 pt menos, el siguiente ejercicio asomaba y uno largo no cabía).
+                .ignoresSafeArea(edges: .bottom)
                 .clipShape(Rectangle())
                 .accessibilityIdentifier(AccessibilityID.watchExercises)
             }
