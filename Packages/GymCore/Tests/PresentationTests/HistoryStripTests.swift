@@ -166,13 +166,13 @@ struct HistoryStripTests {
 @Suite("Lo que enseña cada barra de la tira")
 struct StripBarTests {
     private let session = StripBar(kind: .session(height: 50, color: RGB(r: 0, g: 0, b: 0), isCurrent: true,
-                                                  tooltip: "e1RM 80 kg\n60 kg · 10·10·8"), dateLabel: "1/6")
+                                                  detail: BarDetail(e1RM: "e1RM 80 kg", done: "60 kg · 10·10·8")), dateLabel: "1/6")
 
     @Test("el bocadillo: el peso y las reps arriba, el e1RM debajo")
     func bubble() {
         #expect(session.bubble?.main == "60 kg · 10·10·8")
         #expect(session.bubble?.secondary == "e1RM 80 kg")
-        let oneLine = StripBar(kind: .session(height: 50, color: RGB(r: 0, g: 0, b: 0), isCurrent: false, tooltip: "10·—"), dateLabel: "2/6")
+        let oneLine = StripBar(kind: .session(height: 50, color: RGB(r: 0, g: 0, b: 0), isCurrent: false, detail: BarDetail(e1RM: nil, done: "10·—")), dateLabel: "2/6")
         #expect(oneLine.bubble?.main == "10·—")
         #expect(oneLine.bubble?.secondary == nil)
         #expect(StripBar(kind: .skipped, dateLabel: "3/6").bubble == nil)

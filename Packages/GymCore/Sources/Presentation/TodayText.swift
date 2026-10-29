@@ -59,8 +59,8 @@ public enum TodayText {
     }
     public static func addTitle(_ routine: String) -> String { "Añadir a \(routine)" }
     public static let oneOffToggle = "Solo esta sesión"
+    /// La fila del selector y el título de su pantalla.
     public static let createExercise = "Crear nuevo ejercicio"
-    public static let createTitle = "Crear nuevo ejercicio"
     public static func createNamed(_ name: String) -> String { "Crear «\(name)»" }
     public static let createNameLabel = "Nombre del ejercicio"
     public static let createNamePlaceholder = "Ej: Press Arnold"

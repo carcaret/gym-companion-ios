@@ -71,3 +71,15 @@ public struct Catalog: Hashable, Sendable {
         exercises[id] = exercise
     }
 }
+
+extension Catalog {
+    /// Los ids por nombre del ejercicio, en orden alfabético español.
+    public func sortedByName(_ ids: some Sequence<ExerciseID>) -> [ExerciseID] {
+        ids.sorted { SpanishCollation.precedes(name(of: $0), name(of: $1)) }
+    }
+
+    /// Ya hay un ejercicio con el id que tendría `name` (al crear uno nuevo).
+    public func hasExercise(named name: String) -> Bool {
+        self[ExerciseID(ExerciseID.slug(from: name))] != nil
+    }
+}

@@ -94,7 +94,7 @@ struct CreateExerciseForm: View {
         }
         .screenBackground()
         .keyboardDismissal()
-        .navigationTitle(TodayText.createTitle)
+        .navigationTitle(TodayText.createExercise)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 ConfirmButton { Task { await model.createExercise() } }

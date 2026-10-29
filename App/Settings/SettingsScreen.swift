@@ -52,7 +52,7 @@ struct SettingsScreen: View {
                         if model.activity == .downloading { ProgressView() }
                     }
                 }
-                .disabled(!model.canTransfer)
+                .disabled(!model.canDownload)
                 // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
                 .confirmationDialog(SyncText.downloadTitle, isPresented: $model.isDownloadConfirmationPresented,
                                     titleVisibility: .visible) {

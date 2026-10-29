@@ -60,7 +60,7 @@ public final class HistoryModel {
         self.clock = clock
     }
 
-    var data: TrainingData { app.data ?? TrainingData() }
+    var data: TrainingData { app.current }
 
     // MARK: - Lista
 
@@ -111,7 +111,6 @@ public final class HistoryModel {
         openCards = []
         endEditing()
     }
-
 
     // MARK: - Borrar
 

@@ -5,20 +5,26 @@ import Presentation
 import Testing
 import ViewModels
 
+/// Gráficas con el `db-test.json` de los e2e (o los datos que se pasen), sin GitHub.
 @MainActor
-private func charts(_ data: TrainingData = PWATestDB.data) async -> (ChartsModel, AppModel) {
-    let base = await AppHarness.start(local: data)
-    return (ChartsModel(app: base.app, clock: base.clock), base.app)
+private struct ChartsHarness {
+    let app: AppModel
+    let model: ChartsModel
+
+    static func make(_ data: TrainingData = PWATestDB.data) async -> ChartsHarness {
+        let base = await AppHarness.start(local: data)
+        return ChartsHarness(app: base.app, model: ChartsModel(app: base.app, clock: base.clock))
+    }
 }
 
-private func day(_ iso: String) -> LocalDate { LocalDate(iso: iso)! }
+private let day = SyncFixtures.day
 
 // tests/e2e/charts-full.spec.js
 @MainActor
 @Suite("Graficas completo")
 struct ChartsFullTests {
     private func in2024() async -> ChartsModel {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         return model
     }
@@ -46,7 +52,7 @@ struct ChartsFullTests {
 
     @Test("rango sin datos muestra dropdown vacio")
     func emptyRange() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2030-01-01"), to: day("2030-12-31"))
         #expect(model.hasNoResults)
         #expect(ChartsText.noResults == "Sin resultados")
@@ -121,7 +127,7 @@ struct ChartsFullTests {
 struct ChartsModelTests {
     @Test("por defecto, los últimos seis meses hasta hoy")
     func defaultRange() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         #expect(model.to == SyncFixtures.today)
         #expect(model.from == day("2026-04-25"))
         #expect(model.preset == .sixMonths)
@@ -129,7 +135,7 @@ struct ChartsModelTests {
 
     @Test("un atajo pone el rango desde esos meses antes hasta hoy")
     func presets() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         model.choose(preset: .oneMonth)
         #expect(model.from == day("2026-09-25"))
@@ -143,7 +149,7 @@ struct ChartsModelTests {
 
     @Test("«Todo» empieza en la primera sesión")
     func allPreset() async throws {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.choose(preset: .all)
         let first = try #require(PWATestDB.data.history.sortedChronologically().first?.date)
         #expect(model.from == first)
@@ -153,21 +159,21 @@ struct ChartsModelTests {
 
     @Test("«Todo» sin sesiones es solo hoy")
     func allPresetEmpty() async {
-        let model = await charts(TrainingData()).0
+        let model = await ChartsHarness.make(TrainingData()).model
         model.choose(preset: .all)
         #expect(model.from == SyncFixtures.today)
     }
 
     @Test("cambiar las fechas a mano deja el rango sin atajo")
     func customRange() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         #expect(model.preset == nil)
     }
 
     @Test("un atajo olvida el ejercicio elegido si no se hizo en su rango")
     func presetForgets() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         model.select("sentadilla")
         model.choose(preset: .oneMonth)
@@ -183,14 +189,13 @@ struct ChartsModelTests {
 
     @Test("seis meses antes de un 31 que no existe pasa al mes siguiente, como en JavaScript")
     func monthOverflow() async {
-        let app = AppModel(repository: SyncHarness(local: PWATestDB.data, configured: false).repository())
-        let model31 = ChartsModel(app: app, clock: FixedClock(day("2026-08-31")))
+        let model31 = ChartsModel(app: await ChartsHarness.make().app, clock: FixedClock(day("2026-08-31")))
         #expect(model31.from == day("2026-03-03"))
     }
 
     @Test("sin ejercicio elegido no hay gráficas")
     func nothingSelected() async {
-        #expect(await charts().0.charts.isEmpty)
+        #expect(await ChartsHarness.make().model.charts.isEmpty)
     }
 
     @Test("los ejercicios de alguna rutina van primero, cada grupo por nombre")
@@ -199,7 +204,7 @@ struct ChartsModelTests {
         data.catalog = Catalog(data.catalog.all + [Exercise(id: "remo", name: "Remo")])
         data.history.append(Session(date: day("2024-02-01"), routineID: "DIA1", completed: true,
                                     logs: [ExerciseLog(exerciseID: "remo", series: 3, targetReps: 10, actualReps: [10, 10, 10], weight: 40)]))
-        let model = await charts(data).0
+        let model = await ChartsHarness.make(data).model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         #expect(model.options.inRoutine.map(\.name) == ["Curl Bíceps", "Press Banca", "Sentadilla"])
         #expect(model.options.others.map(\.name) == ["Remo"])
@@ -207,7 +212,7 @@ struct ChartsModelTests {
 
     @Test("cambiar el rango fuera del ejercicio elegido lo olvida")
     func rangeForgets() async {
-        let model = await charts().0
+        let model = await ChartsHarness.make().model
         model.setRange(from: day("2024-01-01"), to: day("2024-12-31"))
         model.select("sentadilla")
         model.setRange(from: day("2025-01-01"), to: day("2025-12-31"))

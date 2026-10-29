@@ -4,9 +4,11 @@ con el mismo `describe` (@Suite) y el mismo nombre (@Test), o estar en
 docs/pwa-tests-no-aplican.tsv con el motivo. Los unitarios se nombran por su fichero
 (`dates.test.js`, en tests/unit) y los e2e con su carpeta (`e2e/routine.spec.js`, en tests/e2e).
 
-Uso: scripts/pwa_tests.py <repo de la PWA> [<fichero>...] [--markdown]
-Sin ficheros, los de docs/pwa-tests-ficheros.txt.
-Sale con error si falta alguno. Con --markdown imprime la tabla para el PR.
+Uso: scripts/pwa_tests.py <repo de la PWA> [<fichero>...] [--markdown | --check-table]
+Sin ficheros, todos los de la PWA (tests/unit/*.test.js y tests/e2e/*.spec.js): un fichero nuevo
+de la PWA sale solo.
+Sale con error si falta alguno. Con --markdown imprime la tabla de docs/paridad.md; con
+--check-table, falla también si esa tabla no es la que sale ahora (hay que regenerarla).
 """
 import csv
 import re
@@ -16,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SWIFT_TESTS = [ROOT / "Packages/GymCore/Tests", ROOT / "UITests"]
 NOT_APPLICABLE = ROOT / "docs/pwa-tests-no-aplican.tsv"
-PORTED_FILES = ROOT / "docs/pwa-tests-ficheros.txt"
+PARITY = ROOT / "docs/paridad.md"
 
 JS_BLOCK = re.compile(r"^(\s*)(test\.describe|describe|test|it)\(\s*(['\"`])(.*?)\3\s*,")
 SWIFT_SUITE = re.compile(r'@Suite\("((?:[^"\\]|\\.)*)"')
@@ -62,12 +64,27 @@ def not_applicable():
         return {(r["fichero"], r["describe"], r["test"]): r["motivo"] for r in csv.DictReader(f, delimiter="\t")}
 
 
+def pwa_files(pwa):
+    """Los ficheros de tests de la PWA: los unitarios por su nombre y los e2e con su carpeta."""
+    tests = pwa / "tests"
+    return ([p.name for p in sorted((tests / "unit").glob("*.test.js"))]
+            + [f"e2e/{p.name}" for p in sorted((tests / "e2e").glob("*.spec.js"))])
+
+
+def table(rows):
+    lines = ["| Test de la PWA | Test nativo | Notas |", "|---|---|---|"]
+    for name, describe, test, native, reason in rows:
+        label = f"`{name}` › {describe} › {test}".replace("|", "\\|")
+        lines.append(f"| {label} | {native if native == '—' else '`' + native.split('/')[-1] + '`'} | {reason.replace('|', '/')} |")
+    return lines
+
+
 def main(argv):
-    markdown = "--markdown" in argv
-    args = [a for a in argv if a != "--markdown"]
+    markdown, check = "--markdown" in argv, "--check-table" in argv
+    args = [a for a in argv if a not in ("--markdown", "--check-table")]
     pwa, files = Path(args[0]), args[1:]
     if not files:
-        files = [l.strip() for l in PORTED_FILES.read_text().splitlines() if l.strip() and not l.startswith("#")]
+        files = pwa_files(pwa)
     ported, skipped = swift_tests(), not_applicable()
     rows, missing = [], []
     for name in files:
@@ -79,16 +96,19 @@ def main(argv):
             else:
                 missing.append((name, describe, test))
     if markdown:
-        print("| Test de la PWA | Test nativo | Notas |\n|---|---|---|")
-        for name, describe, test, native, reason in rows:
-            label = f"`{name}` › {describe} › {test}".replace("|", "\\|")
-            print(f"| {label} | {native if native == '—' else '`' + native.split('/')[-1] + '`'} | {reason.replace('|', '/')} |")
+        print("\n".join(table(rows)))
+    stale = False
+    if check:
+        current = [l for l in PARITY.read_text().splitlines() if l.startswith("|")]
+        stale = current != table(rows)
+        if stale:
+            print("docs/paridad.md no está al día: regenerar la tabla con --markdown.", file=sys.stderr)
     total = len(rows) + len(missing)
     print(f"\n{len(rows) - sum(1 for r in rows if r[3] == '—')} portados, {sum(1 for r in rows if r[3] == '—')} no aplican, "
           f"{len(missing)} sin portar, de {total}.", file=sys.stderr)
     for name, describe, test in missing:
         print(f"FALTA {name} › {describe} › {test}", file=sys.stderr)
-    return 1 if missing else 0
+    return 1 if missing or stale else 0
 
 
 if __name__ == "__main__":

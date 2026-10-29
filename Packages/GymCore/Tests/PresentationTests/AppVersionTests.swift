@@ -13,3 +13,11 @@ struct AppVersionTests {
         #expect(AppVersion(marketing: nil, build: nil).label == "? (?)")
     }
 }
+
+@Suite("La versión en Ajustes")
+struct SettingsVersionTextTests {
+    @Test("la versión instalada")
+    func version() {
+        #expect(SettingsText.version(AppVersion(marketing: "1.0", build: "231")) == "Versión 1.0 (231)")
+    }
+}

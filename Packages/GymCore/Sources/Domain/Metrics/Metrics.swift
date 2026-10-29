@@ -13,11 +13,11 @@ extension ExerciseLog {
         weight > 0 ? weight * Double(series) * averageReps : Double(series) * averageReps
     }
 
-    /// 1RM estimado (Epley) de la mejor serie: peso · (1 + reps/30). Solo cuentan series de 1 a 30
-    /// reps (fuera de ahí la fórmula no es fiable); sin reps hechas, el objetivo. Sin peso, 0.
     /// El 1RM estimado a 0,1 kg, como lo enseñan las gráficas y el bocadillo.
     public var roundedEstimatedOneRepMax: Double { jsRound(estimatedOneRepMax * 10) / 10 }
 
+    /// 1RM estimado (Epley) de la mejor serie: peso · (1 + reps/30). Solo cuentan series de 1 a 30
+    /// reps (fuera de ahí la fórmula no es fiable); sin reps hechas, el objetivo. Sin peso, 0.
     public var estimatedOneRepMax: Double {
         guard weight > 0 else { return 0 }
         let reps: [Int?] = actualReps.isEmpty ? [targetReps] : actualReps
@@ -71,6 +71,23 @@ extension Collection where Element == Session {
         let logs = flatMap(\.logs).filter { $0.exerciseID == exercise && !$0.skipped }
         return MaxMetrics(volume: logs.map(\.volume).max() ?? 0,
                           estimatedOneRepMax: logs.map(\.estimatedOneRepMax).max() ?? 0)
+    }
+}
+
+/// Cómo cambió una sesión respecto a la anterior.
+public enum SessionChange: Hashable, Sendable {
+    /// Una con lastre y la otra no: la diferencia de carga, en kilos.
+    case load(Double)
+    /// Las dos con lastre o las dos sin él: el % de la métrica principal.
+    case percent(Int)
+}
+
+extension ExerciseLog {
+    /// Misma unidad: % de la métrica principal; si una va con lastre y la otra no, manda la carga.
+    /// `nil` si no cambia. (`computeSessionDelta`.)
+    public func change(from previous: ExerciseLog) -> SessionChange? {
+        if (weight > 0) != (previous.weight > 0) { return .load(weight - previous.weight) }
+        return Metrics.sessionDeltaPercent(current: primaryMetric, previous: previous.primaryMetric).map(SessionChange.percent)
     }
 }
 

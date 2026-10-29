@@ -68,3 +68,12 @@ struct LogSummaryTests {
         #expect(LogText.kilograms(-2.5) == "-2,5")
     }
 }
+
+@Suite("El peso con su unidad")
+struct LogTextWeightTests {
+    @Test("el peso con su unidad")
+    func weight() {
+        #expect(LogText.weight(60) == "60 kg")
+        #expect(LogText.weight(52.5) == "52,5 kg")
+    }
+}

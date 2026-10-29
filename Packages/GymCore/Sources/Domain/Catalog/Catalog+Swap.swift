@@ -11,10 +11,10 @@ extension Catalog {
     ) -> [Exercise] {
         let targetGroup = self[exercise]?.group
         let inOtherRoutines = Set(routines.filter { $0.id != currentRoutine }.flatMap(\.exerciseIDs))
-        let inAnyRoutine = Set(routines.flatMap(\.exerciseIDs))
+        let inAnyRoutine = Set(routines.allExerciseIDs)
 
         func tier(_ candidate: Exercise) -> Int {
-            let sameGroup = targetGroup != nil && candidate.group == targetGroup
+            let sameGroup = candidate.isSameGroup(as: targetGroup)
             if sameGroup && inOtherRoutines.contains(candidate.id) { return 0 }
             if sameGroup && !inAnyRoutine.contains(candidate.id) { return 1 }
             if inOtherRoutines.contains(candidate.id) { return 2 }
@@ -43,7 +43,14 @@ extension Catalog {
     ) -> SwapCandidates {
         let group = self[exercise]?.group
         let sorted = sortedForSwap(candidates, replacing: exercise, routines: routines, currentRoutine: currentRoutine)
-        let isSameGroup = { (candidate: Exercise) in group != nil && candidate.group == group }
-        return SwapCandidates(group: group, sameGroup: sorted.filter(isSameGroup), others: sorted.filter { !isSameGroup($0) })
+        return SwapCandidates(group: group, sameGroup: sorted.filter { $0.isSameGroup(as: group) },
+                              others: sorted.filter { !$0.isSameGroup(as: group) })
+    }
+}
+
+extension Exercise {
+    /// Es de `group`. Sin grupo no hay "mismo grupo" (ni siquiera entre dos sin grupo).
+    func isSameGroup(as group: MuscleGroup?) -> Bool {
+        group != nil && self.group == group
     }
 }

@@ -50,7 +50,7 @@ public final class SettingsModel {
         activity == nil && hasUnsavedChanges && SyncModel.isComplete(repository: repository, token: token)
     }
     /// Descargar trabaja con lo guardado.
-    public var canTransfer: Bool { activity == nil && savedLocation != nil }
+    public var canDownload: Bool { activity == nil && savedLocation != nil }
 
     public var statusText: String { sync.statusText }
 
@@ -114,7 +114,7 @@ public final class SettingsModel {
 
     public func confirmDownload() async {
         isDownloadConfirmationPresented = false
-        guard canTransfer else { return }
+        guard canDownload else { return }
         await run(.downloading) { await sync.download() }
     }
 

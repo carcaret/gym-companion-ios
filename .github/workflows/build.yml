@@ -66,8 +66,9 @@ jobs:
         run: swift test
 
   pwa-tests:
-    # Cada test unitario de la PWA ya portado tiene su gemelo en Swift (mismo describe y nombre)
-    # o un motivo en docs/pwa-tests-no-aplican.tsv. Ver CLAUDE.md.
+    # Cada test de la PWA (unitarios y e2e) tiene su gemelo en Swift (mismo describe y nombre) o
+    # un motivo en docs/pwa-tests-no-aplican.tsv, y la tabla de docs/paridad.md está al día. Ver
+    # CLAUDE.md.
     needs: gate
     if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
     runs-on: ubuntu-latest
@@ -78,7 +79,7 @@ jobs:
           repository: carcaret/gym-companion
           path: pwa
       - name: Tests de la PWA portados
-        run: python3 scripts/pwa_tests.py pwa
+        run: python3 scripts/pwa_tests.py pwa --check-table
 
   app:
     # Los tests de UI del iPhone, en tres partes en paralelo. La 1 corre las clases de PART_1, la 2

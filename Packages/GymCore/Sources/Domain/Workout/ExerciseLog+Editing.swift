@@ -8,10 +8,8 @@ extension ExerciseLog {
     /// series vacías y las que falten, con el objetivo), para que un entreno recién creado ya sea
     /// válido. (`buildLog` en la PWA.)
     public init(planning exerciseID: ExerciseID, from seed: LogSeed) {
-        let actual: [Int?] = (0..<max(0, seed.series)).map { index in
-            index < seed.actualReps.count ? seed.actualReps[index] ?? seed.targetReps : seed.targetReps
-        }
-        self.init(exerciseID: exerciseID, series: seed.series, targetReps: seed.targetReps, actualReps: actual, weight: seed.weight)
+        self.init(exerciseID: exerciseID, series: seed.series, targetReps: seed.targetReps, actualReps: seed.actualReps, weight: seed.weight)
+        actualReps = repsOrTarget
     }
 
     /// Escalón de los botones −/+ de peso: cargas ligeras piden ajustes finos y las pesadas, saltos

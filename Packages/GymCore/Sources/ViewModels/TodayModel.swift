@@ -22,7 +22,7 @@ public final class TodayModel {
     var editing = LogEditing()
     var pickerPurpose: PickerPurpose?
     public var pickerQuery = ""
-    public internal(set) var pickerOneOff = false
+    var pickerOneOff = false
     public var isCreatePresented = false
     public var createName = ""
     /// El grupo del ejercicio nuevo, en su pantalla (como en el editor del catálogo).
@@ -41,7 +41,7 @@ public final class TodayModel {
         self.clock = clock
     }
 
-    var data: TrainingData { app.data ?? TrainingData() }
+    var data: TrainingData { app.current }
     var today: LocalDate { clock.today() }
     var todaySession: Session? { data.history.session(on: today) }
     var activeSession: Session? { data.activeWorkout(on: today) }
@@ -78,7 +78,7 @@ public final class TodayModel {
         data.routines.map { routine in
             let names = routine.exerciseIDs.map { data.catalog.name(of: $0) }
             var note: String?
-            if let pending = data.pendingSwaps[routine.id], pending.weekStart == today.weekStart {
+            if let pending = data.pendingSwaps[routine.id], pending.isActive(inWeekStarting: today.weekStart) {
                 note = TodayText.pendingSwapNote(to: data.catalog.name(of: pending.to), from: data.catalog.name(of: pending.from))
             }
             return RoutineRow(id: routine.id, title: routine.name, subtitle: TodayText.routineSummary(names), pendingNote: note,
@@ -140,8 +140,8 @@ public final class TodayModel {
         await start()
     }
 
-    /// «Sustituir». Recibe el aviso que se confirma, no lo lee de `replacePrompt`: SwiftUI cierra
-    /// el diálogo (`cancelReplace`) antes de ejecutar la acción del botón.
+    /// «Sustituir». No lee `replacePrompt`: SwiftUI cierra el diálogo (`cancelReplace`) antes de
+    /// ejecutar la acción del botón. Recibe el aviso como los demás `confirm…`, aunque no lo use.
     public func confirmReplace(_ prompt: ReplacePrompt) async {
         replacePrompt = nil
         await start()

@@ -35,15 +35,15 @@ public enum LogText {
         "\(Self.kilograms(kilograms)) kg"
     }
 
-    /// Kilos con coma decimal y sin ceros de sobra, a 0,01 kg: "60", "52,5", "18,25".
+    /// Los kilos, sin la unidad: "60", "52,5", "18,25" (`decimal`, con su nombre).
     public static func kilograms(_ weight: Double) -> String {
         decimal(weight)
     }
 
     /// Un número con coma decimal y sin ceros de sobra, a 0,01: "60", "52,5", "18,25".
-    public static func decimal(_ weight: Double) -> String {
-        let hundredths = Int((abs(weight) * 100).rounded())
-        let sign = weight < 0 && hundredths > 0 ? "-" : ""
+    public static func decimal(_ value: Double) -> String {
+        let hundredths = Int((abs(value) * 100).rounded())
+        let sign = value < 0 && hundredths > 0 ? "-" : ""
         var fraction = String(hundredths % 100)
         if fraction.count == 1 { fraction = "0" + fraction }
         while fraction.hasSuffix("0") { fraction.removeLast() }

@@ -28,6 +28,13 @@ struct TodayHarness {
         get async { await saved?.history.session(on: SyncFixtures.today) }
     }
 
+    /// Con el entreno de `routine` ya empezado.
+    static func started(_ data: TrainingData = PWATestDB.data, routine: RoutineID = "DIA1") async -> TodayHarness {
+        let today = await make(data)
+        await today.start(routine)
+        return today
+    }
+
     /// Elegir la rutina y empezar (`selectRoutineAndStart` de los e2e).
     func start(_ routine: RoutineID = "DIA1") async {
         model.select(routine)
