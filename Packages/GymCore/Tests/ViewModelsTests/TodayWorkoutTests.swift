@@ -95,31 +95,25 @@ struct WorkoutFlowTests {
 @MainActor
 @Suite("Accordion: solo una card expandida a la vez")
 struct WorkoutAccordionTests {
-    private func started() async -> TodayHarness {
-        let today = await TodayHarness.make()
-        await today.start()
-        return today
-    }
-
     private func openIndices(_ today: TodayHarness) -> [Int] {
         today.model.activeCards.enumerated().filter { $0.element.isOpen }.map(\.offset)
     }
 
     @Test("todas las cards empiezan cerradas")
     func closed() async {
-        #expect(openIndices(await started()).isEmpty)
+        #expect(openIndices(await TodayHarness.started()).isEmpty)
     }
 
     @Test("clicar una card la expande")
     func expand() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         #expect(openIndices(today) == [0])
     }
 
     @Test("clicar otra card cierra la primera y abre la nueva")
     func switchCard() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         today.model.toggleCard("curl_biceps")
         #expect(openIndices(today) == [1])
@@ -127,7 +121,7 @@ struct WorkoutAccordionTests {
 
     @Test("clicar la card abierta la cierra (todas cerradas)")
     func closeOpen() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         today.model.toggleCard("press_banca")
         #expect(openIndices(today).isEmpty)
@@ -135,7 +129,7 @@ struct WorkoutAccordionTests {
 
     @Test("solo hay una card-body.open como máximo en todo momento")
     func atMostOne() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         for (index, card) in today.model.activeCards.enumerated() {
             today.model.toggleCard(card.exerciseID)
             #expect(openIndices(today) == [index])
@@ -144,7 +138,7 @@ struct WorkoutAccordionTests {
 
     @Test("la card abierta se preserva tras ajustar peso")
     func keepAfterWeight() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         await today.model.adjust(.weight, direction: 1, at: 0)
         #expect(openIndices(today) == [0])
@@ -152,7 +146,7 @@ struct WorkoutAccordionTests {
 
     @Test("la card abierta se preserva tras modificar una rep")
     func keepAfterRep() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         today.model.focusSeries(0, at: 0)
         await today.model.chooseRep(12, series: 0, at: 0)
@@ -161,7 +155,7 @@ struct WorkoutAccordionTests {
 
     @Test("después de cerrar todas, se puede abrir cualquiera")
     func reopen() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         today.model.toggleCard("press_banca")
         today.model.toggleCard("curl_biceps")
@@ -171,7 +165,7 @@ struct WorkoutAccordionTests {
     // El chevron de la vista se pinta con `isOpen`.
     @Test("chevrons se sincronizan con el estado de la card")
     func chevrons() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         #expect(today.model.activeCards.map(\.isOpen).prefix(2) == [true, false])
         today.model.toggleCard("curl_biceps")
@@ -299,25 +293,19 @@ struct WorkoutOpenStateTests {
 @MainActor
 @Suite("Subtítulo de card muestra reps reales cuando difieren")
 struct WorkoutSubtitleTests {
-    private func started() async -> TodayHarness {
-        let today = await TodayHarness.make()
-        await today.start()
-        return today
-    }
-
     @Test("subtítulo muestra reps reales al iniciar si difieren del historial previo")
     func pressReps() async {
-        #expect(await started().model.activeCards[0].subtitle.contains("10·10·8"))
+        #expect(await TodayHarness.started().model.activeCards[0].subtitle.contains("10·10·8"))
     }
 
     @Test("subtítulo muestra reps de curl_biceps al iniciar si difieren")
     func curlReps() async {
-        #expect(await started().model.activeCards[1].subtitle.contains("12·12·10"))
+        #expect(await TodayHarness.started().model.activeCards[1].subtitle.contains("12·12·10"))
     }
 
     @Test("subtítulo NO muestra reps cuando todas coinciden con expected")
     func allMatch() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.focusSeries(2, at: 0)
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
@@ -327,7 +315,7 @@ struct WorkoutSubtitleTests {
 
     @Test("subtítulo se actualiza al cambiar una rep")
     func changeRep() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.focusSeries(2, at: 0)
         await today.model.chooseRep(7, series: 2, at: 0)
         #expect(today.model.activeCards[0].subtitle.contains("10·10·7"))
@@ -335,7 +323,7 @@ struct WorkoutSubtitleTests {
 
     @Test("subtítulo se actualiza tras ajustar peso")
     func weight() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         let initial = today.model.activeCards[0].weight
         await today.model.adjust(.weight, direction: 1, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
@@ -345,7 +333,7 @@ struct WorkoutSubtitleTests {
 
     @Test("subtítulo incluye peso y series x reps esperadas junto a las reales")
     func full() async {
-        let subtitle = await started().model.activeCards[0].subtitle
+        let subtitle = await TodayHarness.started().model.activeCards[0].subtitle
         #expect(subtitle.contains("60 kg"))
         #expect(subtitle.contains("3×10"))
         #expect(subtitle.contains("10·10·8"))
@@ -353,7 +341,7 @@ struct WorkoutSubtitleTests {
 
     @Test("reps desaparecen del subtítulo si se corrigen para coincidir con expected")
     func fixed() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
         #expect(subtitle.contains("3×10"))
@@ -365,12 +353,6 @@ struct WorkoutSubtitleTests {
 @MainActor
 @Suite("drag-reorder workout exercises")
 struct WorkoutReorderTests {
-    private func started() async -> TodayHarness {
-        let today = await TodayHarness.make()
-        await today.start()
-        return today
-    }
-
     /// `assertDomMatchesData`: cada tarjeta enseña el log que hay en su posición.
     private func expectCardsMatchData(_ today: TodayHarness) async {
         let logs = await today.savedToday?.logs ?? []
@@ -380,7 +362,7 @@ struct WorkoutReorderTests {
 
     @Test("el handle (≡) es visible en cada tarjeta de ejercicio durante entreno activo")
     func handles() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         #expect(today.model.canReorder)
         #expect(!today.model.activeCards.isEmpty)
     }
@@ -395,7 +377,7 @@ struct WorkoutReorderTests {
 
     @Test("reorderExercises actualiza DB.routines en localStorage")
     func routine() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 1)
         // Sin aviso: la tarjeta ya se ve en su sitio (quitado con la aprobación del usuario, 2026-10-26).
         #expect(today.app.notice == nil)
@@ -404,14 +386,14 @@ struct WorkoutReorderTests {
 
     @Test("reorderExercises actualiza entry.logs del entreno activo (invariante)")
     func logs() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 1)
         #expect(await today.savedToday?.logs.prefix(2).map(\.exerciseID) == ["curl_biceps", "press_banca"])
     }
 
     @Test("tras reordenar y re-renderizar, el nuevo orden se refleja en el DOM")
     func afterTabSwitch() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 1)
         today.model.reselect()
         #expect(today.model.stage == .active)
@@ -420,7 +402,7 @@ struct WorkoutReorderTests {
 
     @Test("editar peso tras reordenar modifica el ejercicio mostrado, no el que estaba antes en esa posición")
     func editWeightAfterReorder() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         let before = try #require(await today.savedToday?.logs)
         await today.model.reorder(from: 0, to: 2)
         #expect(today.model.activeCards[0].title == "Curl Bíceps")
@@ -436,7 +418,7 @@ struct WorkoutReorderTests {
 
     @Test("editar reps por serie (chip) tras reordenar afecta al ejercicio correcto")
     func editRepAfterReorder() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         let before = try #require(await today.savedToday?.logs)
         await today.model.reorder(from: 0, to: 2)
         today.model.toggleCard(today.model.activeCards[0].exerciseID)
@@ -453,7 +435,7 @@ struct WorkoutReorderTests {
 
     @Test("ajustar peso con botones +/- tras reordenar afecta al ejercicio correcto")
     func adjustAfterReorder() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         let before = try #require(await today.savedToday?.logs)
         await today.model.reorder(from: 2, to: 0)
         await expectCardsMatchData(today)
@@ -468,7 +450,7 @@ struct WorkoutReorderTests {
 
     @Test("varios reordenamientos consecutivos mantienen el DOM coherente y editar sigue siendo correcto")
     func chain() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 2)
         await expectCardsMatchData(today)
         await today.model.reorder(from: 2, to: 1)
@@ -488,7 +470,7 @@ struct WorkoutReorderTests {
 
     @Test("cambiar (swap) un ejercicio tras reordenar mantiene la correspondencia card↔log")
     func swapAfterReorder() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 2)
         today.model.openSwapPicker(at: 0)
         await today.model.choose("sentadilla")
@@ -502,7 +484,7 @@ struct WorkoutReorderTests {
 
     @Test("escenario reportado: añadir ejercicio mid-workout, moverlo y editarlo modifica el ejercicio correcto")
     func addMoveEdit() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         await today.model.choose("sentadilla")
         // Sin aviso: la tarjeta nueva ya se ve (quitado con la aprobación del usuario, 2026-10-26).
@@ -522,7 +504,7 @@ struct WorkoutReorderTests {
 
     @Test("el acordeón sigue funcionando tras reordenar y re-renderizar")
     func accordionAfterReorder() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 1)
         today.model.reselect()
         today.model.toggleCard(today.model.activeCards[0].exerciseID)
@@ -533,7 +515,7 @@ struct WorkoutReorderTests {
 
     @Test("el ejercicio que estaba abierto sigue abierto tras reordenar, aunque cambie de posición")
     func openFollowsExercise() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.toggleCard("curl_biceps")
         await today.model.reorder(from: 1, to: 0)
         let open = today.model.activeCards.filter(\.isOpen)
@@ -542,7 +524,7 @@ struct WorkoutReorderTests {
 
     @Test("ejercicio añadido mid-workout también tiene drag-handle")
     func addedIsDraggable() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         let before = today.model.activeCards.count
         today.model.openAddPicker()
         let first = try #require(today.model.picker?.exercises.first)
@@ -554,7 +536,7 @@ struct WorkoutReorderTests {
     // Arrastrar no abre ni cierra tarjetas.
     @Test("clic en drag-handle no abre el acordeón")
     func dragDoesNotOpen() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         await today.model.reorder(from: 0, to: 1)
         #expect(today.model.activeCards.allSatisfy { !$0.isOpen })
     }
@@ -605,5 +587,40 @@ struct TodayReplaceTests {
         #expect(today.model.stage == .active)
         #expect(await today.savedToday?.routineID == "DIA2")
         #expect(await today.savedToday?.completed == false)
+    }
+}
+
+@MainActor
+@Suite("Rutinas: lo que da el modelo a la vista")
+struct TodayViewContentTests {
+    @Test("mover una tarjeta con lo que da onMove: hacia abajo, la posición de después")
+    func moveCard() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        let before = today.model.activeCards.map(\.exerciseID)
+        await today.model.moveCard(from: 0, toOffset: 2)
+        #expect(today.model.activeCards.map(\.exerciseID) == [before[1], before[0]] + before.dropFirst(2))
+        await today.model.moveCard(from: 1, toOffset: 0)
+        #expect(today.model.activeCards.map(\.exerciseID) == before)
+    }
+
+    @Test("crear un ejercicio pide un nombre que no esté vacío")
+    func canCreateExercise() async {
+        let today = await TodayHarness.make()
+        today.model.createName = "   "
+        #expect(!today.model.canCreateExercise)
+        today.model.createName = "Press Arnold"
+        #expect(today.model.canCreateExercise)
+    }
+
+    @Test("la tarjeta da peso, series y objetivo con su texto y su error")
+    func parameters() async {
+        let today = await TodayHarness.make()
+        await today.start()
+        let card = today.model.activeCards[0]
+        #expect(card.parameters.map(\.parameter) == [.weight, .series, .targetReps])
+        #expect(card.parameters.map(\.value) == [LogText.kilograms(card.weight), "\(card.series)", "\(card.targetReps)"])
+        #expect(card.parameters.map(\.isDecimal) == [true, false, false])
+        #expect(card.parameters.allSatisfy { !$0.hasError })
     }
 }

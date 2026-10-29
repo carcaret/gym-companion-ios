@@ -715,9 +715,9 @@ struct HistoryStripE2ETests {
         }
         // Los kilos con espacio y coma decimal, como en el resto de la app (la PWA: "84kg",
         // "73.3kg"); cambio aprobado por el usuario, 2026-10-27.
-        #expect(w1 == "e1RM 84 kg\n60 kg · 12·11·10")
-        #expect(w1.split(separator: "\n").joined(separator: " · ") == "e1RM 84 kg · 60 kg · 12·11·10")
-        #expect(w2 == "e1RM 73,3 kg\n55 kg · 10·10·8")
+        #expect(w1.tooltip == "e1RM 84 kg\n60 kg · 12·11·10")
+        #expect(bars[4].accessibilityText == "e1RM 84 kg · 60 kg · 12·11·10")
+        #expect(w2.tooltip == "e1RM 73,3 kg\n55 kg · 10·10·8")
     }
 
     @Test("barra más alta corresponde a la sesión con mayor e1RM")

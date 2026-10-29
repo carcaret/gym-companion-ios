@@ -52,7 +52,7 @@ public final class CatalogModel {
         self.app = app
     }
 
-    private var data: TrainingData { app.data ?? TrainingData() }
+    private var data: TrainingData { app.current }
 
     // MARK: - Resumen
 

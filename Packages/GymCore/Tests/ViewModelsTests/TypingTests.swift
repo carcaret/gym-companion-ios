@@ -11,8 +11,7 @@ import ViewModels
 @Suite("Lo tecleado en el entreno")
 struct TodayTypingTests {
     private func started() async -> TodayHarness {
-        let today = await TodayHarness.make()
-        await today.start()
+        let today = await TodayHarness.started()
         today.model.toggleCard("press_banca")
         return today
     }

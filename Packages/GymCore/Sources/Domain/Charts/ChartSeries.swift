@@ -67,11 +67,6 @@ extension TrainingData {
 }
 
 extension Catalog {
-    /// Los ids por nombre del ejercicio, en orden alfabético español.
-    public func sortedByName(_ ids: some Sequence<ExerciseID>) -> [ExerciseID] {
-        ids.sorted { SpanishCollation.precedes(name(of: $0), name(of: $1)) }
-    }
-
     /// Separa `exercises` entre los que están en `routineExerciseIDs` y el resto, cada lista por
     /// nombre (el desplegable de Gráficas).
     public func splitByRoutine(_ exercises: [ExerciseID], routineExerciseIDs: some Sequence<ExerciseID>) -> RoutineSplit {

@@ -3,6 +3,12 @@ extension Collection where Element == Routine {
         first { $0.id == id }
     }
 
+    /// Los ejercicios de todas las rutinas, sin repetir y en su orden.
+    public var allExerciseIDs: [ExerciseID] {
+        var seen = Set<ExerciseID>()
+        return flatMap(\.exerciseIDs).filter { seen.insert($0).inserted }
+    }
+
     /// El nombre de la rutina; si no existe, su id.
     public func name(of id: RoutineID) -> String {
         routine(id)?.name ?? id.rawValue
@@ -35,6 +41,11 @@ public struct SwapConsumption: Hashable, Sendable {
 }
 
 extension PendingSwap {
+    /// Un pendiente solo vale la semana en que se creó.
+    public func isActive(inWeekStarting weekStart: LocalDate) -> Bool {
+        self.weekStart == weekStart
+    }
+
     /// Pendiente para la rutina destino, o `nil` si `to` ya está en ella (quedaría duplicado).
     public static func make(from: ExerciseID, to: ExerciseID, targetRoutine: [ExerciseID], weekStart: LocalDate) -> PendingSwap? {
         targetRoutine.contains(to) ? nil : PendingSwap(from: from, to: to, weekStart: weekStart)
@@ -47,7 +58,7 @@ extension PendingSwap {
     /// solo usuario y un solo aparato no compensa vigilarlo aquí.
     public static func consume(_ pending: PendingSwap?, in exerciseIDs: [ExerciseID], weekStart: LocalDate) -> SwapConsumption {
         guard let pending else { return SwapConsumption(exerciseIDs: exerciseIDs, clearNow: false) }
-        guard pending.weekStart == weekStart, let index = exerciseIDs.firstIndex(of: pending.from) else {
+        guard pending.isActive(inWeekStarting: weekStart), let index = exerciseIDs.firstIndex(of: pending.from) else {
             return SwapConsumption(exerciseIDs: exerciseIDs, clearNow: true)
         }
         var swapped = exerciseIDs

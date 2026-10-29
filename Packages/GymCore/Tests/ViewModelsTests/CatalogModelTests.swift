@@ -32,8 +32,8 @@ private struct CatalogHarness {
     let model: CatalogModel
     let progress: ProgressModel
 
-    static func make() async -> CatalogHarness {
-        let base = await AppHarness.start(local: catalogData())
+    static func make(_ data: TrainingData = catalogData()) async -> CatalogHarness {
+        let base = await AppHarness.start(local: data)
         return CatalogHarness(harness: base.harness, app: base.app, model: CatalogModel(app: base.app),
                               progress: ProgressModel(app: base.app, clock: base.clock))
     }
@@ -211,10 +211,7 @@ struct CatalogEditorTests {
     func defaults() async {
         var data = catalogData()
         data.catalog = Catalog(data.catalog.all + [Exercise(id: "jalon_al_pecho", name: "Jalón", group: .espalda)])
-        let harness = SyncHarness(local: data, configured: false)
-        let app = AppModel(repository: harness.repository())
-        await app.start()
-        let model = CatalogModel(app: app)
+        let model = await CatalogHarness.make(data).model
         model.edit("jalon_al_pecho")
         #expect(model.editor?.secondaries == [.biceps])
     }
@@ -242,9 +239,7 @@ struct CatalogEditorTests {
 
     @Test("sin ejercicios no hay secciones, y la vista dice que aún no hay")
     func empty() async {
-        let app = AppModel(repository: SyncHarness(local: TrainingData(), configured: false).repository())
-        await app.start()
-        #expect(CatalogModel(app: app).sections.isEmpty)
+        #expect(await CatalogHarness.make(TrainingData()).model.sections.isEmpty)
         #expect(CatalogText.empty == "Aún no hay ejercicios")
     }
 }

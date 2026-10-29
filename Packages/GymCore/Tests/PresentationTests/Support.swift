@@ -1,7 +1,7 @@
 import Domain
 
 // Literales cómodos para los tests (copia de los de DomainTests: cada target de tests es su módulo).
-// código de producción las fechas se leen con `LocalDate(iso:)`, que puede fallar.
+// En el código de producción las fechas se leen con `LocalDate(iso:)`, que puede fallar.
 extension LocalDate: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         guard let date = LocalDate(iso: value) else { fatalError("Fecha de test inválida: \(value)") }

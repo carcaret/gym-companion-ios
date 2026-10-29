@@ -75,7 +75,7 @@ public final class ChartsModel {
         from = today.adding(months: -6)
     }
 
-    private var data: TrainingData { app.data ?? TrainingData() }
+    private var data: TrainingData { app.current }
 
     /// Desde otra pantalla (Progreso): el ejercicio queda elegido si se hizo en el rango.
     public func choose(_ exercise: ExerciseID) {
@@ -106,7 +106,7 @@ public final class ChartsModel {
     public var options: (inRoutine: [Option], others: [Option]) {
         let needle = query.trimmingWhitespace().searchFolded
         let trained = data.exercisesTrained(from: from, to: to).filter { needle.isEmpty || data.catalog.name(of: $0).searchFolded.contains(needle) }
-        let split = data.catalog.splitByRoutine(trained, routineExerciseIDs: data.routines.flatMap(\.exerciseIDs))
+        let split = data.catalog.splitByRoutine(trained, routineExerciseIDs: data.routines.allExerciseIDs)
         func option(_ id: ExerciseID) -> Option { Option(exerciseID: id, name: data.catalog.name(of: id), isSelected: id == selected) }
         return (split.inRoutine.map(option), split.others.map(option))
     }

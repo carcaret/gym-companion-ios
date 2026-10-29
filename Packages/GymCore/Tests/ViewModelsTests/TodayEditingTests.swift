@@ -471,15 +471,9 @@ struct SkipExerciseTests {
 @MainActor
 @Suite("Ejercicio puntual (solo esta sesión)")
 struct OneOffExerciseTests {
-    private func started() async -> TodayHarness {
-        let today = await TodayHarness.make()
-        await today.start()
-        return today
-    }
-
     @Test("1 — el chip aparece en el modal y arranca apagado")
     func chipOff() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         #expect(today.model.picker?.offersOneOff == true)
         #expect(today.model.picker?.isOneOff == false)
@@ -487,7 +481,7 @@ struct OneOffExerciseTests {
 
     @Test("2 — chip apagado: el ejercicio entra en la rutina (comportamiento de siempre)")
     func off() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         await today.model.choose("sentadilla")
         #expect(await today.saved?.routines[0].exerciseIDs.contains("sentadilla") == true)
@@ -499,7 +493,7 @@ struct OneOffExerciseTests {
 
     @Test("3 — chip encendido: entra en el entreno pero NO en la rutina")
     func on() async throws {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         today.model.toggleOneOff()
         #expect(today.model.picker?.isOneOff == true)
@@ -515,7 +509,7 @@ struct OneOffExerciseTests {
 
     @Test("4 — chip encendido oculta \"Crear nuevo ejercicio\"; apagarlo lo devuelve")
     func createHidden() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         #expect(today.model.picker?.canCreate == true)
         today.model.toggleOneOff()
@@ -526,7 +520,7 @@ struct OneOffExerciseTests {
 
     @Test("5 — la card puntual dice \"Quitar\" y se borra sin modal ni tocar la rutina")
     func removeOneOff() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         today.model.toggleOneOff()
         await today.model.choose("sentadilla")
@@ -539,7 +533,7 @@ struct OneOffExerciseTests {
 
     @Test("6 — reordenar con un puntual presente no mete el puntual en la rutina")
     func reorderWithOneOff() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         today.model.toggleOneOff()
         await today.model.choose("sentadilla")
@@ -552,7 +546,7 @@ struct OneOffExerciseTests {
 
     @Test("7 — al finalizar, el puntual queda en el historial y la rutina sigue limpia")
     func finish() async {
-        let today = await started()
+        let today = await TodayHarness.started()
         today.model.openAddPicker()
         today.model.toggleOneOff()
         await today.model.choose("sentadilla")

@@ -86,3 +86,16 @@ struct ProgressScreenTextTests {
         #expect(ProgressText.window(weeks: 8) == "Últimas 8 semanas")
     }
 }
+
+@Suite("Textos de las filas de Progreso")
+struct ProgressRowTextTests {
+    @Test("series y sesiones de un ejercicio del grupo")
+    func setsAndSessions() {
+        #expect(ProgressText.setsAndSessions(sets: 12, sessions: 4) == "12 · 4")
+    }
+
+    @Test("las reps de las últimas sesiones, separadas")
+    func recentReps() {
+        #expect(ProgressText.recentReps(["11·11·10", "12·11·10"]) == "11·11·10  ·  12·11·10")
+    }
+}

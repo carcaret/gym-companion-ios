@@ -13,10 +13,7 @@ extension TodayModel {
     }
 
     private func addPicker(_ session: Session) -> Picker {
-        let routine = Set(data.routines.routine(session.routineID)?.exerciseIDs ?? [])
-        let present = Set(session.logs.map(\.exerciseID))
-        let candidates = data.catalog.all.filter { !routine.contains($0.id) && !present.contains($0.id) }
-            .sorted { SpanishCollation.precedes($0.name, $1.name) }
+        let candidates = data.addCandidates(on: today)
         let canCreate = !pickerOneOff
         let typed = pickerQuery.trimmingWhitespace()
         let creatable = canCreate && !typed.isEmpty && !data.catalog.hasExercise(named: typed)
@@ -62,11 +59,7 @@ extension TodayModel {
     }
 
     /// Hay algún ejercicio del catálogo fuera del entreno: si no, «Cambiar por otro» no se ofrece.
-    public var canSwap: Bool {
-        guard let session = activeSession else { return false }
-        let present = Set(session.logs.map(\.exerciseID))
-        return data.catalog.ids.contains { !present.contains($0) }
-    }
+    public var canSwap: Bool { data.hasSwapCandidates(on: today) }
 
     /// "Cambiar por otro".
     public func openSwapPicker(at index: Int) {
@@ -134,7 +127,8 @@ extension TodayModel {
             isCreatePresented = false
             return
         }
-        guard !data.catalog.hasExercise(named: name) else {
+        var data = data
+        guard let id = data.createExercise(named: name, group: createGroup) else {
             createMessage = TodayText.alreadyExists
             isCreatePresented = true
             return
@@ -143,9 +137,6 @@ extension TodayModel {
         isCreatePresented = false
         pickerPurpose = nil
         createName = ""
-        let id = ExerciseID(ExerciseID.slug(from: name))
-        var data = data
-        data.catalog = Catalog(data.catalog.all + [Exercise(id: id, name: name, group: createGroup)])
         createGroup = nil
         guard data.addToWorkout(id, oneOff: false, on: today) else { return }
         await app.update(data)
@@ -174,12 +165,7 @@ extension TodayModel {
     /// Si el ejercicio nuevo es de otra rutina (y solo de una) que aún no se ha hecho esta semana,
     /// se ofrece hacer el cambio inverso allí la próxima vez.
     private func offerReciprocal(from routine: RoutineID, new: ExerciseID, outgoing: ExerciseID) {
-        guard let target = data.routines.reciprocalSwapTarget(from: routine, for: new) else { return }
-        let weekStart = today.weekStart
-        guard !data.history.hasCompletedSession(of: target, inWeekStarting: weekStart),
-              let swap = PendingSwap.make(from: new, to: outgoing, targetRoutine: data.routines.routine(target)?.exerciseIDs ?? [],
-                                          weekStart: weekStart)
-        else { return }
+        guard let (target, swap) = data.reciprocalSwap(from: routine, new: new, outgoing: outgoing, on: today) else { return }
         let targetName = data.routines.name(of: target)
         reciprocalOffer = ReciprocalOffer(
             routine: target, swap: swap, title: TodayText.reciprocalTitle,

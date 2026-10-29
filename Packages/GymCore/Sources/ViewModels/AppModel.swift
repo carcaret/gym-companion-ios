@@ -11,6 +11,8 @@ public final class AppModel {
     public private(set) var data: TrainingData? {
         didSet { watch?.send(data) }
     }
+    /// Los datos, o vacíos mientras no se han cargado: lo que leen las pantallas.
+    var current: TrainingData { data ?? TrainingData() }
     /// Si los datos guardados no se pudieron leer: no se machacan, se avisa.
     public private(set) var loadError: String?
     /// Si un cambio no se pudo guardar en el iPhone. Al pasar de guardar bien a fallar, se avisa

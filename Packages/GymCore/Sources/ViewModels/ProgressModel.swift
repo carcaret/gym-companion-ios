@@ -8,7 +8,7 @@ import Presentation
 @MainActor
 @Observable
 public final class ProgressModel {
-    public static let weeks = 8
+    public static let weeks = ProgressWindow.weeks
 
     public struct ExerciseRow: Hashable, Sendable, Identifiable {
         public var id: ExerciseID { exerciseID }
@@ -27,6 +27,13 @@ public final class ProgressModel {
         public let isOpen: Bool
     }
 
+    /// Una línea del desglose de un grupo: "Remo" y "12 · 4" (series · sesiones), o sus series
+    /// indirectas.
+    public struct GroupDetail: Hashable, Sendable {
+        public let name: String
+        public let value: String
+    }
+
     public struct GroupRow: Hashable, Sendable, Identifiable {
         public var id: String { name }
         public let name: String
@@ -34,18 +41,9 @@ public final class ProgressModel {
         public let indirectSets: Double
         /// Series totales redondeadas.
         public let total: Int
-        /// "Remo" y "12 · 4" (series · sesiones).
-        public let exercises: [(name: String, value: String)]
-        public let indirect: [(name: String, value: String)]
+        public let exercises: [GroupDetail]
+        public let indirect: [GroupDetail]
         public let isOpen: Bool
-
-        public static func == (lhs: GroupRow, rhs: GroupRow) -> Bool {
-            lhs.name == rhs.name && lhs.sets == rhs.sets && lhs.indirectSets == rhs.indirectSets && lhs.isOpen == rhs.isOpen
-        }
-
-        public func hash(into hasher: inout Hasher) {
-            hasher.combine(name)
-        }
     }
 
     /// La tarjeta Ejercicios enseña todo, no solo los estancados.
@@ -63,15 +61,13 @@ public final class ProgressModel {
         self.clock = clock
     }
 
-    private var data: TrainingData { app.data ?? TrainingData() }
+    private var data: TrainingData { app.current }
 
     // MARK: - Ejercicios
 
     /// Los ejercicios de las rutinas (sin repetir), estancados primero y sin recorrido al final.
     public var allRows: [ExerciseRow] {
-        var seen = Set<ExerciseID>()
-        let ids = data.routines.flatMap(\.exerciseIDs).filter { seen.insert($0).inserted }
-        return data.progressRows(for: ids, anchor: clock.today(), weeks: Self.weeks).map { progress in
+        return data.progressRows(for: data.routines.allExerciseIDs, anchor: clock.today(), weeks: Self.weeks).map { progress in
             ExerciseRow(
                 exerciseID: progress.exerciseID, name: data.catalog.name(of: progress.exerciseID),
                 weight: progress.weight > 0 ? LogText.weight(progress.weight) : nil,
@@ -132,8 +128,8 @@ public final class ProgressModel {
             let name = GroupText.name(group.group)
             return GroupRow(
                 name: name, sets: group.sets, indirectSets: group.indirectSets, total: Int(jsRound(group.totalSets)),
-                exercises: group.exercises.map { ($0.name, ProgressText.setsAndSessions(sets: $0.sets, sessions: $0.sessions)) },
-                indirect: group.indirect.map { ($0.name, ProgressText.indirectSets($0.sets)) },
+                exercises: group.exercises.map { GroupDetail(name: $0.name, value: ProgressText.setsAndSessions(sets: $0.sets, sessions: $0.sessions)) },
+                indirect: group.indirect.map { GroupDetail(name: $0.name, value: ProgressText.indirectSets($0.sets)) },
                 isOpen: openGroups.contains(name)
             )
         }
@@ -145,8 +141,7 @@ public final class ProgressModel {
     /// Escala absoluta compartida por todas las barras, en decenas (si cada barra se escalara a su
     /// manera, la franja caería en un sitio distinto en cada una y no significaría nada).
     public var scale: Double {
-        let largest = groups.map { Double($0.sets) + $0.indirectSets }.max() ?? 0
-        return max((max(largest, Double(referenceBand.upperBound)) / 10).rounded(.up) * 10, 10)
+        GroupSets.scale(largest: groups.map { Double($0.sets) + $0.indirectSets }.max() ?? 0, reference: referenceBand)
     }
 
     public func toggleGroup(_ name: String) {

@@ -82,7 +82,7 @@ extension TrainingData {
     /// progresa, así que medir contra él marcaría como estancado a quien mejora. Tampoco vale
     /// comparar primera y última de la ventana: con 30-32-32-31 la última supera a la primera,
     /// pero el récord de 32 lleva sin batirse desde la segunda.
-    public func progress(of exercise: ExerciseID, anchor: LocalDate, weeks: Int = 8) -> ExerciseProgress {
+    public func progress(of exercise: ExerciseID, anchor: LocalDate, weeks: Int = ProgressWindow.weeks) -> ExerciseProgress {
         let from = anchor.adding(days: -weeks * 7)
         let withReps = history.sessions(of: exercise, to: anchor).filter { $0.log.totalReps > 0 }
         var progress = ExerciseProgress(exerciseID: exercise, name: catalog.name(of: exercise), sessionCount: withReps.count)
@@ -138,7 +138,7 @@ extension TrainingData {
 
     /// Filas de la tarjeta Ejercicios: primero los que llevan más sesiones sin moverse, después
     /// los que progresan y al final los que aún no tienen recorrido; a igualdad, por nombre.
-    public func progressRows(for exercises: [ExerciseID], anchor: LocalDate, weeks: Int = 8) -> [ExerciseProgress] {
+    public func progressRows(for exercises: [ExerciseID], anchor: LocalDate, weeks: Int = ProgressWindow.weeks) -> [ExerciseProgress] {
         func rank(_ status: ProgressStatus) -> Int {
             switch status {
             case .stalled: 0

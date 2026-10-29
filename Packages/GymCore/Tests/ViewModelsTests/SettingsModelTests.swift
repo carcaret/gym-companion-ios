@@ -155,11 +155,11 @@ struct SettingsConnectionTests {
         await settings.harness.remote.waitForHeldFetch()
         #expect(settings.model.activity == .saving)
         #expect(!settings.model.canSave)
-        #expect(!settings.model.canTransfer)
+        #expect(!settings.model.canDownload)
         await settings.harness.remote.releaseFetches()
         await saving.value
         #expect(settings.model.activity == nil)
-        #expect(settings.model.canTransfer)
+        #expect(settings.model.canDownload)
     }
 }
 
