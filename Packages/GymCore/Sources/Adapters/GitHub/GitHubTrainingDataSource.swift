@@ -27,11 +27,12 @@ public struct GitHubTrainingDataSource: RemoteTrainingDataSource {
     }
 
     public func push(_ data: TrainingData, to location: SyncLocation, token: String, replacing version: RemoteVersion?,
-                     message: String) async throws(RemoteError) -> RemoteVersion {
+                     on day: LocalDate) async throws(RemoteError) -> RemoteVersion {
         var request = request(contentsURL(location), token: token)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let payload = GitHubContents.payload(for: PWAFormat.json(from: data), sha: version?.rawValue, branch: location.branch, message: message)
+        let payload = GitHubContents.payload(for: PWAFormat.json(from: data), sha: version?.rawValue, branch: location.branch,
+                                              message: "Gym Companion update \(day.iso)")
         request.httpBody = try? JSONEncoder().encode(payload)
         let (body, status) = try await send(request)
         if status == 409 || status == 422 { throw .conflict }

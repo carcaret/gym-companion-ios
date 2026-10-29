@@ -17,6 +17,12 @@ public enum ProgressText {
     public static let setsHeader = "series"
     public static let sessionsHeader = "· sesiones"
 
+    /// Una fila del desglose de un grupo: "6 · 3", series y sesiones.
+    public static func setsAndSessions(sets: Int, sessions: Int) -> String { "\(sets) · \(sessions)" }
+
+    /// Las reps de las últimas sesiones, de una en una: "11·11·10  ·  12·11·10".
+    public static func recentReps(_ sessions: [String]) -> String { sessions.joined(separator: "  ·  ") }
+
     public static func window(weeks: Int) -> String { "Últimas \(weeks) semanas" }
 
     /// "1 de 3 estancados" o, sin ninguno, "Nada estancado · 2 progresando".
@@ -30,7 +36,7 @@ public enum ProgressText {
 
     /// Series indirectas con un decimal como mucho ("2,5", "3").
     public static func indirectSets(_ sets: Double) -> String {
-        LogText.kilograms((sets * 10).rounded() / 10)
+        LogText.decimal((sets * 10).rounded() / 10)
     }
 
     // MARK: - Frases de cada ejercicio

@@ -98,7 +98,7 @@ struct CreateExerciseForm: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 ConfirmButton { Task { await model.createExercise() } }
-                    .disabled(model.createName.trimmingWhitespace().isEmpty)
+                    .disabled(!model.canCreateExercise)
                     .accessibilityIdentifier("create-confirm")
             }
         }

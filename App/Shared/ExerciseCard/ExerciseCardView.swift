@@ -63,9 +63,9 @@ struct ExerciseCardView: View {
             // Sin hueco entre filas: cada zona de toque de 44 pt ya deja 8 pt entre los círculos de
             // una fila y los de la siguiente, sin montarse.
             VStack(spacing: 0) {
-                parameterRow(.weight, TodayText.weightLabel, LogText.kilograms(card.weight), decimal: true, hasError: card.errors.contains(.negativeWeight))
-                parameterRow(.series, TodayText.seriesLabel, "\(card.series)", decimal: false, hasError: card.errors.contains(.invalidSeries))
-                parameterRow(.targetReps, TodayText.targetRepsLabel, "\(card.targetReps)", decimal: false, hasError: card.errors.contains(.invalidTargetReps))
+                ForEach(card.parameters, id: \.parameter) { row in
+                    parameterRow(row.parameter, row.label, row.value, decimal: row.isDecimal, hasError: row.hasError)
+                }
             }
             .padding(.vertical, 10)
             divider

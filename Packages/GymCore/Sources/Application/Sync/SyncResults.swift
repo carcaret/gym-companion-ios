@@ -18,14 +18,6 @@ public enum DownloadResult: Hashable, Sendable {
     case failed
 }
 
-public enum ConnectionResult: Hashable, Sendable {
-    case connected
-    case status(Int)
-    case unreachable
-    /// Conecta, pero el fichero no es un `db.json` válido.
-    case invalidContent
-}
-
 public enum ConfigureResult: Hashable, Sendable {
     /// La app estaba vacía: se han bajado los datos de GitHub.
     case downloaded(TrainingData)

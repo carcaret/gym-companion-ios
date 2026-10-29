@@ -59,7 +59,7 @@ public final class CatalogModel {
     private var total: Int { data.catalog.ids.count }
 
     /// Los que no tienen uno de los grupos que se pueden elegir.
-    private var withoutGroup: Int { data.catalog.all.filter { !($0.group?.isKnown ?? false) }.count }
+    private var withoutGroup: Int { data.catalog.all.filter { $0.knownGroup == nil }.count }
 
     /// Debajo del título del catálogo: «4 en total · 1 sin grupo» (antes, la tarjeta de Progreso).
     public var summary: String { CatalogText.summary(total: total, withoutGroup: withoutGroup) }
@@ -84,7 +84,7 @@ public final class CatalogModel {
 
     public func edit(_ exercise: ExerciseID) {
         guard let current = data.catalog[exercise] else { return }
-        editor = Editor(exerciseID: exercise, name: data.catalog.name(of: exercise), group: current.group.flatMap { $0.isKnown ? $0 : nil },
+        editor = Editor(exerciseID: exercise, name: data.catalog.name(of: exercise), group: current.knownGroup,
                         secondaries: SecondaryGroups.resolve(current, id: exercise))
         editorOriginal = editor
     }
@@ -97,14 +97,14 @@ public final class CatalogModel {
     }
 
     /// La ✕: sin cambios, cierra; con cambios, pregunta antes de tirarlos (como las demás hojas).
-    public func requestCancel() {
-        guard hasChanges else { return cancelEditing() }
+    public func requestClose() {
+        guard hasChanges else { return closeEditor() }
         isDiscardPromptPresented = true
     }
 
     /// «Descartar cambios». No depende del diálogo, que SwiftUI cierra antes de la acción.
     public func discardChanges() {
-        cancelEditing()
+        closeEditor()
     }
 
     public func keepEditing() {
@@ -151,7 +151,8 @@ public final class CatalogModel {
         await app.update(data)
     }
 
-    public func cancelEditing() {
+    /// Cierra el editor sin preguntar (la hoja ya se ha cerrado).
+    public func closeEditor() {
         editor = nil
         editorOriginal = nil
         isDiscardPromptPresented = false

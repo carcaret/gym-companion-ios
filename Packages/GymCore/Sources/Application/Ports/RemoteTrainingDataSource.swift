@@ -40,6 +40,7 @@ public protocol RemoteTrainingDataSource: Sendable {
     func fetch(_ location: SyncLocation, token: String) async throws(RemoteError) -> RemoteSnapshot
 
     /// Sube los datos encima de `version` (`nil` = el fichero aún no existe) y devuelve la nueva.
+    /// `day`: cuándo se sube (en GitHub, va en el mensaje del commit).
     func push(_ data: TrainingData, to location: SyncLocation, token: String, replacing version: RemoteVersion?,
-              message: String) async throws(RemoteError) -> RemoteVersion
+              on day: LocalDate) async throws(RemoteError) -> RemoteVersion
 }

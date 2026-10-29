@@ -42,7 +42,7 @@ extension Collection where Element == Session {
             var e1RMPoints: [ChartPoint] = []
             var weightPoints: [ChartPoint] = []
             for session in sessions {
-                guard let log = session.logs.first(where: { $0.exerciseID == exercise }) else { continue }
+                guard let log = session.log(of: exercise) else { continue }
                 if log.skipped {
                     if let last = e1RMPoints.last { e1RMPoints.append(ChartPoint(date: session.date, value: last.value, isCarriedForward: true)) }
                     if let last = weightPoints.last { weightPoints.append(ChartPoint(date: session.date, value: last.value, isCarriedForward: true)) }

@@ -213,7 +213,7 @@ public actor TrainingRepository {
         let snapshotRevision = revision
         do {
             version = try await remote.push(snapshot, to: target.location, token: target.token, replacing: version,
-                                            message: "Gym Companion update \(clock.today().iso)")
+                                            on: clock.today())
         } catch .conflict {
             setStatus(state: .pending, conflict: true)
             return .conflict
@@ -261,18 +261,14 @@ public actor TrainingRepository {
         (settings.location, token)
     }
 
-    /// Probar la conexión (al guardar los ajustes): pregunta a GitHub sin tocar los datos.
-    public func testConnection(_ location: SyncLocation, token: String) async -> ConnectionResult {
+    /// Probar la conexión (al guardar los ajustes): pregunta a GitHub sin tocar los datos. `nil` =
+    /// conecta y el fichero es un `db.json` válido.
+    public func testConnection(_ location: SyncLocation, token: String) async -> RemoteError? {
         do {
             _ = try await remote.fetch(location, token: token)
-            return .connected
+            return nil
         } catch {
-            switch error {
-            case .status(let code): return .status(code)
-            case .unreachable: return .unreachable
-            case .invalidContent: return .invalidContent
-            case .conflict: return .status(409)
-            }
+            return error
         }
     }
 
@@ -286,7 +282,7 @@ public actor TrainingRepository {
         try await settingsStore.save(settings)
         version = nil
         status.conflict = false
-        if data.history.isEmpty && data.catalog.ids.isEmpty {
+        if data.isEmpty {
             setStatus(state: .ok)
             if case .applied(let remoteData) = await download() { return .downloaded(remoteData) }
             return .downloadFailed

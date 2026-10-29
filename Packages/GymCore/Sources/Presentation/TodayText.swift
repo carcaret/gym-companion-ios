@@ -34,7 +34,6 @@ public enum TodayText {
     public static let targetRepsLabel = "Reps obj."
     public static let seriesSectionLabel = "Reps por serie"
     public static func seriesLabel(_ index: Int) -> String { "S\(index + 1)" }
-    public static let emptyRep = "—"
     public static let swapLabel = "Cambiar por otro"
     public static func skipLabel(skipped: Bool) -> String { skipped ? "Reactivar" : "Saltar" }
     public static func removeLabel(oneOff: Bool) -> String { oneOff ? "Quitar" : "Quitar de rutina" }

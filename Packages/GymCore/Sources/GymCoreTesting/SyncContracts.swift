@@ -78,28 +78,29 @@ public enum RemoteTrainingDataSourceContract: String, CaseIterable, Sendable, Cu
     public func verify(makeSource: () throws -> (any RemoteTrainingDataSource, SyncLocation, String)) async throws {
         let (source, location, token) = try makeSource()
         let sample = Self.sample
+        let day = LocalDate(year: 2026, month: 10, day: 25)!
         switch self {
         case .missingIs404:
             await #expect(throws: RemoteError.status(404)) { try await source.fetch(location, token: token) }
         case .createsAndReads:
-            let version = try await source.push(sample, to: location, token: token, replacing: nil, message: "crear")
+            let version = try await source.push(sample, to: location, token: token, replacing: nil, on: day)
             #expect(try await source.fetch(location, token: token) == RemoteSnapshot(data: sample, version: version))
         case .replacesCurrent:
-            let first = try await source.push(TrainingData(), to: location, token: token, replacing: nil, message: "crear")
-            let second = try await source.push(sample, to: location, token: token, replacing: first, message: "cambiar")
+            let first = try await source.push(TrainingData(), to: location, token: token, replacing: nil, on: day)
+            let second = try await source.push(sample, to: location, token: token, replacing: first, on: day)
             #expect(second != first)
             #expect(try await source.fetch(location, token: token) == RemoteSnapshot(data: sample, version: second))
         case .staleIsConflict:
-            let first = try await source.push(TrainingData(), to: location, token: token, replacing: nil, message: "crear")
-            _ = try await source.push(sample, to: location, token: token, replacing: first, message: "cambiar")
+            let first = try await source.push(TrainingData(), to: location, token: token, replacing: nil, on: day)
+            _ = try await source.push(sample, to: location, token: token, replacing: first, on: day)
             await #expect(throws: RemoteError.conflict) {
-                try await source.push(TrainingData(), to: location, token: token, replacing: first, message: "viejo")
+                try await source.push(TrainingData(), to: location, token: token, replacing: first, on: day)
             }
             #expect(try await source.fetch(location, token: token).data == sample)
         case .missingVersionIsConflict:
-            _ = try await source.push(sample, to: location, token: token, replacing: nil, message: "crear")
+            _ = try await source.push(sample, to: location, token: token, replacing: nil, on: day)
             await #expect(throws: RemoteError.conflict) {
-                try await source.push(TrainingData(), to: location, token: token, replacing: nil, message: "sin sha")
+                try await source.push(TrainingData(), to: location, token: token, replacing: nil, on: day)
             }
         }
     }

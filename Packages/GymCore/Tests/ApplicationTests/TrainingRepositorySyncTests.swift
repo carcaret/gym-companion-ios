@@ -27,7 +27,7 @@ struct GitHubSyncTests {
         #expect(await repository.status == SyncStatus(state: .ok, conflict: false))
         let push = try #require(await harness.remote.pushes.first)
         #expect(push.data == F.finishedWorkout())
-        #expect(push.message == "Gym Companion update 2026-10-25")
+        #expect(push.day == F.today)
     }
 
     @Test("GitHub devuelve 401 → muestra mensaje de error")

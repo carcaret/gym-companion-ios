@@ -44,9 +44,14 @@ public struct SessionValidation: Hashable, Sendable {
 
 extension Session {
     /// Los ejercicios saltados no se validan.
+    public var validation: SessionValidation { logs.validation }
+}
+
+extension Array where Element == ExerciseLog {
+    /// Los errores de cada log, por su posición; los ejercicios saltados no se validan.
     public var validation: SessionValidation {
         var errors: [Int: [LogValidationError]] = [:]
-        for (index, log) in logs.enumerated() where !log.skipped {
+        for (index, log) in enumerated() where !log.skipped {
             let logErrors = log.validationErrors
             if !logErrors.isEmpty { errors[index] = logErrors }
         }

@@ -172,10 +172,12 @@ public final class SyncModel {
     public func testConnection(repository name: String, branch: String, path: String, token: String) async -> Notice? {
         guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return nil }
         return switch await repository.testConnection(location, token: token) {
-        case .connected: SyncText.connected
+        case nil: SyncText.connected
         case .status(let code): SyncText.connectionError(status: code)
         case .unreachable: SyncText.offline
         case .invalidContent: SyncText.invalidRemoteContent
+        // Leer no da conflicto; si llegara, como el 409 de GitHub.
+        case .conflict: SyncText.connectionError(status: 409)
         }
     }
 
@@ -210,7 +212,8 @@ public final class SyncModel {
 
     private static func location(_ name: String, _ branch: String, _ path: String) -> SyncLocation? {
         guard let name = trimmed(name) else { return nil }
-        return SyncLocation(repository: name, branch: trimmed(branch) ?? "master", path: trimmed(path) ?? "db.json")
+        return SyncLocation(repository: name, branch: trimmed(branch) ?? SyncLocation.defaultBranch,
+                            path: trimmed(path) ?? SyncLocation.defaultPath)
     }
 
     private static func trimmed(_ text: String) -> String? {

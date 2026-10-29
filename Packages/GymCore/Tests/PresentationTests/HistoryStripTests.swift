@@ -162,3 +162,33 @@ struct HistoryStripTests {
         #expect(HistoryStrip.tooltip(log(series: 2, expected: 10, actual: [10, nil], weight: 0)) == "10·—")
     }
 }
+
+@Suite("Lo que enseña cada barra de la tira")
+struct StripBarTests {
+    private let session = StripBar(kind: .session(height: 50, color: RGB(r: 0, g: 0, b: 0), isCurrent: true,
+                                                  tooltip: "e1RM 80 kg\n60 kg · 10·10·8"), dateLabel: "1/6")
+
+    @Test("el bocadillo: el peso y las reps arriba, el e1RM debajo")
+    func bubble() {
+        #expect(session.bubble?.main == "60 kg · 10·10·8")
+        #expect(session.bubble?.secondary == "e1RM 80 kg")
+        let oneLine = StripBar(kind: .session(height: 50, color: RGB(r: 0, g: 0, b: 0), isCurrent: false, tooltip: "10·—"), dateLabel: "2/6")
+        #expect(oneLine.bubble?.main == "10·—")
+        #expect(oneLine.bubble?.secondary == nil)
+        #expect(StripBar(kind: .skipped, dateLabel: "3/6").bubble == nil)
+    }
+
+    @Test("VoiceOver lee el detalle en una línea; sin sesión, la fecha")
+    func accessibility() {
+        #expect(session.accessibilityText == "e1RM 80 kg · 60 kg · 10·10·8")
+        #expect(StripBar(kind: .empty, dateLabel: "").accessibilityText == "")
+        #expect(StripBar(kind: .skipped, dateLabel: "3/6").accessibilityText == "3/6")
+    }
+
+    @Test("solo las sesiones se tocan, y la de hoy se marca")
+    func selectable() {
+        #expect(session.isSelectable && session.isCurrent)
+        #expect(!StripBar(kind: .skipped, dateLabel: "3/6").isSelectable)
+        #expect(!StripBar(kind: .empty, dateLabel: "").isCurrent)
+    }
+}

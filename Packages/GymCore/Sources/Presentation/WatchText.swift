@@ -14,7 +14,7 @@ public enum WatchText {
 
     /// "62,5 kg", o "Peso corporal" sin peso.
     public static func weight(_ weight: Double) -> String {
-        weight > 0 ? "\(LogText.kilograms(weight)) kg" : "Peso corporal"
+        weight > 0 ? LogText.weight(weight) : "Peso corporal"
     }
 
     /// "21 oct".

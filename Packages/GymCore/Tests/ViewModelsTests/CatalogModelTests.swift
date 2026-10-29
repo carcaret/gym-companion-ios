@@ -53,7 +53,7 @@ struct CatalogCloseTests {
         let catalog = await CatalogHarness.make()
         catalog.model.edit("jalon")
         #expect(!catalog.model.hasChanges)
-        catalog.model.requestCancel()
+        catalog.model.requestClose()
         #expect(catalog.model.editor == nil)
         #expect(!catalog.model.isDiscardPromptPresented)
     }
@@ -64,12 +64,12 @@ struct CatalogCloseTests {
         catalog.model.edit("jalon")
         catalog.model.toggleSecondary(.biceps)
         #expect(catalog.model.hasChanges)
-        catalog.model.requestCancel()
+        catalog.model.requestClose()
         #expect(catalog.model.isDiscardPromptPresented)
         #expect(catalog.model.editor != nil)
         catalog.model.keepEditing()
         #expect(catalog.model.editor?.secondaries == [.biceps])
-        catalog.model.requestCancel()
+        catalog.model.requestClose()
         catalog.model.keepEditing()
         catalog.model.discardChanges()
         #expect(catalog.model.editor == nil)
@@ -191,7 +191,7 @@ struct CatalogTests {
         #expect(catalog.app.notice == nil)
         catalog.model.editor?.name = "Jalón"
         #expect(catalog.model.canSave)
-        catalog.model.cancelEditing()
+        catalog.model.closeEditor()
         #expect(catalog.rows.contains { $0.name == "Jalón al Pecho" })
     }
 }

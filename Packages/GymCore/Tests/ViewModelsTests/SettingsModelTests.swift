@@ -193,7 +193,7 @@ struct SettingsCloseTests {
         #expect(settings.model.repository == "otro/repo")
         settings.model.requestClose()
         settings.model.keepEditing()
-        settings.model.discardAndClose()
+        settings.model.discardChanges()
         #expect(!settings.sync.isSettingsPresented)
     }
 

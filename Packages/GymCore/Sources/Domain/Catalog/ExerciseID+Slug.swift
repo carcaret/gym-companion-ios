@@ -24,3 +24,10 @@ extension ExerciseID {
         return slug
     }
 }
+
+extension Catalog {
+    /// Ya hay un ejercicio con el id que tendría `name` (al crear uno nuevo).
+    public func hasExercise(named name: String) -> Bool {
+        self[ExerciseID(ExerciseID.slug(from: name))] != nil
+    }
+}

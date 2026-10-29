@@ -13,3 +13,10 @@ public struct Session: Hashable, Sendable {
         self.logs = logs
     }
 }
+
+extension Session {
+    /// Lo hecho con `exercise` en esta sesión, si se hizo.
+    public func log(of exercise: ExerciseID) -> ExerciseLog? {
+        logs.first { $0.exerciseID == exercise }
+    }
+}

@@ -8,7 +8,10 @@ public struct SyncLocation: Hashable, Sendable, Codable {
     public var path: String
 
     /// Rama y ruta por defecto, las de la PWA.
-    public init(repository: String, branch: String = "master", path: String = "db.json") {
+    public static let defaultBranch = "master"
+    public static let defaultPath = "db.json"
+
+    public init(repository: String, branch: String = defaultBranch, path: String = defaultPath) {
         self.repository = repository
         self.branch = branch
         self.path = path
