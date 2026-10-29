@@ -18,10 +18,11 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
         capture(app, "70-reloj-entreno")
 
-        for _ in 0..<8 where !app.staticTexts["Curl Bíceps"].exists {
-            XCUIDevice.shared.rotateDigitalCrown(delta: 0.5)
-        }
-        XCTAssertTrue(app.staticTexts["Curl Bíceps"].appears(timeout: 5))
+        // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía, así que se
+        // mira cuál se ve. Deslizar es lo mismo que la corona, que mueve el `ScrollView` sola.
+        XCTAssertTrue(app.staticTexts["Press Banca"].isHittable)
+        app.staticTexts["Press Banca"].swipeUp()
+        XCTAssertTrue(app.staticTexts["Curl Bíceps"].becomesHittable(timeout: 5))
         capture(app, "71-reloj-siguiente")
 
         let rest = app.buttons[AccessibilityID.watchRest]
@@ -58,5 +59,13 @@ final class WatchScreenshotTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.staticTexts["Empieza el entreno en el iPhone"].appears(timeout: 20))
         capture(app, "79-reloj-sin-entreno")
+    }
+}
+
+private extension XCUIElement {
+    /// Se ve en pantalla (y se puede tocar) antes de `timeout`.
+    func becomesHittable(timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: self)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }

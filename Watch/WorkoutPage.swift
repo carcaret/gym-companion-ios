@@ -3,14 +3,12 @@ import SwiftUI
 import ViewModels
 
 /// La página del entreno: arriba, el pulso (la hora la pone watchOS); en grande, el tiempo o el
-/// descanso, que se tocan (o el doble toque) para descansar; debajo, el ejercicio, que se cambia
-/// con la corona. Con la muñeca bajada, lo mismo atenuado.
+/// descanso, que se tocan (o el doble toque) para descansar; debajo, los ejercicios, de uno en uno:
+/// la corona (o el dedo) los pasa, porque es un `ScrollView` con páginas. Con la muñeca bajada, lo
+/// mismo atenuado.
 struct WorkoutPage: View {
     @Bindable var model: WatchModel
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
-    @State private var crown = 0.0
-    /// La corona es de esta página: sin el foco, no le llega.
-    @FocusState private var isCrownFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -26,28 +24,20 @@ struct WorkoutPage: View {
                 .handGestureShortcut(.primaryAction)
                 .accessibilityIdentifier(AccessibilityID.watchRest)
                 Divider()
-                if let exercise = model.currentExercise {
-                    ExerciseView(exercise: exercise, isDimmed: isLuminanceReduced)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(model.exercises) { exercise in
+                            ExerciseView(exercise: exercise, isDimmed: isLuminanceReduced)
+                                .containerRelativeFrame(.vertical, alignment: .topLeading)
+                                .id(exercise.id)
+                        }
+                    }
+                    .scrollTargetLayout()
                 }
-                Spacer(minLength: 0)
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: exercisePosition)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .focusable()
-            .focused($isCrownFocused)
-            .digitalCrownRotation(
-                $crown, from: 0, through: Double(max(model.exercises.count - 1, 1)), by: 1,
-                sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true
-            )
-            .onChange(of: crown) { _, value in
-                model.showExercise(at: Int(value.rounded()))
-            }
-            .onChange(of: model.exerciseIndex) { _, index in
-                if Int(crown.rounded()) != index { crown = Double(index) }
-            }
-            .onAppear {
-                crown = Double(model.exerciseIndex)
-                isCrownFocused = true
-            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 3) {
@@ -60,5 +50,16 @@ struct WorkoutPage: View {
                 }
             }
         }
+    }
+
+    /// El ejercicio a la vista es el del modelo: si un entreno nuevo vuelve al primero, la lista
+    /// también.
+    private var exercisePosition: Binding<Int?> {
+        Binding(
+            get: { model.exerciseIndex },
+            set: { index in
+                if let index { model.showExercise(at: index) }
+            }
+        )
     }
 }
