@@ -18,13 +18,15 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
         capture(app, "70-reloj-entreno")
 
-        // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía, así que se
-        // mira cuál se ve. Deslizar es lo mismo que la corona, que mueve el `ScrollView` sola.
-        XCTAssertTrue(app.staticTexts["Press Banca"].isHittable)
-        XCTAssertFalse(app.staticTexts["Curl Bíceps"].isHittable, "se ve más de un ejercicio a la vez")
-        app.staticTexts["Press Banca"].swipeUp()
-        XCTAssertTrue(app.staticTexts["Curl Bíceps"].becomesHittable(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Press Banca"].isHittable, "se ve más de un ejercicio a la vez")
+        // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía y, recortados,
+        // siguen siendo «hittable», así que se mira cuál cae dentro de la lista. Deslizar es lo
+        // mismo que la corona, que mueve el `ScrollView` sola.
+        let exercises = app.scrollViews.firstMatch
+        XCTAssertTrue(app.staticTexts["Press Banca"].isShown(in: exercises))
+        XCTAssertFalse(app.staticTexts["Curl Bíceps"].isShown(in: exercises), "se ve más de un ejercicio a la vez")
+        exercises.swipeUp()
+        XCTAssertTrue(app.staticTexts["Curl Bíceps"].becomesShown(in: exercises, timeout: 5))
+        XCTAssertFalse(app.staticTexts["Press Banca"].isShown(in: exercises), "se ve más de un ejercicio a la vez")
         capture(app, "71-reloj-siguiente")
 
         let rest = app.buttons[AccessibilityID.watchRest]
@@ -65,9 +67,17 @@ final class WatchScreenshotTests: XCTestCase {
 }
 
 private extension XCUIElement {
-    /// Se ve en pantalla (y se puede tocar) antes de `timeout`.
-    func becomesHittable(timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: self)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    /// Cae dentro de `container` (la parte visible de una lista).
+    func isShown(in container: XCUIElement) -> Bool {
+        exists && container.frame.intersection(frame).height > 1
+    }
+
+    func becomesShown(in container: XCUIElement, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if isShown(in: container) { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        return isShown(in: container)
     }
 }
