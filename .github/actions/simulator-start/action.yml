@@ -1,0 +1,32 @@
+# El arranque del simulador de un job (app y watch): lo elige, restaura el ya migrado de la caché y
+# lo arranca en segundo plano mientras se compila (al de la caché le basta un minuto; la
+# compilación tarda más). Los tests esperan con `ci-simulator.sh wait`. Va después de la caché de
+# la compilación, para no competir con ella al descomprimir. Ver scripts/ci-simulator.sh.
+name: Arranque del simulador
+inputs:
+  kind:
+    description: iphone o watch.
+    required: true
+outputs:
+  key:
+    description: La clave de la caché del simulador, para `simulator-finish`.
+    value: ${{ steps.sim.outputs.key }}
+runs:
+  using: composite
+  steps:
+    - name: Elegir el simulador
+      id: sim
+      shell: bash
+      run: scripts/ci-simulator.sh pick "${{ inputs.kind }}"
+    - uses: actions/cache/restore@v4
+      with:
+        path: ~/sim-cache
+        key: ${{ steps.sim.outputs.key }}
+    # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
+    - name: Sin teclado físico
+      if: inputs.kind == 'iphone'
+      shell: bash
+      run: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
+    - name: Arrancar el simulador
+      shell: bash
+      run: scripts/ci-simulator.sh start "${{ steps.sim.outputs.devtype }}" "${{ steps.sim.outputs.runtime }}"

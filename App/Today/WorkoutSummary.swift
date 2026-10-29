@@ -13,7 +13,7 @@ struct WorkoutSummary: View {
         ScrollView {
             VStack(spacing: 12) {
                 Label(TodayText.completedStatus, systemImage: "checkmark.circle.fill")
-                    .accessibilityIdentifier("workout-completed")
+                    .accessibilityIdentifier(AccessibilityID.workoutCompleted)
                     .scaledFont(14, .medium)
                     .foregroundStyle(Theme.text)
                     .symbolRenderingMode(.multicolor)

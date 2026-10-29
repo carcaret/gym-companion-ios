@@ -27,7 +27,7 @@ public final class TodayModel {
     public var createName = ""
     /// El grupo del ejercicio nuevo, en su pantalla (como en el editor del catálogo).
     public var createGroup: MuscleGroup?
-    /// El mensaje de la alerta de crear: por qué se ha vuelto a abrir (`TodayText.alreadyExists`).
+    /// El mensaje de la pantalla de crear: por qué se ha vuelto a abrir (`TodayText.alreadyExists`).
     public internal(set) var createMessage: String?
     public internal(set) var replacePrompt: ReplacePrompt?
     public internal(set) var removalPrompt: RemovalPrompt?

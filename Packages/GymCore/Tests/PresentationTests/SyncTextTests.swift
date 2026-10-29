@@ -7,14 +7,12 @@ struct SyncTextTests {
     // campos de los ajustes y qué hacer (repaso de la HIG, 2026-10-28).
     @Test("los errores de conexión dicen qué pasa y qué revisar, sin código ni jerga")
     func connectionError() {
-        let token = Notice("GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama.", .error)
-        #expect(SyncText.connectionError(status: 401) == token)
-        #expect(SyncText.connectionError(status: 403) == token)
-        #expect(SyncText.connectionError(status: 404) == Notice("GitHub no encuentra el repositorio, la rama o la ruta. Revísalos.", .error))
-        #expect(SyncText.connectionError(status: 500) == Notice("GitHub ha respondido con un error. Prueba otra vez más tarde.", .error))
-        for status in [401, 403, 404, 500] {
-            let text = SyncText.connectionError(status: status).text
-            #expect(!text.contains("\(status)") && !text.contains("PAT") && !text.contains("repo,"), "\(text)")
+        // Qué código de GitHub da cada uno lo prueba el adaptador (GitHubTrainingDataSourceTests).
+        #expect(SyncText.tokenRejected == Notice("GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama.", .error))
+        #expect(SyncText.remoteNotFound == Notice("GitHub no encuentra el repositorio, la rama o la ruta. Revísalos.", .error))
+        #expect(SyncText.remoteFailed == Notice("GitHub ha respondido con un error. Prueba otra vez más tarde.", .error))
+        for text in [SyncText.tokenRejected, SyncText.remoteNotFound, SyncText.remoteFailed].map(\.text) {
+            #expect(!text.contains(where: \.isNumber) && !text.contains("PAT") && !text.contains("repo,"), "\(text)")
         }
     }
 

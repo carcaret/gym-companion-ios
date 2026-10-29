@@ -58,7 +58,7 @@ public struct WatchSnapshot: Hashable, Sendable {
 extension TrainingData {
     /// Lo que enseña el reloj el día `today`: el entreno sin terminar de ese día, si lo hay.
     public func watchSnapshot(today: LocalDate) -> WatchSnapshot {
-        guard let session = history.session(on: today), !session.completed else { return WatchSnapshot(workout: nil) }
+        guard let session = history.activeSession(on: today) else { return WatchSnapshot(workout: nil) }
         return WatchSnapshot(workout: WatchSnapshot.Workout(
             date: today,
             routineName: routines.name(of: session.routineID),

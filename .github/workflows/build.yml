@@ -107,13 +107,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # para restore-mtimes.sh
-      # El servicio de los simuladores tarda de segundos a más de 2 minutos en arrancar la primera
-      # vez: se arranca ya, en segundo plano, mientras se preparan la compilación y el proyecto.
       - name: Inicio
-        run: |
-          scripts/ci-timeline.sh mark "checkout"
-          nohup xcrun simctl list devices > /dev/null 2>&1 &
-          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
+        run: scripts/ci-start.sh
 
       # Compilación incremental: la carpeta de compilación de Xcode de la última ejecución, con
       # cada fichero en la fecha de su commit para que solo se recompile lo que cambia. Las
@@ -133,21 +128,11 @@ jobs:
           swift --version
           scripts/ci-timeline.sh mark "proyecto generado"
 
-      # El simulador arranca en segundo plano mientras se compila (al de la caché le basta un
-      # minuto; la compilación tarda más), y los tests esperan a que acabe. Va después de la caché
-      # de la compilación para no competir con ella al descomprimir. Ver scripts/ci-simulator.sh.
-      - name: Elegir el simulador
+      - name: Simulador
         id: sim
-        run: scripts/ci-simulator.sh pick iphone
-      - uses: actions/cache/restore@v4
+        uses: ./.github/actions/simulator-start
         with:
-          path: ~/sim-cache
-          key: ${{ steps.sim.outputs.key }}
-      - name: Arrancar el simulador
-        run: |
-          # Sin teclado físico conectado, para que salga el de pantalla (KeyboardTests).
-          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
-          scripts/ci-simulator.sh start "${{ steps.sim.outputs.devtype }}" "${{ steps.sim.outputs.runtime }}"
+          kind: iphone
 
       - name: Compilar la app y los tests
         run: |
@@ -165,12 +150,10 @@ jobs:
       - name: Tests de la app en el simulador
         if: env.TESTED != 'true'
         run: |
+          # Primero a una variable: así, si el script falla, falla el paso.
+          classes=$(scripts/ci-ui-selection.sh "${{ matrix.part }}")
           selection=()
-          case "${{ matrix.part }}" in
-            1) for class in $PART_1; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
-            2) for class in $PART_2; do selection+=("-only-testing:GymCompanionUITests/$class"); done ;;
-            3) for class in $PART_1 $PART_2; do selection+=("-skip-testing:GymCompanionUITests/$class"); done ;;
-          esac
+          while IFS= read -r arg; do selection+=("$arg"); done <<< "$classes"
           scripts/ci-timeline.sh mark "tests: empiezan"
           scripts/ci-xcodebuild.sh test.log 60 "tests: terminan" test-without-building \
             -project GymCompanion.xcodeproj \
@@ -205,11 +188,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Inicio   # ver el job app
-        run: |
-          scripts/ci-timeline.sh mark "checkout"
-          nohup xcrun simctl list devices > /dev/null 2>&1 &
-          nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
+      - name: Inicio
+        run: scripts/ci-start.sh
 
       - name: Fechas de los ficheros   # ver el job app
         run: scripts/restore-mtimes.sh
@@ -229,15 +209,11 @@ jobs:
           scripts/ci-xcodegen.sh
           scripts/ci-timeline.sh mark "proyecto generado"
 
-      - name: Elegir el simulador   # ver el job app
+      - name: Simulador
         id: sim
-        run: scripts/ci-simulator.sh pick watch
-      - uses: actions/cache/restore@v4
+        uses: ./.github/actions/simulator-start
         with:
-          path: ~/sim-cache
-          key: ${{ steps.sim.outputs.key }}
-      - name: Arrancar el simulador
-        run: scripts/ci-simulator.sh start "${{ steps.sim.outputs.devtype }}" "${{ steps.sim.outputs.runtime }}"
+          kind: watch
 
       - name: Compilar el reloj y sus tests
         run: |
@@ -324,7 +300,7 @@ jobs:
 
       - name: Compilar (sin firmar)
         run: |
-          xcodebuild build \
+          scripts/ci-xcodebuild.sh release.log 30 "release compilada" build \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
             -configuration Release \
@@ -332,9 +308,7 @@ jobs:
             -derivedDataPath build \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            | tail -n 30
-          test "${PIPESTATUS[0]}" -eq 0
+            COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Empaquetar .ipa
         run: |
@@ -342,8 +316,7 @@ jobs:
           cp -R build/Build/Products/Release-iphoneos/GymCompanion.app Payload/
           zip -qr GymCompanion.ipa Payload
           shasum -a 256 GymCompanion.ipa | tee GymCompanion.ipa.sha256
-          du -sh build/* build/Build/* 2>/dev/null || true
-          rm -rf build/Index.noindex build/Logs   # ver el job app
+          rm -rf build/Index.noindex build/Logs   # lo que no sirve a la caché (ver simulator-finish)
 
       - uses: actions/upload-artifact@v4
         with:

@@ -37,9 +37,14 @@ extension Collection where Element == Session {
         first { $0.date == date }
     }
 
+    /// El entreno sin terminar de ese día, si lo hay.
+    public func activeSession(on date: LocalDate) -> Session? {
+        session(on: date).flatMap { $0.completed ? nil : $0 }
+    }
+
     /// ¿Hay un entreno sin terminar ese día? (Mientras lo hay, la PWA no sincroniza.)
     public func isWorkoutActive(on date: LocalDate) -> Bool {
-        session(on: date)?.completed == false
+        activeSession(on: date) != nil
     }
 
     /// Lo hecho con un ejercicio en la sesión de ese día, por posición. (`findLog`.)

@@ -64,9 +64,10 @@ struct GitHubTrainingDataSourceTests {
                 try await source(status).push(TrainingData(), to: location, token: "t", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
             }
         }
-        await #expect(throws: RemoteError.status(401)) { try await source(401).fetch(location, token: "t") }
-        await #expect(throws: RemoteError.status(404)) { try await source(404).fetch(location, token: "t") }
-        await #expect(throws: RemoteError.status(500)) {
+        await #expect(throws: RemoteError.unauthorized) { try await source(401).fetch(location, token: "t") }
+        await #expect(throws: RemoteError.unauthorized) { try await source(403).fetch(location, token: "t") }
+        await #expect(throws: RemoteError.notFound) { try await source(404).fetch(location, token: "t") }
+        await #expect(throws: RemoteError.failed(status: 500)) {
             try await source(500).push(TrainingData(), to: location, token: "t", replacing: nil, on: LocalDate(year: 2026, month: 10, day: 25)!)
         }
     }

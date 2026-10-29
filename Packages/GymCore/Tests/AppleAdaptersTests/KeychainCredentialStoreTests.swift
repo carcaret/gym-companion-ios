@@ -11,7 +11,7 @@ struct KeychainCredentialStoreTests {
     @Test(arguments: CredentialStoreContract.allCases)
     func contract(_ check: CredentialStoreContract) async throws {
         let service = "com.carcaret.gymcompanion.tests.\(UUID().uuidString)"
-        defer { try? KeychainCredentialStore(service: service).deleteAll() }
+        defer { try? KeychainCredentialStore(service: service).deleteToken() }
         try await check.verify(makeStores: {
             { KeychainCredentialStore(service: service) }
         })

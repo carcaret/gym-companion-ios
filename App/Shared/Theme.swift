@@ -1,8 +1,8 @@
 import Presentation
 import SwiftUI
 
-/// El estilo de la PWA (`index.css`): tema oscuro con la paleta tipo VS Code, tarjetas separadas
-/// con borde fino y el color de cada día. La app va siempre en oscuro.
+/// El estilo de la PWA (`index.css`): tema oscuro con la paleta tipo VS Code y el color de cada día.
+/// La app va siempre en oscuro.
 enum Theme {
     // Fondos y superficies
     // Los que tienen que leerse están en `Palette`, donde sus tests comprueban el contraste.

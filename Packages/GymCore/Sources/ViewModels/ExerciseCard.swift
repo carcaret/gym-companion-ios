@@ -22,7 +22,17 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
         public let hasError: Bool
     }
 
-    public enum ChipRelation: Hashable, Sendable { case below, atTarget, above }
+    public enum ChipRelation: Hashable, Sendable {
+        case below, atTarget, above
+
+        init(_ outcome: RepOutcome) {
+            switch outcome {
+            case .below: self = .below
+            case .atTarget: self = .atTarget
+            case .above: self = .above
+            }
+        }
+    }
 
     public struct Chip: Hashable, Sendable {
         public let value: Int
@@ -90,7 +100,7 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
         targetReps = log.targetReps
         cells = (0..<max(0, log.series)).map { series in
             let value = series < log.actualReps.count ? log.actualReps[series] : nil
-            let state: SeriesState = value.map { $0 >= log.targetReps ? .done : .filled } ?? .empty
+            let state: SeriesState = value.map { RepOutcome(reps: $0, target: log.targetReps).meetsTarget ? .done : .filled } ?? .empty
             return SeriesCell(label: TodayText.seriesLabel(series), text: value.map(String.init) ?? LogText.emptyRep, value: value, state: state,
                               isFocused: focusedSeries == series, hasError: errors.contains { $0.repIndex == series })
         }
@@ -98,7 +108,7 @@ public struct ExerciseCard: Hashable, Sendable, Identifiable {
             let current = log.repsOrTarget[focused]
             chips = RepChips.values(around: current).map { value in
                 Chip(value: value, isCurrent: value == current,
-                     relation: value < log.targetReps ? .below : value == log.targetReps ? .atTarget : .above)
+                     relation: ChipRelation(RepOutcome(reps: value, target: log.targetReps)))
             }
         } else {
             chips = []

@@ -35,7 +35,7 @@ struct SessionDetail: View {
             }
         }
         // Deslizarla hacia abajo es cancelar: sin cambios, se cierra; con cambios, no se deja.
-        .sheet(isPresented: Binding(get: { model.isEditing }, set: { if !$0 { model.requestClose() } })) {
+        .sheet(isPresented: Binding(presentedWhile: { model.isEditing }, onDismiss: { model.requestClose() })) {
             NavigationStack { SessionEditor(model: model) }
                 // Lo que cuelga de la raíz queda debajo de la hoja: avisos y conflicto, aquí.
                 .syncPresentation(sync)

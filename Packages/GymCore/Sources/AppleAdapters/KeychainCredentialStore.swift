@@ -37,7 +37,7 @@ public struct KeychainCredentialStore: CredentialStore {
 
     public func setToken(_ token: String?) async throws {
         guard let token else {
-            try deleteAll()
+            try deleteToken()
             return
         }
         let data = Data(token.utf8)
@@ -52,7 +52,7 @@ public struct KeychainCredentialStore: CredentialStore {
     }
 
     /// Borra el token (no pasa nada si no había).
-    public func deleteAll() throws {
+    public func deleteToken() throws {
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw KeychainError(status: status) }
     }

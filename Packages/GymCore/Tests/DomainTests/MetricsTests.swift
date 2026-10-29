@@ -189,7 +189,8 @@ struct MaxMetricsTests {
     }
 }
 
-/// `computeRepShortfall` no tiene tests en la PWA; se añaden con los casos de su comentario.
+/// Casos de su comentario en la PWA, además de los portados de bar-colors.test.js
+/// (PresentationTests/BarColorTests.swift, la misma suite).
 @Suite("computeRepShortfall")
 struct RepShortfallTests {
     @Test("suma lo que faltó en cada serie rellenada")

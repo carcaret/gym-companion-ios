@@ -1,76 +1,6 @@
 import Application
 import Domain
 
-/// Doble de la configuración de la sincronización; las instancias con el mismo `Storage` ven lo
-/// mismo, como dos arranques.
-public struct InMemorySyncSettingsStore: SyncSettingsStore {
-    public actor Storage {
-        public private(set) var settings: SyncSettings
-
-        public init(_ settings: SyncSettings = SyncSettings()) {
-            self.settings = settings
-        }
-
-        func save(_ settings: SyncSettings) {
-            self.settings = settings
-        }
-    }
-
-    public let storage: Storage
-
-    public init(storage: Storage = Storage()) {
-        self.storage = storage
-    }
-
-    public func load() async throws -> SyncSettings { await storage.settings }
-    public func save(_ settings: SyncSettings) async throws { await storage.save(settings) }
-}
-
-/// Doble del Llavero.
-public struct InMemoryCredentialStore: CredentialStore {
-    public actor Storage {
-        public private(set) var token: String?
-        /// Guardar falla, como un Llavero que no deja escribir.
-        public private(set) var failsToSave = false
-
-        public init(_ token: String? = nil) {
-            self.token = token
-        }
-
-        public func failSaving() {
-            failsToSave = true
-        }
-
-        func set(_ token: String?) throws {
-            if failsToSave { throw SaveFailure() }
-            self.token = token
-        }
-    }
-
-    public struct SaveFailure: Error {}
-
-    public let storage: Storage
-
-    public init(storage: Storage = Storage()) {
-        self.storage = storage
-    }
-
-    public func token() async throws -> String? { await storage.token }
-    public func setToken(_ token: String?) async throws { try await storage.set(token) }
-}
-
-/// Cuenta las veces que se pidió tiempo en segundo plano y ejecuta el trabajo.
-public actor RecordingBackgroundActivity: BackgroundActivity {
-    public private(set) var runs = 0
-
-    public init() {}
-
-    public func run(_ work: @escaping @Sendable () async -> Void) async {
-        runs += 1
-        await work()
-    }
-}
-
 /// Doble del remoto: un solo fichero con su versión, como el `db.json` de GitHub (subir encima
 /// de una versión que no es la actual es un conflicto). Se le pueden programar fallos y retener
 /// las peticiones para probar lo que pasa mientras están en vuelo.
@@ -124,7 +54,7 @@ public struct InMemoryRemote: RemoteTrainingDataSource {
             await fetchGate.pass()
             fetches += 1
             if let fetchFailure { throw fetchFailure }
-            guard let data else { throw .status(404) }
+            guard let data else { throw .notFound }
             return RemoteSnapshot(data: data, version: version)
         }
 

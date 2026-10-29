@@ -13,15 +13,13 @@ struct HistoryScreen: View {
             .navigationTitle(HistoryText.title)
             // El detalle entra empujado, como en cualquier app de iOS: se vuelve también con el
             // botón de la barra o deslizando desde el borde.
-            .navigationDestination(isPresented: Binding(
-                get: { model.selectedDate != nil }, set: { if !$0 { model.back() } }
-            )) {
+            .navigationDestination(isPresented: Binding(presentedWhile: { model.selectedDate != nil }, onDismiss: { model.back() })) {
                 // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
                 // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
                 SessionDetail(model: model, sync: sync)
                     .syncToolbar {
                         Button(HistoryText.edit) { model.startEditing() }
-                            .accessibilityIdentifier("session-edit")
+                            .accessibilityIdentifier(AccessibilityID.sessionEdit)
                     }
                     .navigationTitle(model.detailTitle)
                     .navigationSubtitle(model.detailSubtitle)
@@ -55,15 +53,13 @@ struct HistoryScreen: View {
                             // HIG, 2026-10-28): el botón de deslizar desaparece al tocarlo, la fila no.
                             // `presenting` le pasa el aviso a la acción: SwiftUI cierra el globo (y lo
                             // descarta) antes de ejecutarla.
-                            .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(
-                                get: { model.deletePrompt?.date == row.date }, set: { if !$0 { model.cancelDelete() } }
-                            ), titleVisibility: .visible, presenting: model.deletePrompt) { prompt in
+                            .confirmationDialog(model.deletePrompt?.title ?? "", isPresented: Binding(presentedWhile: { model.deletePrompt?.date == row.date }, onDismiss: { model.cancelDelete() }), titleVisibility: .visible, presenting: model.deletePrompt) { prompt in
                                 Button(HistoryText.deleteSession, role: .destructive) { Task { await model.confirmDelete(prompt) } }
                                 Button(FormText.cancel, role: .cancel) { model.cancelDelete() }
                             } message: { prompt in
                                 Text(prompt.message)
                             }
-                            .accessibilityIdentifier("history-\(row.date.iso)")
+                            .accessibilityIdentifier(AccessibilityID.history(row.date.iso))
                     }
                 }
             }

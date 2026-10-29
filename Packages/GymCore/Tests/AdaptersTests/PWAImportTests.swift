@@ -6,18 +6,13 @@ import Testing
 
 @Suite("Importación de db.json de la PWA")
 struct PWAImportTests {
-    private func fixture() throws -> Data {
-        let url = try #require(Bundle.module.url(forResource: "db-test", withExtension: "json", subdirectory: "Fixtures"))
-        return try Data(contentsOf: url)
-    }
-
     private func importing(_ json: String) throws -> TrainingData {
         try PWAFormat.trainingData(from: Data(json.utf8))
     }
 
     @Test("el fixture de la PWA: ejercicios, rutinas e historial")
     func fixtureImport() throws {
-        let data = try PWAFormat.trainingData(from: fixture())
+        let data = try PWAFormat.trainingData(from: pwaTestDB())
         #expect(data.catalog.ids == ["curl_biceps", "ejercicio_sin_historial", "press_banca", "sentadilla"])
         #expect(data.catalog["press_banca"] == Exercise(id: "press_banca", name: "Press Banca", group: .pecho))
         #expect(data.catalog["ejercicio_sin_historial"]?.group == "otro")
@@ -34,7 +29,7 @@ struct PWAImportTests {
 
     @Test("el fixture de la PWA es el PWATestDB de los tests de los ViewModels")
     func fixtureMatchesSwiftCopy() throws {
-        #expect(try PWAFormat.trainingData(from: fixture()) == PWATestDB.data)
+        #expect(try PWAFormat.trainingData(from: pwaTestDB()) == PWATestDB.data)
     }
 
     @Test("saltados, cambiados, puntuales y series vacías")

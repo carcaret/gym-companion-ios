@@ -17,15 +17,10 @@ public struct IndirectSets: Hashable, Sendable {
     }
 }
 
-/// Series de un grupo muscular en una ventana de semanas (tarjeta Grupos de Estadísticas).
+/// Series de un grupo muscular en una ventana de semanas (la sección Grupos musculares de Progreso).
 ///
 /// Se cuentan series y no volumen en kg·rep: el volumen premia lo que se carga pesado y hace
 /// incomparables los grupos entre sí. Aviso conocido: brazos y core salen infracontados.
-/// La ventana de Progreso: las series y el progreso de cada ejercicio, en las últimas 8 semanas.
-public enum ProgressWindow {
-    public static let weeks = 8
-}
-
 public struct GroupSets: Hashable, Sendable {
     /// `nil` = ejercicios sin grupo.
     public let group: MuscleGroup?

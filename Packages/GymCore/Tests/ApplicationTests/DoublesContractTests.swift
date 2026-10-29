@@ -4,19 +4,16 @@ import Testing
 
 // Los dobles de GymCoreTesting pasan los mismos tests de contrato que los adaptadores de verdad.
 
-@Suite("Contrato del almacenamiento (doble en memoria)")
-struct InMemoryContractTests {
+@Suite("Los dobles pasan los contratos")
+struct DoublesContractTests {
     @Test(arguments: TrainingDataStoreContract.allCases)
-    func contract(_ check: TrainingDataStoreContract) async throws {
+    func store(_ check: TrainingDataStoreContract) async throws {
         try await check.verify(makeStores: {
             let storage = InMemoryTrainingDataStore.Storage()
             return { InMemoryTrainingDataStore(storage: storage) }
         })
     }
-}
 
-@Suite("Dobles de los puertos de sincronización")
-struct SyncDoublesTests {
     @Test(arguments: SyncSettingsStoreContract.allCases)
     func settings(_ check: SyncSettingsStoreContract) async throws {
         try await check.verify(makeStores: {

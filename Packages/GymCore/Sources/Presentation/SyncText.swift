@@ -42,11 +42,7 @@ public enum SyncText {
 
     /// Qué pasa y qué revisar, con los nombres de los campos de los ajustes; sin el código ni «PAT»
     /// (repaso de la HIG, 2026-10-28).
-    public static func connectionError(status: Int) -> Notice {
-        switch status {
-        case 401, 403: Notice("GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama.", .error)
-        case 404: Notice("GitHub no encuentra el repositorio, la rama o la ruta. Revísalos.", .error)
-        default: Notice("GitHub ha respondido con un error. Prueba otra vez más tarde.", .error)
-        }
-    }
+    public static let tokenRejected = Notice("GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama.", .error)
+    public static let remoteNotFound = Notice("GitHub no encuentra el repositorio, la rama o la ruta. Revísalos.", .error)
+    public static let remoteFailed = Notice("GitHub ha respondido con un error. Prueba otra vez más tarde.", .error)
 }

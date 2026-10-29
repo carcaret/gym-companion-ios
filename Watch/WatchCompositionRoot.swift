@@ -9,12 +9,17 @@ import WatchAdapters
 /// (solo para las capturas del CI).
 @MainActor
 final class WatchCompositionRoot {
-    let model = WatchModel(clock: SystemClock())
+    private let clock = SystemClock()
+    let model: WatchModel
     private let receiver = WatchConnectivityReceiver()
+
+    init() {
+        model = WatchModel(clock: clock)
+    }
 
     /// Lo que llega del iPhone, mientras la app esté abierta.
     func listen() async {
-        if let demo = WatchDemo.snapshot(arguments: ProcessInfo.processInfo.arguments, today: SystemClock().today()) {
+        if let demo = WatchDemo.snapshot(arguments: ProcessInfo.processInfo.arguments, today: clock.today()) {
             model.receive(demo)
             return
         }

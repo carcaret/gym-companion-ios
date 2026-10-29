@@ -74,7 +74,7 @@ struct RootView: View {
                     // (repaso de la HIG, 2026-10-28).
                     NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
                         .accessibilityLabel(CatalogText.openLabel)
-                        .accessibilityIdentifier("catalog-button")
+                        .accessibilityIdentifier(AccessibilityID.catalogButton)
                 }
             }
             Tab(ChartsText.title, systemImage: "chart.bar", value: AppTab.charts) {

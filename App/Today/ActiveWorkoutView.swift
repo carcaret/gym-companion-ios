@@ -34,9 +34,7 @@ struct ActiveWorkoutView: View {
                     }
                     // Colgado de su tarjeta: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes de ejecutarla.
-                    .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(
-                        get: { model.removalPrompt?.exerciseID == card.exerciseID }, set: { if !$0 { model.cancelRemoval() } }
-                    ), titleVisibility: .visible, presenting: model.removalPrompt) { prompt in
+                    .confirmationDialog(model.removalPrompt?.title ?? "", isPresented: Binding(presentedWhile: { model.removalPrompt?.exerciseID == card.exerciseID }, onDismiss: { model.cancelRemoval() }), titleVisibility: .visible, presenting: model.removalPrompt) { prompt in
                         Button(TodayText.removeConfirm, role: .destructive) { Task { await model.confirmRemoval(prompt) } }
                         Button(FormText.cancel, role: .cancel) { model.cancelRemoval() }
                     } message: { prompt in
@@ -63,19 +61,17 @@ struct ActiveWorkoutView: View {
             BottomActions {
                 Button { model.openAddPicker() } label: { Text(TodayText.addExercise).frame(maxWidth: .infinity) }
                     .buttonStyle(.glassPill(.secondary))
-                    .accessibilityIdentifier("add-exercise")
+                    .accessibilityIdentifier(AccessibilityID.addExercise)
             } primary: {
                 Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
                     .buttonStyle(.glassPill())
-                    .accessibilityIdentifier("finish-workout")
+                    .accessibilityIdentifier(AccessibilityID.finishWorkout)
             }
         }
-        .sheet(isPresented: Binding(get: { model.picker != nil }, set: { if !$0 { model.closePicker() } })) {
+        .sheet(isPresented: Binding(presentedWhile: { model.picker != nil }, onDismiss: { model.closePicker() })) {
             ExercisePickerSheet(model: model)
         }
-        .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(
-            get: { model.reciprocalOffer != nil }, set: { if !$0 { model.declineReciprocal() } }
-        ), presenting: model.reciprocalOffer) { offer in
+        .alert(model.reciprocalOffer?.title ?? "", isPresented: Binding(presentedWhile: { model.reciprocalOffer != nil }, onDismiss: { model.declineReciprocal() }), presenting: model.reciprocalOffer) { offer in
             Button(TodayText.reciprocalDecline, role: .cancel) { model.declineReciprocal() }
             Button(offer.acceptLabel) { Task { await model.acceptReciprocal(offer) } }
         } message: { offer in

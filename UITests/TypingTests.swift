@@ -13,17 +13,17 @@ final class TypingTests: XCTestCase {
     func testFinalizarConElTecladoAbierto() {
         let app = XCUIApplication.launchDemo()
         app.startWorkout()
-        app.buttons["card-press_banca"].firstMatch.tap()
+        app.buttons[AccessibilityID.card("press_banca")].firstMatch.tap()
 
-        let weight = app.textFields["weight-field"].firstMatch
+        let weight = app.textFields[AccessibilityID.parameter(.weight, .field)].firstMatch
         XCTAssertTrue(weight.appears(timeout: 10))
         // Al final del texto, para que los borrados se lleven el valor entero.
         weight.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         weight.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 6) + "61")
         XCTAssertTrue(app.keyboards.firstMatch.exists, "El teclado tiene que seguir abierto")
 
-        app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+        app.buttons[AccessibilityID.finishWorkout].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
         let typed = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '61 kg'")).firstMatch
         XCTAssertTrue(typed.appears(timeout: 5), "El entreno terminado no tiene el peso tecleado")
     }

@@ -15,14 +15,14 @@ final class KeyboardTests: XCTestCase {
     @MainActor
     func testDesplazarCierraElTecladoEnAjustes() {
         let app = openSettingsWithKeyboard()
-        app.textFields["settings-repository"].typeText("usuario/repo")
+        app.textFields[AccessibilityID.settingsRepository].typeText("usuario/repo")
         // Desde la cabecera de la sección (no desde un campo) hasta abajo, por encima del teclado:
         // con `.interactively` el teclado sigue al dedo y se cierra.
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
             .press(forDuration: 0, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "El teclado sigue abierto")
         XCTAssertTrue(app.navigationBars["Sincronización"].exists, "Deslizar cerró la hoja con algo sin guardar")
-        app.buttons["settings-close"].tap()
+        app.buttons[AccessibilityID.settingsClose].tap()
         let discard = app.buttons["Descartar cambios"].firstMatch
         XCTAssertTrue(discard.appears(timeout: 5), "Con algo sin guardar, la X pregunta")
         discard.tap()
@@ -39,7 +39,7 @@ final class KeyboardTests: XCTestCase {
     func testTocarFueraEnUnaLista() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Gráficas"].tap()
-        let exercise = app.buttons["chart-exercise"]
+        let exercise = app.buttons[AccessibilityID.chartExercise]
         XCTAssertTrue(exercise.appears(timeout: 10))
         exercise.tap()
         let search = app.searchFields.firstMatch
@@ -55,7 +55,7 @@ final class KeyboardTests: XCTestCase {
     private func openSettingsWithKeyboard() -> XCUIApplication {
         let app = XCUIApplication.launchDemo()
         app.openSyncSettings()
-        let repository = app.textFields["settings-repository"]
+        let repository = app.textFields[AccessibilityID.settingsRepository]
         XCTAssertTrue(repository.appears(timeout: 10))
         repository.tap()
         XCTAssertTrue(app.keyboards.firstMatch.appears(timeout: 5), "No se abrió el teclado")

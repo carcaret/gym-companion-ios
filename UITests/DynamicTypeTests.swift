@@ -14,16 +14,16 @@ final class DynamicTypeTests: XCTestCase {
     func testLaLetraGrandeAgrandaLasTarjetas() {
         let app = XCUIApplication.launchDemo(arguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"])
         app.tabBars.buttons["Rutinas"].tap()
-        let card = app.buttons["routine-DIA1"]
+        let card = app.buttons[AccessibilityID.routine("DIA1")]
         XCTAssertTrue(card.appears(timeout: 20))
         XCTAssertGreaterThan(card.frame.height, 100, "Con letra grande la tarjeta de la rutina tiene que crecer")
-        capture(app, "70-letra-grande-rutinas")
+        capture(app, "80-letra-grande-rutinas")
 
         card.tap()
-        app.buttons["start-workout"].tap()
-        let exercise = app.buttons["card-press_banca"].firstMatch
+        app.buttons[AccessibilityID.startWorkout].tap()
+        let exercise = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(exercise.appears(timeout: 20))
         exercise.tap()
-        capture(app, "70-letra-grande-entreno")
+        capture(app, "80-letra-grande-entreno")
     }
 }

@@ -27,6 +27,17 @@ struct JSONFileSyncSettingsStoreTests {
         #expect(!text.lowercased().contains("token"))
     }
 
+    // El formato es del adaptador, no de SyncLocation: renombrar un campo del modelo no puede romper
+    // el fichero que ya tiene el iPhone (repaso del 2026-10-29).
+    @Test("lee el sync.json que ya hay en el iPhone")
+    func existingFormat() async throws {
+        let file = temporaryFile()
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(#"{"hasPendingUpload":true,"location":{"branch":"main","path":"datos/db.json","repository":"u/r"}}"#.utf8).write(to: file)
+        let settings = try await JSONFileSyncSettingsStore(file: file).load()
+        #expect(settings == SyncSettings(location: SyncLocation(repository: "u/r", branch: "main", path: "datos/db.json"), hasPendingUpload: true))
+    }
+
     @Test("un fichero corrupto da error, no una configuración vacía")
     func corrupt() async throws {
         let file = temporaryFile()

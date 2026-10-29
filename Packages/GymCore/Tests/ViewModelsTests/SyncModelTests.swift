@@ -74,7 +74,7 @@ struct SyncModelTests {
     @Test("GitHub devuelve 401 → muestra mensaje de error")
     func unauthorized() async {
         let harness = SyncHarness()
-        await harness.remote.fail(fetch: .status(401))
+        await harness.remote.fail(fetch: .unauthorized)
         let (_, sync) = await models(harness)
         await sync.download()
         #expect(sync.notice?.text.contains("No se pudo") == true)
@@ -309,8 +309,8 @@ struct SyncModelTests {
     func testConnectionErrors() async {
         let harness = SyncHarness()
         let (_, sync) = await models(harness)
-        await harness.remote.fail(fetch: .status(404))
-        #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t") == SyncText.connectionError(status: 404))
+        await harness.remote.fail(fetch: .notFound)
+        #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t") == SyncText.remoteNotFound)
         await harness.remote.fail(fetch: .unreachable)
         #expect(await sync.testConnection(repository: "u/r", branch: "main", path: "db.json", token: "t") == SyncText.offline)
     }

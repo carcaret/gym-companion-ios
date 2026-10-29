@@ -20,7 +20,7 @@ final class ScreenshotTests: XCTestCase {
             XCTAssertTrue(app.navigationBars[title].appears(timeout: 10), "No se abrió \(tab)")
             capture(app, name)
         }
-        XCTAssertTrue(app.buttons["sync-indicator"].exists)
+        XCTAssertTrue(app.buttons[AccessibilityID.syncIndicator].exists)
     }
 
     /// Hoy con datos de ejemplo (`-demo`): selector, vista previa, entreno, tarjeta abierta y
@@ -29,52 +29,52 @@ final class ScreenshotTests: XCTestCase {
     func testHoy() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 10))
         capture(app, "10-hoy-selector")
 
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
+        app.buttons[AccessibilityID.routine("DIA1")].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.startWorkout].appears(timeout: 10))
         capture(app, "11-hoy-vista-previa")
 
-        app.buttons["start-workout"].tap()
-        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
+        app.buttons[AccessibilityID.startWorkout].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.finishWorkout].appears(timeout: 10))
         capture(app, "12-hoy-entreno")
 
-        app.buttons["card-press_banca"].firstMatch.tap()
+        app.buttons[AccessibilityID.card("press_banca")].firstMatch.tap()
         capture(app, "13-hoy-tarjeta")
 
         // Un toque en la penúltima barra de «Últimas sesiones»: su bocadillo.
-        let bars = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'strip-bar-'"))
+        let bars = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.stripBarPrefix))
         XCTAssertTrue(bars.firstMatch.appears(timeout: 10))
         bars.element(boundBy: bars.count - 2).tap()
         capture(app, "15-hoy-tira-bocadillo")
 
-        app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+        app.buttons[AccessibilityID.finishWorkout].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
         capture(app, "14-hoy-terminado")
 
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 10))
         capture(app, "20-historial-lista")
 
         first.tap()
-        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 10))
-        app.buttons["card-press_banca"].firstMatch.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.card("press_banca")].firstMatch.appears(timeout: 10))
+        app.buttons[AccessibilityID.card("press_banca")].firstMatch.tap()
         // Con la tarjeta ya abierta del todo: sin esperar, la captura salía a medio abrir.
-        XCTAssertTrue(app.descendants(matching: .any)["series-0"].firstMatch.appears(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.series(0)].firstMatch.appears(timeout: 10))
         capture(app, "21-historial-detalle")
 
-        app.buttons["session-edit"].tap()
-        XCTAssertTrue(app.buttons["session-done"].appears(timeout: 10))
-        XCTAssertTrue(app.buttons["weight-plus"].firstMatch.appears(timeout: 10))
+        app.buttons[AccessibilityID.sessionEdit].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionDone].appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.parameter(.weight, .plus)].firstMatch.appears(timeout: 10))
         capture(app, "22-historial-editando")
         // Sin cambios, la ✕ cierra la hoja sin preguntar.
-        app.buttons["session-cancel"].tap()
-        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 10))
+        app.buttons[AccessibilityID.sessionCancel].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionEdit].appears(timeout: 10))
 
         app.tabBars.buttons["Gráficas"].tap()
-        let exercise = app.buttons["chart-exercise"]
+        let exercise = app.buttons[AccessibilityID.chartExercise]
         XCTAssertTrue(exercise.appears(timeout: 10))
         exercise.tap()
         XCTAssertTrue(app.buttons["Press Banca"].firstMatch.appears(timeout: 10))
@@ -84,11 +84,11 @@ final class ScreenshotTests: XCTestCase {
         capture(app, "31-graficas")
 
         app.tabBars.buttons["Progreso"].tap()
-        XCTAssertTrue(app.buttons["stats-exercises"].appears(timeout: 10))
-        app.buttons["stats-exercises"].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.statsExercises].appears(timeout: 10))
+        app.buttons[AccessibilityID.statsExercises].tap()
         capture(app, "40-progreso")
 
-        app.buttons["stats-row-press_banca"].tap()
+        app.buttons[AccessibilityID.statsRow("press_banca")].tap()
         app.buttons["Ver en Gráficas"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Gráficas"].appears(timeout: 10))
         capture(app, "41-progreso-graficas")
@@ -96,14 +96,14 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
 
         // El catálogo, en la barra de Progreso.
-        app.buttons["catalog-button"].tap()
+        app.buttons[AccessibilityID.catalogButton].tap()
         XCTAssertTrue(app.navigationBars["Ejercicios"].appears(timeout: 10))
         capture(app, "50-catalogo")
 
         // Los ajustes, desde la nube de la pantalla de entrada de Rutinas.
         app.tabBars.buttons["Rutinas"].tap()
         app.openSyncSettings()
-        XCTAssertTrue(app.staticTexts["settings-version"].appears(timeout: 10))
+        XCTAssertTrue(app.staticTexts[AccessibilityID.settingsVersion].appears(timeout: 10))
         capture(app, "60-ajustes")
     }
 }

@@ -203,7 +203,7 @@ public actor TrainingRepository {
                 version = try await remote.fetch(target.location, token: target.token).version
             } catch .unreachable {
                 return .unreachable
-            } catch .status(404) {
+            } catch .notFound {
                 // El fichero aún no existe: se crea.
             } catch {
                 return .failed

@@ -35,7 +35,7 @@ struct ParameterRow: View {
         if let adjust, let type, let commit {
             RoundIconButton(systemImage: "minus") { adjust(-1) }
                 .accessibilityLabel(CardAccessibilityText.decrease(parameter))
-                .accessibilityIdentifier("\(identifier)-minus")
+                .accessibilityIdentifier(AccessibilityID.parameter(identifier, .minus))
             TextField(label, text: $text)
                 .keyboardType(decimal ? .decimalPad : .numberPad)
                 .multilineTextAlignment(.center)
@@ -71,10 +71,10 @@ struct ParameterRow: View {
                     @unknown default: break
                     }
                 }
-                .accessibilityIdentifier("\(identifier)-field")
+                .accessibilityIdentifier(AccessibilityID.parameter(identifier, .field))
             RoundIconButton(systemImage: "plus") { adjust(1) }
                 .accessibilityLabel(CardAccessibilityText.increase(parameter))
-                .accessibilityIdentifier("\(identifier)-plus")
+                .accessibilityIdentifier(AccessibilityID.parameter(identifier, .plus))
         } else {
             Text(value)
                 .scaledFont(15, .semibold)
@@ -84,17 +84,17 @@ struct ParameterRow: View {
                 .overlay { RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.border) }
                 .accessibilityLabel(CardAccessibilityText.name(parameter))
                 .accessibilityValue(CardAccessibilityText.value(parameter, value, hasError: hasError))
-                .accessibilityIdentifier("\(identifier)-value")
+                .accessibilityIdentifier(AccessibilityID.parameter(identifier, .value))
                 .frame(height: TouchTarget.side(for: boxHeight))
         }
     }
 
     /// Para los tests de UI: `weight-plus`, `series-field`…
-    private var identifier: String {
+    private var identifier: AccessibilityID.Parameter {
         switch parameter {
-        case .weight: "weight"
-        case .series: "series"
-        case .targetReps: "target-reps"
+        case .weight: .weight
+        case .series: .series
+        case .targetReps: .targetReps
         }
     }
 }

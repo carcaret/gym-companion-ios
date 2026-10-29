@@ -22,14 +22,14 @@ struct SessionEditor: View {
             ToolbarItem(placement: .cancellationAction) {
                 // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
                 Button(role: .close) { model.requestClose() }
-                    .accessibilityIdentifier("session-cancel")
+                    .accessibilityIdentifier(AccessibilityID.sessionCancel)
                     .discardChangesDialog(HistoryText.discardTitle, isPresented: model.isDiscardPromptPresented,
                                           discard: model.discardChanges, keep: model.keepEditing)
             }
             ToolbarItem(placement: .confirmationAction) {
                 ConfirmButton { Task { await model.finishEditing() } }
                     .disabled(!model.hasChanges)
-                    .accessibilityIdentifier("session-done")
+                    .accessibilityIdentifier(AccessibilityID.sessionDone)
             }
         }
     }

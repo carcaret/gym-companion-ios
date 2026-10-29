@@ -1,41 +1,19 @@
 # Pendiente para terminar en el NAS
 
-Lo que Claude no pudo hacer al avanzar la épica #1 fuera del NAS (sesión del 2026-10-25, en un
-portátil tratado como un PC con Windows: sin Xcode ni `swift` local, solo Docker y `gh`). Cada
-sub-issue añade aquí lo que deja sin hacer. Al terminarlo en el NAS, se tacha (`[x]`) y, cuando no
-quede nada, se borra este fichero.
-
-## Cómo se trabajó fuera del NAS
-
-- Tests del paquete: `sh Packages/GymCore/test.sh` con Docker (la imagen de Swift que dice `test.sh`), igual que en el
-  NAS. La PWA se clonó en `~/git/gym-companion` para el cruce de tests y el `db.json` real.
-- La app (vistas SwiftUI, Llavero, XCUITest y capturas) solo la compila y prueba el CI (`app`).
-- Nada del NAS: ni `ios-signer`, ni su log, ni el iPhone.
+Lo que queda por comprobar desde el NAS o con el iPhone en la mano: la app solo se compila y se
+prueba en el CI. Al comprobarlo, se borra la línea; cuando no quede nada, el fichero.
 
 ## Comprobaciones que solo se pueden hacer desde el NAS
 
-Para cada PR fusionada, después de que el CI publique la release:
-
-- [ ] `tail /volume1/docker/ios-signer/data/ios-signer.log`: "Instalada la compilación N" con la
-      última compilación (la N es la del run de `master` de cada fusión).
 - [ ] Los datos de la app se conservan tras la reinstalación (pendiente desde #6: comprobar con
       `house_arrest` antes y después de una instalación que `Application Support/GymCompanion/`
       sigue ahí).
-
-## Trabajo que pasa de una issue a otra
-
-Para que no se pierda nada al repartir tests entre issues:
-
-- [x] `e2e/view-nav-buttons.spec.js` (de #8): los 11 de Hoy en #9 y los 4 del historial en #10;
-      el fichero ya está en el cruce.
-- [x] `unit/builders.test.js` y `unit/bar-colors.test.js` (de #10) se portaron en #9: la tira de
-      historial también sale en las tarjetas de Hoy. En #10 solo queda pintarla en el detalle.
 
 ## Por sub-issue
 
 ### #7 Sincronización con GitHub
 
-Hecho y probado en Docker (600 tests, con la ida y vuelta del `db.json` real idéntica) y en el CI.
+Hecho y probado en Docker (con la ida y vuelta del `db.json` real idéntica) y en el CI.
 Falta lo que necesita el iPhone o el NAS:
 
 - [ ] El Llavero en el iPhone firmado con la cuenta gratuita: guardar el token desde los ajustes (#14)
@@ -84,9 +62,9 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #12 Progreso
 
-- [ ] Con los datos reales: la tarjeta de ejercicios dice cuántos hay estancados y la de grupos
-      pinta las barras con la franja de 32–80 series. "Ver en Gráficas" abre Gráficas con el
-      ejercicio elegido y el botón de volver.
+- [ ] Con los datos reales: la sección de ejercicios dice cuántos hay estancados y la de grupos
+      pinta las barras con la franja de 32–80 series. «Ver en Gráficas» abre las gráficas del
+      ejercicio y se vuelve con la flecha.
 
 ### #13 Catálogo
 
@@ -95,7 +73,7 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #14 Ajustes
 
-- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en los ajustes (menú del indicador → «Configurar GitHub»), repositorio
+- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en los ajustes (menú del indicador → «Configurar GitHub…»), repositorio
       `carcaret/gym-companion` y un PAT con permiso de escritura en ese repo (rama `master` y ruta
       `db.json`, en «Avanzado», ya vienen puestas). Con la app vacía, la ✓ baja los datos; comprobar que salen las 297+
       sesiones en Historial.

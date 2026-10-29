@@ -31,7 +31,7 @@ struct SeriesCellView: View {
         .accessibilityLabel(CardAccessibilityText.seriesLabel(index))
         .accessibilityValue(CardAccessibilityText.seriesValue(cell.value, target: targetReps, hasError: cell.hasError))
         .accessibilityAddTraits(cell.isFocused ? .isSelected : [])
-        .accessibilityIdentifier("series-\(index)")
+        .accessibilityIdentifier(AccessibilityID.series(index))
     }
 
     private var cellContent: some View {

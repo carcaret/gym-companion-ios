@@ -32,7 +32,7 @@ public enum CardAccessibilityText {
     public static func seriesValue(_ reps: Int?, target: Int, hasError: Bool) -> String {
         let text = reps.map { reps in
             let count = reps == 1 ? "1 repetición" : "\(reps) repeticiones"
-            return "\(count), \(reps >= target ? "objetivo cumplido" : "por debajo del objetivo")"
+            return "\(count), \(RepOutcome(reps: reps, target: target).meetsTarget ? "objetivo cumplido" : "por debajo del objetivo")"
         } ?? "Sin completar"
         return value(text, hasError: hasError)
     }
