@@ -27,6 +27,9 @@ struct ReadyView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.greenSoft)
+                // Texto oscuro, como en los botones de color del iPhone: el blanco sobre este verde no
+                // llega a 4,5:1.
+                .foregroundStyle(Theme.onAccent)
                 .disabled(ready.isStarting)
                 .accessibilityIdentifier(AccessibilityID.watchStart)
                 .padding(.top, 8)
