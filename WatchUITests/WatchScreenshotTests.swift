@@ -21,12 +21,14 @@ final class WatchScreenshotTests: XCTestCase {
         // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía y, recortados,
         // siguen siendo «hittable», así que se mira cuál cae dentro de la lista. Deslizar es lo
         // mismo que la corona, que mueve el `ScrollView` sola.
-        let exercises = app.scrollViews.firstMatch
-        XCTAssertTrue(app.staticTexts["Press Banca"].isShown(in: exercises))
-        XCTAssertFalse(app.staticTexts["Curl Bíceps"].isShown(in: exercises), "se ve más de un ejercicio a la vez")
+        let exercises = app.descendants(matching: .any)[AccessibilityID.watchExercises].firstMatch
+        let first = app.staticTexts["Press Banca"], second = app.staticTexts["Curl Bíceps"]
+        func frames() -> String { "lista \(exercises.frame), primero \(first.frame), segundo \(second.frame)" }
+        XCTAssertTrue(first.isShown(in: exercises), frames())
+        XCTAssertFalse(second.isShown(in: exercises), "se ve más de un ejercicio a la vez: \(frames())")
         exercises.swipeUp()
-        XCTAssertTrue(app.staticTexts["Curl Bíceps"].becomesShown(in: exercises, timeout: 5))
-        XCTAssertFalse(app.staticTexts["Press Banca"].isShown(in: exercises), "se ve más de un ejercicio a la vez")
+        XCTAssertTrue(second.becomesShown(in: exercises, timeout: 5), frames())
+        XCTAssertFalse(first.isShown(in: exercises), "se ve más de un ejercicio a la vez: \(frames())")
         capture(app, "71-reloj-siguiente")
 
         let rest = app.buttons[AccessibilityID.watchRest]

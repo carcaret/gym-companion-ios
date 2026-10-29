@@ -39,6 +39,7 @@ struct WorkoutPage: View {
                 // watchOS pinta el contenido también en el margen de abajo: sin recortar, el
                 // siguiente ejercicio asoma debajo del que se ve.
                 .clipShape(Rectangle())
+                .accessibilityIdentifier(AccessibilityID.watchExercises)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .toolbar {
