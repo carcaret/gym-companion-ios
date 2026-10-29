@@ -11,15 +11,8 @@ final class TypingTests: XCTestCase {
     /// Teclear el peso y, con el teclado aún abierto, finalizar: el entreno guarda lo tecleado.
     @MainActor
     func testFinalizarConElTecladoAbierto() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
-        app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
-        app.buttons["start-workout"].tap()
-        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
+        let app = XCUIApplication.launchDemo()
+        app.startWorkout()
         app.buttons["card-press_banca"].firstMatch.tap()
 
         let weight = app.textFields["weight-field"].firstMatch

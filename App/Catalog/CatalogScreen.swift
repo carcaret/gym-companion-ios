@@ -114,11 +114,8 @@ private struct CatalogEditor: View {
                     // Con cambios, pregunta antes de tirarlos, como las demás hojas.
                     Button(role: .close) { model.requestClose() }
                         .accessibilityIdentifier("catalog-cancel")
-                        .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
-                                            titleVisibility: .visible) {
-                            Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
-                            Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
-                        }
+                        .discardChangesDialog(isPresented: model.isDiscardPromptPresented,
+                                              discard: model.discardChanges, keep: model.keepEditing)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     ConfirmButton { Task { await model.save() } }

@@ -118,8 +118,6 @@ private struct ProgressChart: View {
     @State private var selection = TapSelection<LocalDate>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let bubbleDuration: Duration = .seconds(3)
-
     var body: some View {
         Chart {
             ForEach(chart.points, id: \.date) { point in
@@ -144,12 +142,7 @@ private struct ProgressChart: View {
                         Text(ChartsText.pointLabel(chart.label, value: selected.value, carriedForward: selected.isCarriedForward))
                             .scaledFont(12, .semibold)
                             .foregroundStyle(Theme.text)
-                            .monospacedDigit()
-                            .fixedSize()
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(Theme.surface2, in: .rect(cornerRadius: 10))
-                            .shadow(color: .black.opacity(0.45), radius: 9, y: 4)
+                            .chartBubble()
                     }
             }
         }
@@ -164,12 +157,7 @@ private struct ProgressChart: View {
                 }
             }
         }
-        .task(id: selection.selected) {
-            guard let shown = selection.selected else { return }
-            // Cancelado por otro toque, no cierra nada: el bocadillo que se ve ya es otro.
-            guard (try? await Task.sleep(for: Self.bubbleDuration)) != nil else { return }
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selection.expire(shown) }
-        }
+        .expiringBubble($selection)
         .chartYScale(domain: chart.valueRange)
         .chartXScale(range: .plotDimension(padding: 24))
         // Cada fecha centrada en su línea, con margen para que la última no se corte

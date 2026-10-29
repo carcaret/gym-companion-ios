@@ -70,12 +70,12 @@ struct GroupBar: View {
         Chart {
             RectangleMark(xStart: .value("Series", Double(band.lowerBound)), xEnd: .value("Series", Double(band.upperBound)),
                           y: .value("Grupo", group.name), height: .ratio(1))
-                .foregroundStyle(Color.white.opacity(0.10))
+                .foregroundStyle(Theme.referenceBandBar)
             // Las indirectas, con el extremo redondeado, debajo de las directas: la unión queda
             // recta y el extremo de la barra entera, redondo.
             if total > direct {
                 BarMark(xStart: .value("Series", 0.0), xEnd: .value("Series", total), y: .value("Grupo", group.name), height: .ratio(1))
-                    .foregroundStyle(Theme.accent.opacity(0.32))
+                    .foregroundStyle(Theme.indirect)
                     .cornerRadius(3)
             }
             BarMark(xStart: .value("Series", 0.0), xEnd: .value("Series", direct), y: .value("Grupo", group.name), height: .ratio(1))
@@ -83,7 +83,7 @@ struct GroupBar: View {
                 .cornerRadius(total > direct ? 0 : 3)
             ForEach([band.lowerBound, band.upperBound], id: \.self) { limit in
                 RuleMark(x: .value("Series", Double(limit)))
-                    .foregroundStyle(Color.white.opacity(0.45))
+                    .foregroundStyle(Theme.referenceLimit)
                     .lineStyle(StrokeStyle(lineWidth: 1))
             }
         }

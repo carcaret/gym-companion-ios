@@ -8,37 +8,6 @@ import ViewModels
 // Las reps se separan con «·» y la serie vacía es «—» (cambiado con la aprobación del usuario,
 // 2026-10-27; en la PWA, «10-8-10» y «10---8»).
 
-/// Historial con el `db-test.json` de los e2e (o los datos que se pasen), sin GitHub.
-@MainActor
-struct HistoryHarness {
-    let harness: SyncHarness
-    let app: AppModel
-    let model: HistoryModel
-
-    static func make(_ data: TrainingData = PWATestDB.data) async -> HistoryHarness {
-        let harness = SyncHarness(local: data, configured: false)
-        let app = AppModel(repository: harness.repository())
-        await app.start()
-        return HistoryHarness(harness: harness, app: app, model: HistoryModel(app: app, clock: FixedClock(SyncFixtures.today)))
-    }
-
-    var saved: TrainingData? {
-        get async { await harness.savedLocally }
-    }
-
-    /// Abre la primera sesión de la lista (la más reciente) y su primera tarjeta.
-    func openFirstAndExpand() {
-        model.open(model.rows[0].date)
-        model.toggleCard(0)
-    }
-
-    /// Abre la primera sesión, su primera tarjeta y pasa a editar.
-    func openFirstAndEdit() {
-        openFirstAndExpand()
-        model.startEditing()
-    }
-}
-
 // tests/e2e/history-full.spec.js. La primera sesión de la lista es la del 2024-01-10 (Sentadilla).
 @MainActor
 @Suite("Historial completo")

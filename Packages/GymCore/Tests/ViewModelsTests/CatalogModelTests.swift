@@ -33,11 +33,9 @@ private struct CatalogHarness {
     let progress: ProgressModel
 
     static func make() async -> CatalogHarness {
-        let harness = SyncHarness(local: catalogData(), configured: false)
-        let app = AppModel(repository: harness.repository())
-        await app.start()
-        return CatalogHarness(harness: harness, app: app, model: CatalogModel(app: app),
-                              progress: ProgressModel(app: app, clock: FixedClock(SyncFixtures.today)))
+        let base = await AppHarness.start(local: catalogData())
+        return CatalogHarness(harness: base.harness, app: base.app, model: CatalogModel(app: base.app),
+                              progress: ProgressModel(app: base.app, clock: base.clock))
     }
 
     var rows: [CatalogModel.Row] { model.sections.flatMap(\.rows) }

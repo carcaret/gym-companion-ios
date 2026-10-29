@@ -67,8 +67,8 @@ struct ProgressScreen: View {
         } footer: {
             HStack(spacing: 14) {
                 legend(ProgressText.direct, Theme.accent)
-                legend(ProgressText.indirect, Theme.accent.opacity(0.32))
-                legend(ProgressText.referenceBand(model.referenceBand), Color.white.opacity(0.07), border: Color.white.opacity(0.14))
+                legend(ProgressText.indirect, Theme.indirect)
+                legend(ProgressText.referenceBand(model.referenceBand), Theme.referenceBand, border: Theme.referenceBandBorder)
             }
             .scaledFont(11)
             .foregroundStyle(Theme.textSecondary)

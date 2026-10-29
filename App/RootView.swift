@@ -35,11 +35,11 @@ struct RootView: View {
         } message: {
             Text(DataErrorText.saveMessage)
         }
-        .syncPresentation(root.sync, noticeDuration: root.noticeDuration,
+        .syncPresentation(root.sync,
                           isActive: !root.sync.isSettingsPresented && !root.history.isEditing)
         .sheet(isPresented: Bindable(root.sync).isSettingsPresented) {
             NavigationStack { SettingsScreen(model: root.settings) }
-                .syncPresentation(root.sync, noticeDuration: root.noticeDuration)
+                .syncPresentation(root.sync)
         }
         // Para la nube de cada pantalla (`syncToolbar`).
         .environment(root.sync)
@@ -62,7 +62,7 @@ struct RootView: View {
                 stack(.routines) { TodayScreen(model: root.today) }
             }
             Tab(HistoryText.title, systemImage: "clock", value: AppTab.history) {
-                stack(.history) { HistoryScreen(model: root.history, sync: root.sync, noticeDuration: root.noticeDuration) }
+                stack(.history) { HistoryScreen(model: root.history, sync: root.sync) }
             }
             Tab(ProgressText.title, systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {

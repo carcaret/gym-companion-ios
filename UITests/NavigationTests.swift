@@ -11,9 +11,7 @@ final class NavigationTests: XCTestCase {
 
     @MainActor
     func testDeslizarAMediasNoCierraElDetalleDelHistorial() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 10))
@@ -30,9 +28,7 @@ final class NavigationTests: XCTestCase {
 
     @MainActor
     func testDeslizarAMediasNoCierraLaVistaPrevia() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
         app.buttons["routine-DIA1"].tap()
@@ -50,9 +46,7 @@ final class NavigationTests: XCTestCase {
     /// usuario, 2026-10-25; la PWA volvía a la de entrada).
     @MainActor
     func testCambiarDePestanaConservaLaPantalla() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 20))
@@ -70,9 +64,7 @@ final class NavigationTests: XCTestCase {
     /// la vista previa de una rutina y lo empujado en Progreso.
     @MainActor
     func testTocarOtraVezLaPestanaVuelveALaEntrada() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 20))
@@ -102,9 +94,7 @@ final class NavigationTests: XCTestCase {
     /// deslizando desde el borde, como en iOS (decisión del usuario, 2026-10-25).
     @MainActor
     func testVerEnGraficasEntraEmpujadaEnProgreso() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Progreso"].tap()
         openChartsFromProgress(app)
         XCTAssertTrue(app.tabBars.buttons["Progreso"].isSelected, "Las gráficas se abren dentro de Progreso")
@@ -119,9 +109,7 @@ final class NavigationTests: XCTestCase {
     /// como en la vista previa (decisión del usuario, 2026-10-27).
     @MainActor
     func testDeslizarDesdeElEntrenoTerminadoVuelveALasRutinas() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
         let routine = app.buttons["routine-DIA1"]
         XCTAssertTrue(routine.appears(timeout: 20))
@@ -140,9 +128,7 @@ final class NavigationTests: XCTestCase {
     /// barra: antes solo estaba en la de entrada de cada pestaña (2026-10-27).
     @MainActor
     func testLaNubeSaleEnLasPantallasEmpujadas() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
 
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))

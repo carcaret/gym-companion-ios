@@ -8,9 +8,7 @@ final class DataErrorTests: XCTestCase {
 
     @MainActor
     func testDatosIlegiblesLoDice() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-datos-ilegibles"]
-        app.launch()
+        let app = XCUIApplication.launchDemo(.unreadableData)
         XCTAssertTrue(app.staticTexts["No se pudieron leer los datos"].appears(timeout: 20), app.debugDescription)
         let retry = app.buttons["data-retry"]
         XCTAssertTrue(retry.exists)

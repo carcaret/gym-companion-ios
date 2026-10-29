@@ -7,9 +7,8 @@ import ViewModels
 
 @MainActor
 private func charts(_ data: TrainingData = PWATestDB.data) async -> (ChartsModel, AppModel) {
-    let app = AppModel(repository: SyncHarness(local: data, configured: false).repository())
-    await app.start()
-    return (ChartsModel(app: app, clock: FixedClock(SyncFixtures.today)), app)
+    let base = await AppHarness.start(local: data)
+    return (ChartsModel(app: base.app, clock: base.clock), base.app)
 }
 
 private func day(_ iso: String) -> LocalDate { LocalDate(iso: iso)! }

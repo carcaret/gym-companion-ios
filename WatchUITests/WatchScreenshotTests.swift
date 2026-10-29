@@ -11,7 +11,7 @@ final class WatchScreenshotTests: XCTestCase {
     @MainActor
     func testEntreno() {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
+        app.launchArguments = [LaunchArgument.demo.rawValue]
         app.launch()
         XCTAssertTrue(app.staticTexts["Press Banca"].appears(timeout: 20))
         capture(app, "70-reloj-ejercicio")
@@ -24,17 +24,9 @@ final class WatchScreenshotTests: XCTestCase {
     @MainActor
     func testSinEntreno() {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo-sin-entreno"]
+        app.launchArguments = [LaunchArgument.demoWithoutWorkout.rawValue]
         app.launch()
         XCTAssertTrue(app.staticTexts["Sin entreno en curso"].appears(timeout: 20))
         capture(app, "72-reloj-sin-entreno")
-    }
-
-    @MainActor
-    private func capture(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
     }
 }

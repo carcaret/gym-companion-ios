@@ -27,9 +27,7 @@ final class ScreenshotTests: XCTestCase {
     /// entreno terminado.
     @MainActor
     func testHoy() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
         capture(app, "10-hoy-selector")
@@ -107,13 +105,5 @@ final class ScreenshotTests: XCTestCase {
         app.openSyncSettings()
         XCTAssertTrue(app.staticTexts["settings-version"].appears(timeout: 10))
         capture(app, "60-ajustes")
-    }
-
-    @MainActor
-    private func capture(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
     }
 }

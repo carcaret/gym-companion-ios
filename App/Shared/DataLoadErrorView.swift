@@ -21,7 +21,7 @@ struct DataLoadErrorView: View {
             Button(DataErrorText.retry) { run { await model.start() } }
                 .buttonStyle(.pill)
                 .accessibilityIdentifier("data-retry")
-            if sync.status.state != .disabled {
+            if sync.offersDownload {
                 Button(SettingsText.download, role: .destructive) { isDownloadConfirmationPresented = true }
                     .accessibilityIdentifier("data-download")
                     // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.

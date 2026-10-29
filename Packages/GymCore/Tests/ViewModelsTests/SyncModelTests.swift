@@ -9,12 +9,8 @@ private typealias F = SyncFixtures
 
 @MainActor
 private func models(_ harness: SyncHarness, repository: TrainingRepository? = nil) async -> (AppModel, SyncModel) {
-    let repository = repository ?? harness.repository()
-    let app = AppModel(repository: repository)
-    let sync = SyncModel(repository: repository, app: app)
-    await app.start()
-    await sync.refresh()
-    return (app, sync)
+    let base = await AppHarness.start(harness, repository: repository)
+    return (base.app, base.sync)
 }
 
 // Port por comportamiento de tests/e2e/sync-ui.spec.js: el indicador, los toasts y los botones

@@ -10,9 +10,7 @@ final class TouchTargetTests: XCTestCase {
 
     @MainActor
     func testLosControlesDeLaTarjetaMiden44YNoSeMontan() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
         XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
         app.buttons["routine-DIA1"].tap()
@@ -67,9 +65,7 @@ final class TouchTargetTests: XCTestCase {
     /// cada ejercicio, «Ver en Gráficas» y cada grupo muscular.
     @MainActor
     func testLasFilasDeProgresoSeTocanEnteras() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Progreso"].tap()
         let expand = app.buttons["stats-exercises"]
         XCTAssertTrue(expand.appears(timeout: 20))

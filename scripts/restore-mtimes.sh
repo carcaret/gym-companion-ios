@@ -28,3 +28,7 @@ git -c core.quotepath=off log --diff-merges=first-parent --format='%x01%ct' --na
     for (my $dir = $_; $dir =~ s{/[^/]*$}{}; ) { $dirs{$dir} = $time if ($dirs{$dir} // 0) < $time }
     END { utime $dirs{$_}, $dirs{$_}, $_ for sort { length($b) <=> length($a) } keys %dirs }
 '
+
+# Que Xcode no recompile por el inodo: en cada máquina del CI los ficheros tienen otro, aunque
+# tengan la misma fecha.
+defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES

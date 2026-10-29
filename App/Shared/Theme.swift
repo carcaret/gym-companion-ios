@@ -37,6 +37,8 @@ enum Theme {
     static let skipTint = red.opacity(0.06)
     static let danger = Color(hex: 0xD97070)
     static let dangerTint = danger.opacity(0.15)
+    /// El texto de un campo con error, sobre `dangerTint`.
+    static let dangerText = Color(hex: 0xFFA9A9)
     static let gold = Color(hex: 0xDCDCAA)
 
     // Un color, un significado (repaso de la HIG, 2026-10-28): verde es solo «sincronizado» o
@@ -52,6 +54,18 @@ enum Theme {
     static let actionBlue = Color(Palette.actionBlue)
     static let actionRed = Color(Palette.actionRed)
     static let actionGray = Color(Palette.actionGray)
+
+    // Las barras de grupos de Progreso
+    /// Las series indirectas, en la barra y en su leyenda.
+    static let indirect = accent.opacity(0.32)
+    /// La franja de referencia (32–80 series) y su borde.
+    static let referenceBand = Color.white.opacity(0.07)
+    static let referenceBandBorder = Color.white.opacity(0.14)
+    /// La franja dentro de cada barra y las líneas de sus límites.
+    static let referenceBandBar = Color.white.opacity(0.10)
+    static let referenceLimit = Color.white.opacity(0.45)
+    /// La línea fina entre dos filas de una sección.
+    static let separator = Color.white.opacity(0.08)
 
     // Radios
     /// Las tarjetas, con las esquinas de las secciones de lista de iOS 26 (la PWA usaba 14): así las

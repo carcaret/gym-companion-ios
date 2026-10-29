@@ -118,9 +118,7 @@ jobs:
       # cada fichero en la fecha de su commit para que solo se recompile lo que cambia. Las
       # ejecuciones de master guardan la caché que usan las PR.
       - name: Fechas de los ficheros
-        run: |
-          scripts/restore-mtimes.sh
-          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+        run: scripts/restore-mtimes.sh
       - uses: actions/cache@v4
         with:
           path: build
@@ -152,20 +150,13 @@ jobs:
 
       - name: Compilar la app y los tests
         run: |
-          mkdir -p diagnostico
-          xcodebuild build-for-testing \
+          scripts/ci-xcodebuild.sh build.log 40 "app compilada" build-for-testing \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -showBuildTimingSummary \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
-            | tee diagnostico/build.log | tail -n 40
-          status=${PIPESTATUS[0]}
-          scripts/ci-timeline.sh mark "app compilada"
-          grep -E ': error:' diagnostico/build.log | sort -u | head -n 30 || true
-          test "$status" -eq 0
+            COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Esperar al simulador
         run: scripts/ci-simulator.sh wait
@@ -180,62 +171,25 @@ jobs:
             3) for class in $PART_1 $PART_2; do selection+=("-skip-testing:GymCompanionUITests/$class"); done ;;
           esac
           scripts/ci-timeline.sh mark "tests: empiezan"
-          xcodebuild test-without-building \
+          scripts/ci-xcodebuild.sh test.log 60 "tests: terminan" test-without-building \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanion \
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Tests.xcresult \
             -retry-tests-on-failure -test-iterations 2 \
-            "${selection[@]}" \
-            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
-            | tee diagnostico/test.log | tail -n 60
-          status=${PIPESTATUS[0]}
-          scripts/ci-timeline.sh mark "tests: terminan"
-          test "$status" -eq 0
+            "${selection[@]}"
 
-      # El simulador recién migrado (copiado antes de instalar la app), para los runs siguientes.
-      - name: ¿Simulador para la caché?
-        id: simsave
-        if: always() && env.SIM_CACHED == '0'
-        run: test -f ~/sim-cache/udid && echo "save=1" >> "$GITHUB_OUTPUT" || true
-      - uses: actions/cache/save@v4
-        if: always() && steps.simsave.outputs.save == '1'
+      - name: Fin
+        if: always()
+        uses: ./.github/actions/simulator-finish
         with:
-          path: ~/sim-cache
-          key: ${{ steps.sim.outputs.key }}
-
-      - name: Capturas, tiempos y cronología
-        if: always()
-        run: |
-          scripts/ci-capturas.sh capturas Tests.xcresult || true
-          scripts/ci-test-times.sh Tests.xcresult "Tests de app (${{ matrix.part }})" diagnostico || true
-          scripts/ci-timeline.sh mark "fin"
-          scripts/ci-timeline.sh summary "Cronología de app (${{ matrix.part }}) · simulador de la caché: ${SIM_CACHED:-?}"
-          cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
-          du -sh ~/sim-cache 2>/dev/null || true
-      # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
-      # que tardaban en descomprimirse.
-      - name: Limpiar la carpeta de compilación
-        if: always()
-        run: |
-          du -sh build/* build/Build/* 2>/dev/null || true
-          rm -rf build/Index.noindex build/Logs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: capturas-${{ matrix.part }}
-          path: capturas
-          if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: diagnostico-app-${{ matrix.part }}
-          path: |
-            diagnostico
-            Tests.xcresult
-          retention-days: 7
-          if-no-files-found: ignore
+          sim-key: ${{ steps.sim.outputs.key }}
+          xcresult: Tests.xcresult
+          title: app (${{ matrix.part }})
+          tests-title: Tests de app (${{ matrix.part }})
+          capturas: capturas-${{ matrix.part }}
+          diagnostico: diagnostico-app-${{ matrix.part }}
 
   watch:
     # La app del reloj, con su propio esquema y su simulador (capturas del reloj), y al final los
@@ -257,9 +211,7 @@ jobs:
           nohup scripts/ci-cpu.sh diagnostico/cpu.log > /dev/null 2>&1 &
 
       - name: Fechas de los ficheros   # ver el job app
-        run: |
-          scripts/restore-mtimes.sh
-          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+        run: scripts/restore-mtimes.sh
       - uses: actions/cache@v4
         with:
           path: build
@@ -288,20 +240,13 @@ jobs:
 
       - name: Compilar el reloj y sus tests
         run: |
-          mkdir -p diagnostico
-          xcodebuild build-for-testing \
+          scripts/ci-xcodebuild.sh build.log 40 "reloj compilado" build-for-testing \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanionWatch \
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -showBuildTimingSummary \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
-            | tee diagnostico/build.log | tail -n 40
-          status=${PIPESTATUS[0]}
-          scripts/ci-timeline.sh mark "reloj compilado"
-          grep -E ': error:' diagnostico/build.log | sort -u | head -n 30 || true
-          test "$status" -eq 0
+            COMPILER_INDEX_STORE_ENABLE=NO
 
       # Sin icono el reloj enseña la app con un círculo vacío, y ningún test lo ve.
       - name: El reloj lleva icono
@@ -318,60 +263,24 @@ jobs:
         if: env.TESTED != 'true'
         run: |
           scripts/ci-timeline.sh mark "tests: empiezan"
-          xcodebuild test-without-building \
+          scripts/ci-xcodebuild.sh test.log 40 "tests: terminan" test-without-building \
             -project GymCompanion.xcodeproj \
             -scheme GymCompanionWatch \
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Watch.xcresult \
-            -retry-tests-on-failure -test-iterations 2 \
-            2>&1 | perl -MPOSIX -pe 'BEGIN { $| = 1 } print strftime("%H:%M:%S ", localtime)' \
-            | tee diagnostico/test.log | tail -n 40
-          status=${PIPESTATUS[0]}
-          scripts/ci-timeline.sh mark "tests: terminan"
-          test "$status" -eq 0
+            -retry-tests-on-failure -test-iterations 2
 
-      - name: ¿Simulador para la caché?   # ver el job app
-        id: simsave
-        if: always() && env.SIM_CACHED == '0'
-        run: test -f ~/sim-cache/udid && echo "save=1" >> "$GITHUB_OUTPUT" || true
-      - uses: actions/cache/save@v4
-        if: always() && steps.simsave.outputs.save == '1'
+      - name: Fin
+        if: always()
+        uses: ./.github/actions/simulator-finish
         with:
-          path: ~/sim-cache
-          key: ${{ steps.sim.outputs.key }}
-
-      - name: Capturas, tiempos y cronología
-        if: always()
-        run: |
-          scripts/ci-capturas.sh capturas Watch.xcresult || true
-          scripts/ci-test-times.sh Watch.xcresult "Tests del reloj" diagnostico || true
-          scripts/ci-timeline.sh mark "fin"
-          scripts/ci-timeline.sh summary "Cronología de watch · simulador de la caché: ${SIM_CACHED:-?}"
-          cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
-          du -sh ~/sim-cache 2>/dev/null || true
-      # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
-      # que tardaban en descomprimirse.
-      - name: Limpiar la carpeta de compilación
-        if: always()
-        run: |
-          du -sh build/* build/Build/* 2>/dev/null || true
-          rm -rf build/Index.noindex build/Logs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: capturas-reloj
-          path: capturas
-          if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: diagnostico-watch
-          path: |
-            diagnostico
-            Watch.xcresult
-          retention-days: 7
-          if-no-files-found: ignore
+          sim-key: ${{ steps.sim.outputs.key }}
+          xcresult: Watch.xcresult
+          title: watch
+          tests-title: Tests del reloj
+          capturas: capturas-reloj
+          diagnostico: diagnostico-watch
 
       - name: Tests del paquete (macOS)
         if: env.TESTED != 'true'
@@ -401,9 +310,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fechas de los ficheros   # ver el job app
-        run: |
-          scripts/restore-mtimes.sh
-          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+        run: scripts/restore-mtimes.sh
       - uses: actions/cache@v4
         with:
           path: build

@@ -1,0 +1,67 @@
+# El final de un job con simulador (app y watch): guarda el simulador recién migrado en la caché,
+# publica capturas, tiempos y cronología, limpia la carpeta de compilación para su caché y sube
+# los artefactos. Se llama con `if: always()`.
+name: Fin del job con simulador
+inputs:
+  sim-key:
+    description: La clave de la caché del simulador (la salida `key` de `ci-simulator.sh pick`).
+    required: true
+  xcresult:
+    description: El .xcresult de los tests.
+    required: true
+  title:
+    description: El nombre del job en el resumen del run ("app (1)", "watch").
+    required: true
+  tests-title:
+    description: El título de la tabla de tiempos de los tests.
+    required: true
+  capturas:
+    description: El nombre del artefacto de las capturas.
+    required: true
+  diagnostico:
+    description: El nombre del artefacto del diagnóstico.
+    required: true
+runs:
+  using: composite
+  steps:
+    # El simulador recién migrado (copiado antes de instalar la app), para los runs siguientes.
+    - name: ¿Simulador para la caché?
+      id: simsave
+      if: env.SIM_CACHED == '0'
+      shell: bash
+      run: test -f ~/sim-cache/udid && echo "save=1" >> "$GITHUB_OUTPUT" || true
+    - uses: actions/cache/save@v4
+      if: steps.simsave.outputs.save == '1'
+      with:
+        path: ~/sim-cache
+        key: ${{ inputs.sim-key }}
+
+    - name: Capturas, tiempos y cronología
+      shell: bash
+      run: |
+        scripts/ci-capturas.sh capturas "${{ inputs.xcresult }}" || true
+        scripts/ci-test-times.sh "${{ inputs.xcresult }}" "${{ inputs.tests-title }}" diagnostico || true
+        scripts/ci-timeline.sh mark "fin"
+        scripts/ci-timeline.sh summary "Cronología de ${{ inputs.title }} · simulador de la caché: ${SIM_CACHED:-?}"
+        cp "$RUNNER_TEMP/timeline.tsv" "$RUNNER_TEMP/sim/boot.log" diagnostico/ 2>/dev/null || true
+        du -sh ~/sim-cache 2>/dev/null || true
+    # La caché guarda solo lo que sirve para compilar: el índice y los logs eran miles de ficheros
+    # que tardaban en descomprimirse.
+    - name: Limpiar la carpeta de compilación
+      shell: bash
+      run: |
+        du -sh build/* build/Build/* 2>/dev/null || true
+        rm -rf build/Index.noindex build/Logs
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.capturas }}
+        path: capturas
+        if-no-files-found: ignore
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.diagnostico }}
+        path: |
+          diagnostico
+          ${{ inputs.xcresult }}
+        retention-days: 7
+        if-no-files-found: ignore
