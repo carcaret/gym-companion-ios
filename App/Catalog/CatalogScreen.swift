@@ -46,7 +46,7 @@ struct CatalogScreen: View {
                 }
             }
         }
-        .searchable(text: $model.query, prompt: CatalogText.searchPlaceholder)
+        .searchable(text: $model.query, prompt: FormText.searchExercise)
         .navigationTitle(CatalogText.title)
         // Lo que decía la tarjeta de Progreso: el total y los que no tienen grupo.
         .navigationSubtitle(model.summary)
@@ -117,7 +117,7 @@ private struct CatalogEditor: View {
                         .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
                                             titleVisibility: .visible) {
                             Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
-                            Button(SyncText.cancelLabel, role: .cancel) { model.keepEditing() }
+                            Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
                         }
                 }
                 ToolbarItem(placement: .confirmationAction) {

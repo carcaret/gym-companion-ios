@@ -24,7 +24,7 @@ struct HistoryStripView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(StatsText.recentSessions).sectionLabelStyle()
+                Text(ProgressText.recentSessions).sectionLabelStyle()
                 Spacer()
                 if let delta = strip.deltaText {
                     Text(delta)

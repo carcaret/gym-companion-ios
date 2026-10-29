@@ -64,7 +64,7 @@ struct RootView: View {
             Tab(HistoryText.title, systemImage: "clock", value: AppTab.history) {
                 stack(.history) { HistoryScreen(model: root.history, sync: root.sync, noticeDuration: root.noticeDuration) }
             }
-            Tab(StatsText.title, systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
+            Tab(ProgressText.title, systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 stack(.progress) {
                     ProgressScreen(model: root.progress)
                         .navigationDestination(for: CatalogRoute.self) { _ in CatalogScreen(model: root.catalog).syncToolbar() }
@@ -73,7 +73,7 @@ struct RootView: View {
                     // final de la lista), a la izquierda de la nube: el borde izquierdo es para volver
                     // (repaso de la HIG, 2026-10-28).
                     NavigationLink(value: CatalogRoute()) { Image(systemName: "list.bullet") }
-                        .accessibilityLabel(CatalogText.cardTitle)
+                        .accessibilityLabel(CatalogText.openLabel)
                         .accessibilityIdentifier("catalog-button")
                 }
             }

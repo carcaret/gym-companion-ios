@@ -54,7 +54,7 @@ struct StatsTests {
         let model = await progress().0
         #expect(!model.allRows.isEmpty)
         #expect(!model.groups.isEmpty)
-        #expect([StatsText.exercisesTitle, StatsText.groupsTitle] == ["Ejercicios", "Grupos musculares"])
+        #expect([ProgressText.exercisesTitle, ProgressText.groupsTitle] == ["Ejercicios", "Grupos musculares"])
     }
 
     @Test("la tarjeta arranca plegada y solo muestra los estancados")
@@ -173,7 +173,7 @@ struct StatsTests {
         let model = await progress().0
         #expect(model.referenceBand == 32...80)
         #expect(model.scale >= Double(model.referenceBand.upperBound))
-        #expect(StatsText.referenceBand(model.referenceBand) == "32–80 series")
+        #expect(ProgressText.referenceBand(model.referenceBand) == "32–80 series")
     }
 
     @Test("tocar un grupo despliega y pliega sus ejercicios")
@@ -194,7 +194,7 @@ struct StatsTests {
 struct ProgressModelTests {
     @Test("sin nada estancado, el subtítulo lo dice con palabras")
     func nothingStalled() {
-        #expect(StatsText.exercisesSubtitle(stalled: 0, total: 3, progressing: 2) == "Nada estancado · 2 progresando")
+        #expect(ProgressText.exercisesSubtitle(stalled: 0, total: 3, progressing: 2) == "Nada estancado · 2 progresando")
     }
 
     @Test("la escala es la decena por encima del grupo mayor o de la franja, y nunca menos de 10")
@@ -216,9 +216,9 @@ struct ProgressModelTests {
 
     @Test("las series indirectas van con un decimal como mucho")
     func indirect() {
-        #expect(StatsText.indirectSets(2.5) == "2,5")
-        #expect(StatsText.indirectSets(3) == "3")
-        #expect(StatsText.indirectSets(1.25) == "1,3")
+        #expect(ProgressText.indirectSets(2.5) == "2,5")
+        #expect(ProgressText.indirectSets(3) == "3")
+        #expect(ProgressText.indirectSets(1.25) == "1,3")
     }
 }
 

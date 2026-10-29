@@ -89,14 +89,3 @@ struct DisclosureHeader<Label: View>: View {
         }
     }
 }
-
-/// Mientras el dedo está apoyado, la cabecera se apaga un poco: Apple pide que todo botón propio se
-/// vea pulsado (repaso de la HIG, 2026-10-28). Sin animación: con `.plain`, el texto volvía con un
-/// fundido después de abrirse la tarjeta, un parpadeo en cada toque (vídeo del CI, 2026-10-27).
-private struct DimmedButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.6 : 1)
-            .animation(nil, value: configuration.isPressed)
-    }
-}

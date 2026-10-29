@@ -56,15 +56,13 @@ public final class CatalogModel {
 
     // MARK: - Resumen
 
-    public var total: Int { data.catalog.ids.count }
+    private var total: Int { data.catalog.ids.count }
 
     /// Los que no tienen uno de los grupos que se pueden elegir.
-    public var withoutGroup: Int { data.catalog.all.filter { !($0.group?.isKnown ?? false) }.count }
+    private var withoutGroup: Int { data.catalog.all.filter { !($0.group?.isKnown ?? false) }.count }
 
     /// Debajo del título del catálogo: «4 en total · 1 sin grupo» (antes, la tarjeta de Progreso).
-    public var summary: String {
-        withoutGroup > 0 ? "\(CatalogText.total(total)) · \(CatalogText.withoutGroup(withoutGroup))" : CatalogText.total(total)
-    }
+    public var summary: String { CatalogText.summary(total: total, withoutGroup: withoutGroup) }
 
     // MARK: - Lista
 
@@ -76,7 +74,7 @@ public final class CatalogModel {
         }
     }
 
-    /// "Volver a Estadísticas": la búsqueda se olvida.
+    /// Volver a Progreso: la búsqueda se olvida.
     public func leave() {
         query = ""
         editor = nil
@@ -139,7 +137,7 @@ public final class CatalogModel {
     /// La ✓, apagada sin cambios o con el nombre vacío.
     public var canSave: Bool { hasChanges && !(editor?.name.trimmingWhitespace().isEmpty ?? true) }
 
-    /// "Guardar". Si no vale, el editor sigue abierto (la interfaz no deja llegar a eso).
+    /// La ✓. Si no vale, el editor sigue abierto (la interfaz no deja llegar a eso).
     public func save() async {
         guard let editor, canSave else { return }
         var data = data

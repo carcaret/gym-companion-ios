@@ -48,8 +48,8 @@ public final class ProgressModel {
 
     /// La tarjeta Ejercicios enseña todo, no solo los estancados.
     public private(set) var isExpanded = false
-    public private(set) var openRows: Set<ExerciseID> = []
-    public private(set) var openGroups: Set<String> = []
+    private var openRows: Set<ExerciseID> = []
+    private var openGroups: Set<String> = []
     /// Las gráficas de un ejercicio, empujadas dentro de Progreso; `nil` = Progreso.
     public private(set) var charts: ChartsModel?
 
@@ -93,7 +93,7 @@ public final class ProgressModel {
 
     public var exercisesSubtitle: String {
         let rows = allRows
-        return StatsText.exercisesSubtitle(stalled: rows.filter { $0.status == .stalled }.count, total: rows.count,
+        return ProgressText.exercisesSubtitle(stalled: rows.filter { $0.status == .stalled }.count, total: rows.count,
                                            progressing: rows.filter { $0.status == .progressing }.count)
     }
 
@@ -129,9 +129,9 @@ public final class ProgressModel {
         data.groupSets(anchor: clock.today(), weeks: Self.weeks).map { group in
             let name = GroupText.name(group.group)
             return GroupRow(
-                name: name, sets: group.sets, indirectSets: group.indirectSets, total: Int((group.totalSets + 0.5).rounded(.down)),
+                name: name, sets: group.sets, indirectSets: group.indirectSets, total: Int(jsRound(group.totalSets)),
                 exercises: group.exercises.map { ($0.name, "\($0.sets) · \($0.sessions)") },
-                indirect: group.indirect.map { ($0.name, StatsText.indirectSets($0.sets)) },
+                indirect: group.indirect.map { ($0.name, ProgressText.indirectSets($0.sets)) },
                 isOpen: openGroups.contains(name)
             )
         }

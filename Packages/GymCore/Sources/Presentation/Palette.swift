@@ -24,9 +24,3 @@ public enum Palette {
     public static let actions = [actionBlue, actionRed, actionGray]
     public static let white = RGB(hex: 0xFFFFFF)
 }
-
-extension RGB {
-    public init(hex: UInt32) {
-        self.init(r: Int((hex >> 16) & 0xFF), g: Int((hex >> 8) & 0xFF), b: Int(hex & 0xFF))
-    }
-}

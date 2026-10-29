@@ -32,12 +32,6 @@ public final class TodayModel {
         public let tint: RoutineTint?
     }
 
-    public typealias SeriesState = ExerciseCard.SeriesState
-    public typealias SeriesCell = ExerciseCard.SeriesCell
-    public typealias ChipRelation = ExerciseCard.ChipRelation
-    public typealias Chip = ExerciseCard.Chip
-    public typealias Card = ExerciseCard
-
     /// Una línea del entreno terminado (el formato del historial).
     public struct SummaryRow: Hashable, Sendable {
         public let title: String
@@ -206,7 +200,7 @@ public final class TodayModel {
     }
 
     /// Cada ejercicio con los valores con los que arrancaría (`getBestRecentValuesForExercise`).
-    public var previewCards: [Card] {
+    public var previewCards: [ExerciseCard] {
         guard case .preview(let routine) = stage else { return [] }
         let exerciseIDs = data.routines.first { $0.id == routine }?.exerciseIDs ?? []
         return exerciseIDs.enumerated().map { index, id in
@@ -267,7 +261,7 @@ public final class TodayModel {
 
     // MARK: - Entreno en curso
 
-    public var activeCards: [Card] {
+    public var activeCards: [ExerciseCard] {
         guard let session = activeSession else { return [] }
         return session.logs.enumerated().map { index, log in
             card(for: log, index: index, isOpen: log.exerciseID == openExercise, editable: true, anchor: session.date)
@@ -633,7 +627,7 @@ public final class TodayModel {
         return data.routines.first { $0.id == routine }?.name ?? routine.rawValue
     }
 
-    private func card(for log: ExerciseLog, index: Int, isOpen: Bool, editable: Bool, anchor: LocalDate) -> Card {
+    private func card(for log: ExerciseLog, index: Int, isOpen: Bool, editable: Bool, anchor: LocalDate) -> ExerciseCard {
         ExerciseCard(
             log: log, data: data, isOpen: isOpen, isEditable: editable, anchor: anchor,
             focusedSeries: editable && focusedSeries?.log == index ? focusedSeries?.series : nil,

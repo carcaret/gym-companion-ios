@@ -5,7 +5,7 @@ import Foundation
 import GymCoreTesting
 import Testing
 
-// Solo en Apple (el job `app` del CI, en macOS); en Linux no hay Llavero.
+// Solo en Apple (el job `watch` del CI, que pasa el paquete en macOS); en Linux no hay Llavero.
 @Suite("Token en el Llavero", .serialized)
 struct KeychainCredentialStoreTests {
     @Test(arguments: CredentialStoreContract.allCases)

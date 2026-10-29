@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SWIFT_TESTS = [ROOT / "Packages/GymCore/Tests", ROOT / "UITests", ROOT / "AppTests"]
+SWIFT_TESTS = [ROOT / "Packages/GymCore/Tests", ROOT / "UITests"]
 NOT_APPLICABLE = ROOT / "docs/pwa-tests-no-aplican.tsv"
 PORTED_FILES = ROOT / "docs/pwa-tests-ficheros.txt"
 

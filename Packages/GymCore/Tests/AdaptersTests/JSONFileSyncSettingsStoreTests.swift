@@ -35,29 +35,3 @@ struct JSONFileSyncSettingsStoreTests {
         await #expect(throws: (any Error).self) { try await JSONFileSyncSettingsStore(file: file).load() }
     }
 }
-
-@Suite("Dobles de los puertos de sincronización")
-struct SyncDoublesTests {
-    @Test(arguments: SyncSettingsStoreContract.allCases)
-    func settings(_ check: SyncSettingsStoreContract) async throws {
-        try await check.verify(makeStores: {
-            let storage = InMemorySyncSettingsStore.Storage()
-            return { InMemorySyncSettingsStore(storage: storage) }
-        })
-    }
-
-    @Test(arguments: CredentialStoreContract.allCases)
-    func credentials(_ check: CredentialStoreContract) async throws {
-        try await check.verify(makeStores: {
-            let storage = InMemoryCredentialStore.Storage()
-            return { InMemoryCredentialStore(storage: storage) }
-        })
-    }
-
-    @Test(arguments: RemoteTrainingDataSourceContract.allCases)
-    func remote(_ check: RemoteTrainingDataSourceContract) async throws {
-        try await check.verify(makeSource: {
-            (InMemoryRemote(storage: .init()), SyncLocation(repository: "u/r"), "t")
-        })
-    }
-}

@@ -1,6 +1,6 @@
 import Domain
 
-/// Los textos del Historial, los mismos que la PWA (`views/historial.js`).
+/// Los textos del Historial. Salen de la PWA (`views/historial.js`), con los cambios que anota cada uno.
 public enum HistoryText {
     public static let title = "Historial"
     public static let empty = "No hay sesiones registradas"
@@ -11,8 +11,6 @@ public enum HistoryText {
     // Editar una sesión (2026-10-27)
     public static let edit = "Editar"
     public static let discardTitle = "Los cambios en esta sesión se perderán."
-    public static let discardConfirm = "Descartar cambios"
-    public static let keepEditing = "Seguir editando"
     /// La sesión cambió por otro lado mientras se editaba (el entreno en curso, otra rutina hoy,
     /// lo bajado de GitHub): la ✓ no la pisa.
     public static let changedWhileEditing = Notice("La sesión ha cambiado mientras la editabas. Vuelve a editarla.", .warning)
@@ -36,5 +34,4 @@ public enum HistoryText {
     public static let deleteConfirm = "Borrar"
     /// El botón del globo que lo confirma (repaso de la HIG, 2026-10-28).
     public static let deleteSession = "Borrar entreno"
-    public static let cancel = "Cancelar"
 }

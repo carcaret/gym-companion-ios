@@ -1,21 +1,5 @@
 import Domain
 
-/// Un color RGB de 0 a 255.
-public struct RGB: Hashable, Sendable {
-    public let r: Int
-    public let g: Int
-    public let b: Int
-
-    public init(r: Int, g: Int, b: Int) {
-        self.r = r
-        self.g = g
-        self.b = b
-    }
-
-    /// "rgb(30,58,80)", como el CSS de la PWA.
-    public var text: String { "rgb(\(r),\(g),\(b))" }
-}
-
 /// Escala de intensidad del grupo «por debajo del objetivo»: por volumen o, si todas empatan, por
 /// 1RM estimado.
 public struct BelowTargetScale: Hashable, Sendable {
@@ -73,7 +57,7 @@ public enum BarColor {
 
     /// Como `Math.round` de JS en cada canal.
     private static func interpolate(_ a: RGB, _ b: RGB, _ t: Double) -> RGB {
-        func channel(_ x: Int, _ y: Int) -> Int { Int((Double(x) + Double(y - x) * t + 0.5).rounded(.down)) }
+        func channel(_ x: Int, _ y: Int) -> Int { Int(jsRound(Double(x) + Double(y - x) * t)) }
         return RGB(r: channel(a.r, b.r), g: channel(a.g, b.g), b: channel(a.b, b.b))
     }
 }

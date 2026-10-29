@@ -79,7 +79,7 @@ public enum HistoryStrip {
             let level = levels[levelIndex]
             levelIndex += 1
             let color = BarColor.color(item.log, blueRange: blueRange, belowTargetScale: belowTargetScale, referenceWeight: current.weight, blueMetric: level)
-            let height = max(6, Int((level * 100 + 0.5).rounded(.down)))
+            let height = max(6, Int(jsRound(level * 100)))
             return StripBar(kind: .session(height: height, color: color, isCurrent: item.isCurrent, tooltip: tooltip(item.log)), dateLabel: label)
         }
         return HistoryStripContent(bars: bars, delta: delta)
@@ -118,19 +118,9 @@ public enum HistoryStrip {
     /// "60 kg · 12-11-10". Los kilos, como en el resto de la app: con espacio y coma decimal (la
     /// PWA ponía "84kg" y "73.3kg"; cambio aprobado por el usuario, 2026-10-27).
     public static func tooltip(_ log: ExerciseLog) -> String {
-        let e1rm = log.estimatedOneRepMax
-        let first = e1rm > 0 ? "e1RM \(LogText.kilograms((e1rm * 10 + 0.5).rounded(.down) / 10)) kg" : ""
+        let first = log.estimatedOneRepMax > 0 ? "e1RM \(LogText.kilograms(log.roundedEstimatedOneRepMax)) kg" : ""
         let reps = log.actualReps.contains { $0 != nil } ? LogText.reps(log.actualReps) : ""
         let second = [log.weight > 0 ? "\(LogText.kilograms(log.weight)) kg" : "", reps].filter { !$0.isEmpty }.joined(separator: " · ")
         return [first, second].filter { !$0.isEmpty }.joined(separator: "\n")
-    }
-}
-
-/// Los chips para elegir las reps de una serie (`buildChipValues`, `buildChipStripHtml`).
-public enum RepChips {
-    /// Cinco valores alrededor de `current`, sin bajar de 0.
-    public static func values(around current: Int) -> [Int] {
-        let low = max(0, current - 2)
-        return Array(low...(low + 4))
     }
 }

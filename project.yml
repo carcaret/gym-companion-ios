@@ -115,7 +115,8 @@ targets:
   GymCompanionWatchUITests:
     type: bundle.ui-testing
     platform: watchOS
-    sources: [WatchUITests]
+    # Las esperas, las mismas que en los tests del iPhone (`appears(timeout:)`).
+    sources: [WatchUITests, UITests/Waiting.swift]
     dependencies:
       - target: GymCompanionWatch
     settings:

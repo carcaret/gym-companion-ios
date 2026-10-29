@@ -5,3 +5,8 @@ Payload/
 .DS_Store
 .build/
 .swiftpm/
+# Los genera XcodeGen desde project.yml.
+App/Info.plist
+Watch/Info.plist
+# Lo local de Claude Code.
+.claude/

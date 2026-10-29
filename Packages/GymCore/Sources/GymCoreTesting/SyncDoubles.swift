@@ -1,17 +1,6 @@
 import Application
 import Domain
 
-/// Reloj parado en un día.
-public struct FixedClock: Clock {
-    private let day: LocalDate
-
-    public init(_ day: LocalDate) {
-        self.day = day
-    }
-
-    public func today() -> LocalDate { day }
-}
-
 /// Doble de la configuración de la sincronización; las instancias con el mismo `Storage` ven lo
 /// mismo, como dos arranques.
 public struct InMemorySyncSettingsStore: SyncSettingsStore {

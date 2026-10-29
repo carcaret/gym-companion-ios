@@ -30,7 +30,7 @@ public final class SettingsModel {
     /// Por qué no se guardó (la conexión falló), debajo de los campos.
     public private(set) var connectionResult: Notice?
 
-    public let version: AppVersion
+    private let version: AppVersion
     private let sync: SyncModel
     private let repositoryActor: TrainingRepository
     private var savedLocation: SyncLocation?
@@ -43,8 +43,7 @@ public final class SettingsModel {
         self.version = version
     }
 
-    /// "Versión 0.1 (15)": lo que ha instalado el NAS.
-    public var versionLabel: String { "Versión \(version.label)" }
+    public var versionLabel: String { SettingsText.version(version) }
 
     /// Algo cambiado, con repo y token escritos, y nada en marcha.
     public var canSave: Bool {
@@ -53,7 +52,6 @@ public final class SettingsModel {
     /// Descargar trabaja con lo guardado.
     public var canTransfer: Bool { activity == nil && savedLocation != nil }
 
-    public var status: SyncStatus { sync.status }
     public var statusText: String { sync.statusText }
 
     /// Al abrir: los campos con lo guardado.
@@ -75,7 +73,7 @@ public final class SettingsModel {
 
     private var fields: [String] { [repository, branch, path, token] }
 
-    /// "Guardar": prueba lo escrito y, si va bien, lo guarda y cierra la hoja; si no, dice por qué
+    /// La ✓: prueba lo escrito y, si va bien, lo guarda y cierra la hoja; si no, dice por qué
     /// debajo de los campos y no guarda nada. Rama y ruta vacías toman las de siempre.
     public func save() async {
         guard canSave else { return }

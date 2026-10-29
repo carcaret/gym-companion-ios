@@ -16,20 +16,18 @@ public struct JSONFileSyncSettingsStore: SyncSettingsStore {
     }
 
     public static func applicationSupport() throws -> JSONFileSyncSettingsStore {
-        let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        return JSONFileSyncSettingsStore(file: base.appendingPathComponent("GymCompanion/sync.json"))
+        JSONFileSyncSettingsStore(file: try JSONFile.applicationSupport("sync.json"))
     }
 
     public func load() async throws -> SyncSettings {
-        guard FileManager.default.fileExists(atPath: file.path) else { return SyncSettings() }
-        let stored = try JSONDecoder().decode(Stored.self, from: Data(contentsOf: file))
+        guard let contents = try JSONFile.read(file) else { return SyncSettings() }
+        let stored = try JSONDecoder().decode(Stored.self, from: contents)
         return SyncSettings(location: stored.location, hasPendingUpload: stored.hasPendingUpload)
     }
 
     public func save(_ settings: SyncSettings) async throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try encoder.encode(Stored(location: settings.location, hasPendingUpload: settings.hasPendingUpload)).write(to: file, options: .atomic)
+        try JSONFile.write(encoder.encode(Stored(location: settings.location, hasPendingUpload: settings.hasPendingUpload)), to: file)
     }
 }

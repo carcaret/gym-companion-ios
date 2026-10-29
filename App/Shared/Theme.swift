@@ -12,7 +12,6 @@ enum Theme {
     static let cardSolid = Color(Palette.cardSolid)   // --bg-card-solid
     static let input = Color.white.opacity(0.05)      // --bg-input
     static let border = Color.white.opacity(0.09)     // --border
-    static let borderLight = Color.white.opacity(0.06)
     static let borderStrong = Color.white.opacity(0.16)
 
     // Texto
@@ -27,27 +26,27 @@ enum Theme {
     /// pestañas, interruptores y alertas. Aquí en hexadecimal porque el reloj no tiene ese asset.
     static let accentLight = Color(hex: 0x9CDCFE)
     static let accentSoft = Color(hex: 0x93C5EA)
-    static let accentTint = Color(hex: 0x569CD6).opacity(0.15)
+    /// El texto oscuro sobre el azul (los botones principales).
+    static let onAccent = Color(hex: 0x08121C)
+    static let accentTint = accent.opacity(0.15)
     static let green = Color(hex: 0x6A9955)
     static let greenSoft = Color(hex: 0x5DCAA5)
-    static let greenTint = Color(hex: 0x5DCAA5).opacity(0.15)
+    static let greenTint = greenSoft.opacity(0.15)
     static let red = Color(hex: 0xF44747)
     static let redSoft = Color(hex: 0xE2706A)
-    static let redTint = Color(hex: 0xF44747).opacity(0.12)
-    static let skipTint = Color(hex: 0xF44747).opacity(0.06)
+    static let skipTint = red.opacity(0.06)
     static let danger = Color(hex: 0xD97070)
-    static let dangerTint = Color(hex: 0xD97070).opacity(0.15)
-    static let orange = Color(hex: 0xCE9178)
+    static let dangerTint = danger.opacity(0.15)
     static let gold = Color(hex: 0xDCDCAA)
 
     // Un color, un significado (repaso de la HIG, 2026-10-28): verde es solo «sincronizado» o
     // «bien»; rojo, solo error o lo que borra.
     /// Por debajo del objetivo (antes, verde).
     static let below = Color(hex: 0xCE9178)
-    static let belowTint = Color(hex: 0xCE9178).opacity(0.14)
+    static let belowTint = below.opacity(0.14)
     /// Por encima del objetivo: el azul de cumplido, más fuerte (antes, rojo, como un error).
     static let aboveText = Color(hex: 0xCFE6FB)
-    static let aboveTint = Color(hex: 0x569CD6).opacity(0.28)
+    static let aboveTint = accent.opacity(0.28)
 
     /// Fondos de las acciones de deslizar, con el texto blanco de iOS.
     static let actionBlue = Color(Palette.actionBlue)

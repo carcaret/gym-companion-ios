@@ -134,7 +134,7 @@ struct SyncPresentation: ViewModifier {
                 Button(SyncText.keepLocalLabel) { Task { await sync.keepLocal() } }
                 // Lo de este iPhone se pierde: en rojo.
                 Button(SyncText.keepRemoteLabel, role: .destructive) { Task { await sync.keepRemote() } }
-                Button(SyncText.cancelLabel, role: .cancel) { sync.cancelConflict() }
+                Button(FormText.cancel, role: .cancel) { sync.cancelConflict() }
             } message: {
                 Text(SyncText.conflictMessage)
             }

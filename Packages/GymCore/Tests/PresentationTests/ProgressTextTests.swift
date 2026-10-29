@@ -74,3 +74,15 @@ struct GroupNameTests {
         #expect(GroupText.name(nil) == "Sin grupo")
     }
 }
+
+@Suite("Textos de Progreso")
+struct ProgressScreenTextTests {
+    /// En iOS, cada etiqueta suelta empieza en mayúscula (repaso de la HIG, 2026-10-28; la PWA las
+    /// ponía en minúscula).
+    @Test("las leyendas empiezan en mayúscula")
+    func legends() {
+        #expect(ProgressText.direct == "Directo")
+        #expect(ProgressText.indirect == "Indirecto")
+        #expect(ProgressText.window(weeks: 8) == "Últimas 8 semanas")
+    }
+}

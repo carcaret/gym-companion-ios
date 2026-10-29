@@ -125,13 +125,13 @@ public final class SyncModel {
 
     // MARK: - Botones
 
-    /// "Descargar de GitHub", ya confirmado.
+    /// «Sustituir por los datos de GitHub», ya confirmado.
     public func download() async {
         await applyRemote()
         await refresh()
     }
 
-    /// Conflicto → "Subir local → GitHub". La alerta se cierra siempre (SwiftUI ya la ha cerrado
+    /// Conflicto → «Usar los de este iPhone». La alerta se cierra siempre (SwiftUI ya la ha cerrado
     /// al tocar): si falla, sale el error y el indicador sigue ofreciendo resolverlo.
     public func keepLocal() async {
         isConflictPresented = false
@@ -144,7 +144,7 @@ public final class SyncModel {
         await refresh()
     }
 
-    /// Conflicto → "Bajar GitHub → local", como `keepLocal`.
+    /// Conflicto → «Usar los de GitHub», como `keepLocal`.
     public func keepRemote() async {
         isConflictPresented = false
         await applyRemote()
@@ -179,7 +179,7 @@ public final class SyncModel {
         }
     }
 
-    /// "Guardar": rama y ruta vacías toman las de siempre (`master`, `db.json`). Sin repo o sin
+    /// La ✓ de los ajustes: rama y ruta vacías toman las de siempre (`master`, `db.json`). Sin repo o sin
     /// token no guarda (el botón está desactivado).
     /// Devuelve si se guardó.
     @discardableResult

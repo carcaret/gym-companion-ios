@@ -1,5 +1,3 @@
-import Domain
-
 /// Los textos de los ajustes de sincronización (`views/settings.js` e `index.html` de la PWA).
 public enum SettingsText {
     public static let title = "Sincronización"
@@ -19,5 +17,6 @@ public enum SettingsText {
     public static let download = "Sustituir por los datos de GitHub"
     public static let status = "Estado"
 
-    public static func status(_ state: String) -> String { state }
+    /// "Versión 0.1 (15)": lo que ha instalado el NAS.
+    public static func version(_ version: AppVersion) -> String { "Versión \(version.label)" }
 }
