@@ -27,12 +27,10 @@ struct RoutinePreview: View {
             BottomActions(primary: {
                 Button { Task { await model.requestStart() } } label: { Text(TodayText.start).frame(maxWidth: .infinity) }
                     .buttonStyle(.glassPill())
-                    .accessibilityIdentifier("start-workout")
+                    .accessibilityIdentifier(AccessibilityID.startWorkout)
                     // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     // `presenting` le pasa el aviso a la acción: SwiftUI lo cierra antes.
-                    .confirmationDialog(model.replacePrompt?.title ?? "", isPresented: Binding(
-                        get: { model.replacePrompt != nil }, set: { if !$0 { model.cancelReplace() } }
-                    ), titleVisibility: .visible, presenting: model.replacePrompt) { prompt in
+                    .confirmationDialog(model.replacePrompt?.title ?? "", isPresented: Binding(presentedWhile: { model.replacePrompt != nil }, onDismiss: { model.cancelReplace() }), titleVisibility: .visible, presenting: model.replacePrompt) { prompt in
                         Button(TodayText.replaceConfirm, role: .destructive) { Task { await model.confirmReplace(prompt) } }
                         Button(FormText.cancel, role: .cancel) { model.cancelReplace() }
                     } message: { prompt in

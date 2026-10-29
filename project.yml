@@ -65,7 +65,8 @@ targets:
   GymCompanionUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [UITests, App/Shared/LaunchArgument.swift]
+    # Los argumentos de arranque y los identificadores de accesibilidad, los mismos que la app.
+    sources: [UITests, App/Shared/LaunchArgument.swift, App/Shared/AccessibilityID.swift]
     dependencies:
       - target: GymCompanion
     settings:
@@ -74,7 +75,8 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: GymCompanion
   # App del reloj (#16): solo lectura, lo que le envía el iPhone. Comparte con la app los datos de
-  # ejemplo de las capturas, los colores y el icono (el catálogo de la app lo trae para iOS y watchOS).
+  # ejemplo de las capturas, los argumentos de arranque, los colores y el icono (el catálogo de la app
+  # lo trae para iOS y watchOS).
   GymCompanionWatch:
     type: application
     platform: watchOS
@@ -116,7 +118,8 @@ targets:
   GymCompanionWatchUITests:
     type: bundle.ui-testing
     platform: watchOS
-    # Las esperas, las mismas que en los tests del iPhone (`appears(timeout:)`).
+    # Lo mismo que en los tests del iPhone: las esperas (`appears(timeout:)`), las capturas y los
+    # argumentos de arranque.
     sources: [WatchUITests, UITests/Waiting.swift, UITests/Capture.swift, App/Shared/LaunchArgument.swift]
     dependencies:
       - target: GymCompanionWatch

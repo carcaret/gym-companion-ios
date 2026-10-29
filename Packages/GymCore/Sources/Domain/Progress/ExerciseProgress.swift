@@ -6,8 +6,8 @@ public enum ProgressStatus: Hashable, Sendable {
     case noTrack
 }
 
-/// Estado de progreso de un ejercicio en una ventana de semanas (tarjeta Ejercicios de
-/// Estadísticas). Diseño: `docs/superpowers/specs/2026-08-25-estadisticas-design.md` de la PWA.
+/// Estado de progreso de un ejercicio en una ventana de semanas (la sección Ejercicios
+/// de Progreso). Diseño: `docs/superpowers/specs/2026-08-25-estadisticas-design.md` de la PWA.
 public struct ExerciseProgress: Hashable, Sendable {
     public var exerciseID: ExerciseID
     public var name: String
@@ -131,7 +131,7 @@ extension TrainingData {
         progress.repsTo = atWeightInScope.last?.log.totalReps
         progress.spanDays = spanFrom.days(until: anchor)
         progress.allHit = atWeight[lastImprovement...].allSatisfy { session in
-            session.log.actualReps.allSatisfy { ($0 ?? .max) >= session.log.targetReps }
+            session.log.actualReps.allSatisfy { $0.map { RepOutcome(reps: $0, target: session.log.targetReps).meetsTarget } ?? true }
         }
         return progress
     }

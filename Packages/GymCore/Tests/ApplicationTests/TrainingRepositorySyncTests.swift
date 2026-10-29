@@ -33,7 +33,7 @@ struct GitHubSyncTests {
     @Test("GitHub devuelve 401 → muestra mensaje de error")
     func unauthorized() async throws {
         let harness = SyncHarness()
-        await harness.remote.fail(fetch: .status(401), push: .status(401))
+        await harness.remote.fail(fetch: .unauthorized, push: .unauthorized)
         let repository = harness.repository()
         _ = try await repository.start()
         #expect(await repository.download() == .failed)

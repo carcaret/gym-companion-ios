@@ -121,3 +121,14 @@ struct GroupSetsRulesTests {
         #expect(espalda?.sets == 7)
     }
 }
+
+@Suite("Cómo queda una serie respecto al objetivo")
+struct RepOutcomeTests {
+    @Test("por debajo, justo o por encima del objetivo; llegar a él es cumplirlo")
+    func outcome() {
+        #expect(RepOutcome(reps: 8, target: 10) == .below)
+        #expect(RepOutcome(reps: 10, target: 10) == .atTarget)
+        #expect(RepOutcome(reps: 12, target: 10) == .above)
+        #expect(!RepOutcome.below.meetsTarget && RepOutcome.atTarget.meetsTarget && RepOutcome.above.meetsTarget)
+    }
+}

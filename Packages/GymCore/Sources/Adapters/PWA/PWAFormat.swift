@@ -84,7 +84,7 @@ extension PWAFormat {
         Data(value(from: data).stringified().utf8)
     }
 
-    static func value(from data: TrainingData) -> JSONValue {
+    private static func value(from data: TrainingData) -> JSONValue {
         let exercises = data.catalog.all.map { exercise -> (key: String, value: JSONValue) in
             var fields: [(key: String, value: JSONValue)] = [("id", .string(exercise.id.rawValue)), ("name", .string(exercise.name))]
             if let group = exercise.group { fields.append(("grupo", .string(group.rawValue))) }

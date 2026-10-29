@@ -11,18 +11,18 @@ final class SettingsTests: XCTestCase {
     func testRetornoPasaAlCampoSiguiente() {
         let app = XCUIApplication.launchDemo()
         app.openSyncSettings()
-        let repository = app.textFields["settings-repository"]
+        let repository = app.textFields[AccessibilityID.settingsRepository]
         XCTAssertTrue(repository.appears(timeout: 10))
 
         repository.tap()
         // En el orden en que se ven: repositorio y token arriba; rama y ruta en «Avanzado».
         repository.typeText("usuario/repo\n")
-        XCTAssertTrue(hasFocus(app.secureTextFields["settings-token"]), "Retorno en Repositorio pasa al token")
-        app.secureTextFields["settings-token"].typeText("\n")
-        XCTAssertTrue(hasFocus(app.textFields["settings-branch"]), "Retorno en el token pasa a Rama")
-        app.textFields["settings-branch"].typeText("\n")
-        XCTAssertTrue(hasFocus(app.textFields["settings-path"]), "Retorno en Rama pasa a Ruta")
-        app.textFields["settings-path"].typeText("\n")
+        XCTAssertTrue(hasFocus(app.secureTextFields[AccessibilityID.settingsToken]), "Retorno en Repositorio pasa al token")
+        app.secureTextFields[AccessibilityID.settingsToken].typeText("\n")
+        XCTAssertTrue(hasFocus(app.textFields[AccessibilityID.settingsBranch]), "Retorno en el token pasa a Rama")
+        app.textFields[AccessibilityID.settingsBranch].typeText("\n")
+        XCTAssertTrue(hasFocus(app.textFields[AccessibilityID.settingsPath]), "Retorno en Rama pasa a Ruta")
+        app.textFields[AccessibilityID.settingsPath].typeText("\n")
 
         let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.keyboards.firstMatch)
         wait(for: [closed], timeout: 5)

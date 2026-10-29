@@ -19,7 +19,7 @@ struct TodayScreen: View {
                 ActiveWorkoutView(model: model).navigationTitle(model.title)
             }
         }
-        .navigationDestination(isPresented: Binding(get: { isPushed }, set: { if !$0 { model.backToSelector() } })) {
+        .navigationDestination(isPresented: Binding(presentedWhile: { isPushed }, onDismiss: { model.backToSelector() })) {
             // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
             // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
             Group {
@@ -64,7 +64,7 @@ struct TodayScreen: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.card)
-                .accessibilityIdentifier("routine-\(row.id.rawValue)")
+                .accessibilityIdentifier(AccessibilityID.routine(row.id.rawValue))
                 .cardRow()
             }
         }

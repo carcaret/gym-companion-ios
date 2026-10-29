@@ -13,10 +13,10 @@ final class NavigationTests: XCTestCase {
     func testDeslizarAMediasNoCierraElDetalleDelHistorial() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 10))
         first.tap()
-        let card = app.buttons["card-press_banca"].firstMatch
+        let card = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(card.appears(timeout: 10))
 
         swipeBackHalfway(app)
@@ -30,16 +30,16 @@ final class NavigationTests: XCTestCase {
     func testDeslizarAMediasNoCierraLaVistaPrevia() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
-        app.buttons["routine-DIA1"].tap()
-        let start = app.buttons["start-workout"]
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 10))
+        app.buttons[AccessibilityID.routine("DIA1")].tap()
+        let start = app.buttons[AccessibilityID.startWorkout]
         XCTAssertTrue(start.appears(timeout: 10))
 
         swipeBackHalfway(app)
         XCTAssertTrue(start.appears(timeout: 5), "Soltar a medias tiene que dejar la vista previa abierta")
 
         swipeBackFully(app)
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 5), "Deslizar del todo vuelve al selector")
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 5), "Deslizar del todo vuelve al selector")
     }
 
     /// Como en iOS: cambiar de pestaña y volver deja la pantalla donde estaba (decisión del
@@ -48,14 +48,14 @@ final class NavigationTests: XCTestCase {
     func testCambiarDePestanaConservaLaPantalla() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 20))
         first.tap()
-        let card = app.buttons["card-press_banca"].firstMatch
+        let card = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(card.appears(timeout: 20))
 
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 20))
         app.tabBars.buttons["Historial"].tap()
         XCTAssertTrue(card.appears(timeout: 10), "Al volver a Historial tiene que seguir el detalle")
     }
@@ -66,26 +66,26 @@ final class NavigationTests: XCTestCase {
     func testTocarOtraVezLaPestanaVuelveALaEntrada() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 20))
         first.tap()
-        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 20))
+        XCTAssertTrue(app.buttons[AccessibilityID.card("press_banca")].firstMatch.appears(timeout: 20))
         app.tabBars.buttons["Historial"].tap()
         XCTAssertTrue(first.appears(timeout: 10), "Tocar otra vez Historial vuelve a la lista")
 
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
-        app.buttons["routine-DIA1"].tap()
-        let start = app.buttons["start-workout"]
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 20))
+        app.buttons[AccessibilityID.routine("DIA1")].tap()
+        let start = app.buttons[AccessibilityID.startWorkout]
         XCTAssertTrue(start.appears(timeout: 20))
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10), "Tocar otra vez Rutinas vuelve al selector")
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 10), "Tocar otra vez Rutinas vuelve al selector")
         // Hasta que la vista previa acaba de cerrarse: un toque en la barra de pestañas durante la
         // animación de volver se pierde, y el test seguía en Rutinas (2026-10-26).
         XCTAssertTrue(start.waitForNonExistence(timeout: 10))
 
         app.tabBars.buttons["Progreso"].tap()
-        openChartsFromProgress(app)
+        app.openChartsFromProgress()
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10), "Tocar otra vez Progreso cierra las gráficas")
     }
@@ -96,10 +96,10 @@ final class NavigationTests: XCTestCase {
     func testVerEnGraficasEntraEmpujadaEnProgreso() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Progreso"].tap()
-        openChartsFromProgress(app)
+        app.openChartsFromProgress()
         XCTAssertTrue(app.tabBars.buttons["Progreso"].isSelected, "Las gráficas se abren dentro de Progreso")
         // La fila del ejercicio es un `NavigationLink`: su texto va en la etiqueta del botón.
-        XCTAssertTrue(app.buttons["chart-exercise"].label.contains("Press Banca"), "Con el ejercicio elegido")
+        XCTAssertTrue(app.buttons[AccessibilityID.chartExercise].label.contains("Press Banca"), "Con el ejercicio elegido")
 
         swipeBackFully(app)
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10), "Deslizar vuelve a Progreso")
@@ -111,14 +111,14 @@ final class NavigationTests: XCTestCase {
     func testDeslizarDesdeElEntrenoTerminadoVuelveALasRutinas() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Rutinas"].tap()
-        let routine = app.buttons["routine-DIA1"]
+        let routine = app.buttons[AccessibilityID.routine("DIA1")]
         XCTAssertTrue(routine.appears(timeout: 20))
         routine.tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
-        app.buttons["start-workout"].tap()
-        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10))
-        app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.startWorkout].appears(timeout: 10))
+        app.buttons[AccessibilityID.startWorkout].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.finishWorkout].appears(timeout: 10))
+        app.buttons[AccessibilityID.finishWorkout].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
 
         swipeBackFully(app)
         XCTAssertTrue(routine.appears(timeout: 10), "Deslizar desde el entreno terminado vuelve a las rutinas")
@@ -131,35 +131,35 @@ final class NavigationTests: XCTestCase {
         let app = XCUIApplication.launchDemo()
 
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 20))
+        app.buttons[AccessibilityID.routine("DIA1")].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.startWorkout].appears(timeout: 10))
         assertSyncIndicator(app, "en la vista previa de una rutina")
 
         app.tabBars.buttons["Historial"].tap()
-        let session = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let session = app.firstHistorySession
         XCTAssertTrue(session.appears(timeout: 10))
         session.tap()
-        XCTAssertTrue(app.buttons["card-press_banca"].firstMatch.appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.card("press_banca")].firstMatch.appears(timeout: 10))
         assertSyncIndicator(app, "en el detalle del historial")
 
         app.tabBars.buttons["Gráficas"].tap()
-        let exercise = app.buttons["chart-exercise"]
+        let exercise = app.buttons[AccessibilityID.chartExercise]
         XCTAssertTrue(exercise.appears(timeout: 10))
         exercise.tap()
         XCTAssertTrue(app.buttons["Press Banca"].firstMatch.appears(timeout: 10))
         assertSyncIndicator(app, "al elegir ejercicio en Gráficas")
 
         app.tabBars.buttons["Progreso"].tap()
-        openChartsFromProgress(app)
+        app.openChartsFromProgress()
         assertSyncIndicator(app, "en las gráficas abiertas desde Progreso")
 
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.navigationBars["Progreso"].appears(timeout: 10))
         // El catálogo, en la barra de Progreso, a la izquierda de la nube: el borde izquierdo es
         // para volver (repaso de la HIG, 2026-10-28).
-        let catalog = app.buttons["catalog-button"]
-        let indicator = app.buttons["sync-indicator"]
+        let catalog = app.buttons[AccessibilityID.catalogButton]
+        let indicator = app.buttons[AccessibilityID.syncIndicator]
         XCTAssertGreaterThan(catalog.frame.minX, app.windows.firstMatch.frame.midX, "El catálogo va a la derecha")
         XCTAssertLessThanOrEqual(catalog.frame.maxX, indicator.frame.minX, "El catálogo va a la izquierda de la nube")
         catalog.tap()
@@ -169,22 +169,8 @@ final class NavigationTests: XCTestCase {
 
     @MainActor
     private func assertSyncIndicator(_ app: XCUIApplication, _ place: String) {
-        let indicator = app.buttons["sync-indicator"]
+        let indicator = app.buttons[AccessibilityID.syncIndicator]
         XCTAssertTrue(indicator.appears(timeout: 5) && indicator.isHittable, "Falta la nube \(place)")
-    }
-
-    @MainActor
-    private func openChartsFromProgress(_ app: XCUIApplication) {
-        let expand = app.buttons["stats-exercises"]
-        XCTAssertTrue(expand.appears(timeout: 20))
-        expand.tap()
-        let row = app.buttons["stats-row-press_banca"]
-        XCTAssertTrue(row.appears(timeout: 10))
-        row.tap()
-        let open = app.buttons["Ver en Gráficas"].firstMatch
-        XCTAssertTrue(open.appears(timeout: 10))
-        open.tap()
-        XCTAssertTrue(app.navigationBars["Gráficas"].appears(timeout: 20))
     }
 
     /// Desde el borde izquierdo hasta un cuarto de la pantalla, despacio, y soltar: iOS cancela.

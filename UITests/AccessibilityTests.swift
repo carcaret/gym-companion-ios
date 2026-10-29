@@ -11,19 +11,19 @@ final class AccessibilityTests: XCTestCase {
     func testLaTarjetaDelEntrenoSeEntiendeConVoiceOver() {
         let app = XCUIApplication.launchDemo()
         app.startWorkout()
-        app.buttons["card-press_banca"].firstMatch.tap()
+        app.buttons[AccessibilityID.card("press_banca")].firstMatch.tap()
 
         // Un botón dice lo que hace, con su verbo; antes, «+ Ejercicio» y VoiceOver solo decía
         // «Ejercicio» (repaso de la HIG, 2026-10-28).
-        XCTAssertEqual(app.buttons["add-exercise"].label, "Añadir ejercicio")
-        XCTAssertEqual(app.buttons["weight-plus"].firstMatch.label, "Subir peso")
-        XCTAssertEqual(app.buttons["weight-minus"].firstMatch.label, "Bajar peso")
-        XCTAssertEqual(app.buttons["target-reps-plus"].firstMatch.label, "Subir repeticiones objetivo")
-        let weight = app.textFields["weight-field"].firstMatch
+        XCTAssertEqual(app.buttons[AccessibilityID.addExercise].label, "Añadir ejercicio")
+        XCTAssertEqual(app.buttons[AccessibilityID.parameter(.weight, .plus)].firstMatch.label, "Subir peso")
+        XCTAssertEqual(app.buttons[AccessibilityID.parameter(.weight, .minus)].firstMatch.label, "Bajar peso")
+        XCTAssertEqual(app.buttons[AccessibilityID.parameter(.targetReps, .plus)].firstMatch.label, "Subir repeticiones objetivo")
+        let weight = app.textFields[AccessibilityID.parameter(.weight, .field)].firstMatch
         XCTAssertEqual(weight.label, "Peso")
         XCTAssertTrue((weight.value as? String)?.hasSuffix("kilos") == true, "\(weight.value ?? "")")
 
-        let series = app.descendants(matching: .any)["series-0"].firstMatch
+        let series = app.descendants(matching: .any)[AccessibilityID.series(0)].firstMatch
         XCTAssertTrue(series.appears(timeout: 5))
         XCTAssertEqual(series.label, "Serie 1")
         let value = series.value as? String ?? ""

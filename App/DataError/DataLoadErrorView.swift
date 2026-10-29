@@ -20,10 +20,10 @@ struct DataLoadErrorView: View {
             // Lo más probable es reintentar: destacado, como la acción principal de las píldoras.
             Button(DataErrorText.retry) { run { await model.start() } }
                 .buttonStyle(.pill)
-                .accessibilityIdentifier("data-retry")
+                .accessibilityIdentifier(AccessibilityID.dataRetry)
             if sync.offersDownload {
                 Button(SettingsText.download, role: .destructive) { isDownloadConfirmationPresented = true }
-                    .accessibilityIdentifier("data-download")
+                    .accessibilityIdentifier(AccessibilityID.dataDownload)
                     // Colgado del botón: en iOS 26 el diálogo sale como globo que apunta a su vista.
                     .confirmationDialog(SyncText.downloadTitle, isPresented: $isDownloadConfirmationPresented,
                                         titleVisibility: .visible) {

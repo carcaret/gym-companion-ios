@@ -16,7 +16,7 @@ struct GroupBarRow: View {
     @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 26
 
     var body: some View {
-        CardDisclosure(isExpanded: group.isOpen, chevronSize: 11, identifier: "stats-group-\(group.name)",
+        CardDisclosure(isExpanded: group.isOpen, chevronSize: 11, identifier: AccessibilityID.statsGroup(group.name),
                        headerPadding: EdgeInsets(top: 13, leading: 16, bottom: 13, trailing: 16), toggle: toggle) {
             HStack(spacing: 10) {
                 Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)

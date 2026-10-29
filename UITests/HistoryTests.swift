@@ -13,7 +13,7 @@ final class HistoryTests: XCTestCase {
     func testBorrarDeslizandoLaFila() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 10))
         let row = app.buttons[first.identifier]
 
@@ -33,12 +33,12 @@ final class HistoryTests: XCTestCase {
 
     /// Mientras se confirma, la lista no cambia: con `role: .destructive` la lista daba la fila
     /// por borrada al tocar el botón de deslizar, la quitaba y SwiftUI la volvía a meter, con las
-    /// filas cambiadas de sitio a la vista (2026-10-25). Cancelar la deja igual.
+    /// filas cambiadas de sitio a la vista (2026-10-25). Tocar fuera del globo la deja igual.
     @MainActor
     func testConfirmarElBorradoNoQuitaLaFilaAntesDeTiempo() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'"))
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.historyPrefix))
         XCTAssertTrue(rows.firstMatch.appears(timeout: 10))
         let before = rows.allElementsBoundByIndex.map(\.identifier)
         XCTAssertGreaterThan(before.count, 2)
@@ -66,7 +66,7 @@ final class HistoryTests: XCTestCase {
     func testTirarHaciaAbajoSincroniza() {
         let app = XCUIApplication.launchDemo(.longNotices)
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 20))
 
         // Desde la parte vacía de la lista, debajo de las filas, hasta abajo, aguantando antes de
@@ -74,7 +74,7 @@ final class HistoryTests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.62))
             .press(forDuration: 0, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
                    withVelocity: .default, thenHoldForDuration: 1)
-        let notice = app.staticTexts.matching(identifier: "notice").firstMatch
+        let notice = app.staticTexts.matching(identifier: AccessibilityID.notice).firstMatch
         XCTAssertTrue(notice.appears(timeout: 10))
         XCTAssertEqual(notice.label, "GitHub no configurado")
 
@@ -92,51 +92,51 @@ final class HistoryTests: XCTestCase {
     @MainActor
     func testEditarYCancelarDescarta() {
         let app = openFirstSessionCard()
-        let value = app.descendants(matching: .any)["weight-value"].firstMatch
+        let value = app.descendants(matching: .any)[AccessibilityID.parameter(.weight, .value)].firstMatch
         XCTAssertTrue(value.appears(timeout: 10))
         let saved = value.value as? String
-        XCTAssertFalse(app.buttons["weight-plus"].exists, "Sin «Editar», la tarjeta no se puede cambiar")
+        XCTAssertFalse(app.buttons[AccessibilityID.parameter(.weight, .plus)].exists, "Sin «Editar», la tarjeta no se puede cambiar")
         // «Editar», a la izquierda de la nube, que sigue en la esquina (2026-10-27).
-        XCTAssertLessThan(app.buttons["session-edit"].frame.maxX, app.buttons["sync-indicator"].firstMatch.frame.minX)
+        XCTAssertLessThan(app.buttons[AccessibilityID.sessionEdit].frame.maxX, app.buttons[AccessibilityID.syncIndicator].firstMatch.frame.minX)
 
-        app.buttons["session-edit"].tap()
-        let plus = app.buttons["weight-plus"].firstMatch
+        app.buttons[AccessibilityID.sessionEdit].tap()
+        let plus = app.buttons[AccessibilityID.parameter(.weight, .plus)].firstMatch
         XCTAssertTrue(plus.appears(timeout: 5))
         plus.tap()
-        XCTAssertNotEqual(app.textFields["weight-field"].firstMatch.value as? String, saved)
+        XCTAssertNotEqual(app.textFields[AccessibilityID.parameter(.weight, .field)].firstMatch.value as? String, saved)
 
         // La hoja de editar, con cambios, no se cierra deslizando hacia abajo.
         app.navigationBars.firstMatch.swipeDown()
-        XCTAssertTrue(app.buttons["session-cancel"].appears(timeout: 5), "Con cambios, deslizar no cierra la hoja")
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionCancel].appears(timeout: 5), "Con cambios, deslizar no cierra la hoja")
 
-        app.buttons["session-cancel"].tap()
+        app.buttons[AccessibilityID.sessionCancel].tap()
         let discard = app.buttons["Descartar cambios"].firstMatch
         XCTAssertTrue(discard.appears(timeout: 5))
         discard.tap()
-        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 5))
-        XCTAssertEqual(app.descendants(matching: .any)["weight-value"].firstMatch.value as? String, saved)
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionEdit].appears(timeout: 5))
+        XCTAssertEqual(app.descendants(matching: .any)[AccessibilityID.parameter(.weight, .value)].firstMatch.value as? String, saved)
     }
 
     /// La ✓ guarda y vuelve a solo lectura con lo cambiado.
     @MainActor
-    func testEditarYOKGuarda() {
+    func testEditarYConfirmarGuarda() {
         let app = openFirstSessionCard()
-        let value = app.descendants(matching: .any)["weight-value"].firstMatch
+        let value = app.descendants(matching: .any)[AccessibilityID.parameter(.weight, .value)].firstMatch
         XCTAssertTrue(value.appears(timeout: 10))
         let saved = value.value as? String
 
-        app.buttons["session-edit"].tap()
-        let plus = app.buttons["weight-plus"].firstMatch
+        app.buttons[AccessibilityID.sessionEdit].tap()
+        let plus = app.buttons[AccessibilityID.parameter(.weight, .plus)].firstMatch
         XCTAssertTrue(plus.appears(timeout: 5))
         // La ✓, apagada sin cambios (2026-10-28).
-        XCTAssertFalse(app.buttons["session-done"].isEnabled)
+        XCTAssertFalse(app.buttons[AccessibilityID.sessionDone].isEnabled)
         plus.tap()
-        XCTAssertTrue(app.buttons["session-done"].isEnabled)
-        let edited = app.textFields["weight-field"].firstMatch.value as? String
-        app.buttons["session-done"].tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionDone].isEnabled)
+        let edited = app.textFields[AccessibilityID.parameter(.weight, .field)].firstMatch.value as? String
+        app.buttons[AccessibilityID.sessionDone].tap()
 
-        XCTAssertTrue(app.buttons["session-edit"].appears(timeout: 5))
-        let after = app.descendants(matching: .any)["weight-value"].firstMatch
+        XCTAssertTrue(app.buttons[AccessibilityID.sessionEdit].appears(timeout: 5))
+        let after = app.descendants(matching: .any)[AccessibilityID.parameter(.weight, .value)].firstMatch
         XCTAssertTrue(after.appears(timeout: 5))
         XCTAssertNotEqual(after.value as? String, saved)
         // El número: el campo y el valor de solo lectura pueden decir o no los kilos.
@@ -148,10 +148,10 @@ final class HistoryTests: XCTestCase {
     private func openFirstSessionCard() -> XCUIApplication {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
+        let first = app.firstHistorySession
         XCTAssertTrue(first.appears(timeout: 10))
         first.tap()
-        let card = app.buttons["card-press_banca"].firstMatch
+        let card = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(card.appears(timeout: 10))
         card.tap()
         return app

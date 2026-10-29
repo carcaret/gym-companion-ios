@@ -2,8 +2,8 @@
 public enum CatalogText {
     /// El botón de la barra de Progreso que abre el catálogo, para VoiceOver.
     public static let openLabel = "Catálogo de ejercicios"
-    public static func total(_ count: Int) -> String { "\(count) en total" }
-    public static func withoutGroup(_ count: Int) -> String { "\(count) sin grupo" }
+    private static func total(_ count: Int) -> String { "\(count) en total" }
+    private static func withoutGroup(_ count: Int) -> String { "\(count) sin grupo" }
     /// Debajo del título del catálogo: «4 en total · 1 sin grupo».
     public static func summary(total count: Int, withoutGroup: Int) -> String {
         withoutGroup > 0 ? "\(total(count)) · \(Self.withoutGroup(withoutGroup))" : total(count)

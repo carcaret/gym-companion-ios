@@ -29,7 +29,7 @@ extension TodayModel {
     public struct SummaryRow: Hashable, Sendable {
         public let title: String
         public let subtitle: String
-        /// Saltado: se pinta con el fondo de saltado y sin botones.
+        /// Saltado: se pinta con el fondo de saltado.
         public let isSkipped: Bool
     }
 
@@ -56,7 +56,7 @@ extension TodayModel {
         /// "Crear «Press Arnold»": lo buscado, si no existe, se crea de un toque, sin alerta (con el
         /// teclado abierto, la alerta se perdía al cerrarse la búsqueda; 2026-10-27).
         public let searchCreateLabel: String?
-        /// "Crear nuevo ejercicio", con su alerta: solo sin nada buscado.
+        /// "Crear nuevo ejercicio", que abre su pantalla: solo sin nada buscado.
         public let offersNewExercise: Bool
     }
 

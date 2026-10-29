@@ -15,7 +15,6 @@ struct ExercisePickerSheet: View {
                 if let picker = model.picker {
                     if picker.offersOneOff {
                         Toggle(TodayText.oneOffToggle, isOn: Binding(get: { picker.isOneOff }, set: { _ in model.toggleOneOff() }))
-                            .accessibilityIdentifier("one-off-toggle")
                     }
                     ForEach(picker.sections, id: \.title) { section in
                         Section {
@@ -38,10 +37,10 @@ struct ExercisePickerSheet: View {
                     // (repaso de la HIG, 2026-10-28: antes, una alerta con un campo).
                     if let label = picker.searchCreateLabel {
                         Button(label) { Task { await model.createFromSearch() } }
-                            .accessibilityIdentifier("create-from-search")
+                            .accessibilityIdentifier(AccessibilityID.createFromSearch)
                     } else if picker.offersNewExercise {
                         Button(TodayText.createExercise) { model.openCreate() }
-                            .accessibilityIdentifier("create-exercise")
+                            .accessibilityIdentifier(AccessibilityID.createExercise)
                     }
                 }
             }
@@ -59,6 +58,7 @@ struct ExercisePickerSheet: View {
         }
         // Siempre grande: a media altura, al cerrarse el teclado la hoja se encogía, la fila se
         // movía bajo el dedo e iOS cancelaba el toque (vídeo del CI y el iPhone, 2026-10-27).
+        .presentationDetents([.large])
     }
 }
 
@@ -75,7 +75,7 @@ struct CreateExerciseForm: View {
                     .focused($nameFocused)
                     .submitLabel(.done)
                     .onSubmit { Task { await model.createExercise() } }
-                    .accessibilityIdentifier("create-name")
+                    .accessibilityIdentifier(AccessibilityID.createName)
             } header: {
                 Text(TodayText.createNameLabel)
             } footer: {
@@ -83,13 +83,7 @@ struct CreateExerciseForm: View {
                 if let message = model.createMessage { Text(message).foregroundStyle(Theme.gold) }
             }
             Section(CatalogText.groupLabel) {
-                Picker(CatalogText.groupLabel, selection: $model.createGroup) {
-                    Text(CatalogText.noGroup).tag(MuscleGroup?.none)
-                    ForEach(MuscleGroup.all, id: \.self) { group in
-                        Text(GroupText.name(group)).tag(MuscleGroup?.some(group))
-                    }
-                }
-                .pickerStyle(.menu)
+                MuscleGroupPicker(selection: $model.createGroup)
             }
         }
         .screenBackground()
@@ -99,7 +93,7 @@ struct CreateExerciseForm: View {
             ToolbarItem(placement: .confirmationAction) {
                 ConfirmButton { Task { await model.createExercise() } }
                     .disabled(!model.canCreateExercise)
-                    .accessibilityIdentifier("create-confirm")
+                    .accessibilityIdentifier(AccessibilityID.createConfirm)
             }
         }
         .onAppear { nameFocused = true }

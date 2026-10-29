@@ -15,11 +15,12 @@ public struct GitHubTrainingDataSource: RemoteTrainingDataSource {
     }
 
     public func fetch(_ location: SyncLocation, token: String) async throws(RemoteError) -> RemoteSnapshot {
-        var components = URLComponents(url: contentsURL(location), resolvingAgainstBaseURL: false)
+        var components = URLComponents(url: try contentsURL(location), resolvingAgainstBaseURL: false)
         components?.queryItems = [URLQueryItem(name: "ref", value: location.branch)]
-        guard let url = components?.url else { throw .invalidContent }
+        // Una ruta que no forma una URL no puede existir en el remoto.
+        guard let url = components?.url else { throw .notFound }
         let (body, status) = try await send(request(url, token: token))
-        guard (200..<300).contains(status) else { throw .status(status) }
+        guard (200..<300).contains(status) else { throw Self.error(status: status) }
         guard let file = GitHubContents.parse(body), let sha = file.sha,
               let data = try? PWAFormat.trainingData(from: file.content)
         else { throw .invalidContent }
@@ -28,15 +29,14 @@ public struct GitHubTrainingDataSource: RemoteTrainingDataSource {
 
     public func push(_ data: TrainingData, to location: SyncLocation, token: String, replacing version: RemoteVersion?,
                      on day: LocalDate) async throws(RemoteError) -> RemoteVersion {
-        var request = request(contentsURL(location), token: token)
+        var request = request(try contentsURL(location), token: token)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let payload = GitHubContents.payload(for: PWAFormat.json(from: data), sha: version?.rawValue, branch: location.branch,
                                               message: "Gym Companion update \(day.iso)")
         request.httpBody = try? JSONEncoder().encode(payload)
         let (body, status) = try await send(request)
-        if status == 409 || status == 422 { throw .conflict }
-        guard (200..<300).contains(status) else { throw .status(status) }
+        guard (200..<300).contains(status) else { throw Self.error(status: status) }
         struct Response: Decodable {
             struct Content: Decodable { var sha: String }
             var content: Content
@@ -46,9 +46,13 @@ public struct GitHubTrainingDataSource: RemoteTrainingDataSource {
     }
 
     /// `https://api.github.com/repos/{repo}/contents/{path}`; el repo y la ruta llevan "/" y van tal cual.
-    private func contentsURL(_ location: SyncLocation) -> URL {
+    /// Si no forma una URL (un repo con espacios), no puede existir en el remoto: `.notFound`.
+    private func contentsURL(_ location: SyncLocation) throws(RemoteError) -> URL {
         let path = location.path.split(separator: "/").map { $0.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String($0) }
-        return URL(string: "https://api.github.com/repos/\(location.repository)/contents/\(path.joined(separator: "/"))")!
+        guard let url = URL(string: "https://api.github.com/repos/\(location.repository)/contents/\(path.joined(separator: "/"))") else {
+            throw .notFound
+        }
+        return url
     }
 
     private func request(_ url: URL, token: String) -> URLRequest {
@@ -64,6 +68,16 @@ public struct GitHubTrainingDataSource: RemoteTrainingDataSource {
             return try await transport.send(request)
         } catch {
             throw .unreachable
+        }
+    }
+
+    /// Lo que quiere decir cada código de error de la API de GitHub.
+    static func error(status: Int) -> RemoteError {
+        switch status {
+        case 401, 403: .unauthorized
+        case 404: .notFound
+        case 409, 422: .conflict
+        default: .failed(status: status)
         }
     }
 }

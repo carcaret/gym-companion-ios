@@ -6,14 +6,9 @@ import Testing
 
 @Suite("Exportación a db.json de la PWA")
 struct PWAExportTests {
-    private func fixture() throws -> Data {
-        let url = try #require(Bundle.module.url(forResource: "db-test", withExtension: "json", subdirectory: "Fixtures"))
-        return try Data(contentsOf: url)
-    }
-
     @Test("ida y vuelta sin pérdidas con el fixture de la PWA")
     func fixtureRoundTrip() throws {
-        let imported = try PWAFormat.trainingData(from: fixture())
+        let imported = try PWAFormat.trainingData(from: pwaTestDB())
         #expect(try PWAFormat.trainingData(from: PWAFormat.json(from: imported)) == imported)
     }
 
@@ -26,8 +21,8 @@ struct PWAExportTests {
 
     @Test("el fixture vuelve a db.json con los mismos datos que tenía")
     func fixtureSameJSON() throws {
-        let original = try #require(JSONValue(parsing: fixture()))
-        let exported = try #require(JSONValue(parsing: PWAFormat.json(from: PWAFormat.trainingData(from: fixture()))))
+        let original = try #require(JSONValue(parsing: pwaTestDB()))
+        let exported = try #require(JSONValue(parsing: PWAFormat.json(from: PWAFormat.trainingData(from: pwaTestDB()))))
         // El fixture no tiene `pendingSwaps` y la exportación siempre lo escribe (vacío).
         #expect(exported["pendingSwaps"] == [:])
         #expect(exported["exercises"] == original["exercises"])

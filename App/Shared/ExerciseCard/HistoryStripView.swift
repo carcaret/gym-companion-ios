@@ -49,7 +49,7 @@ struct HistoryStripView: View {
                     .cornerRadius(2)
                     .accessibilityLabel(bar.accessibilityText)
                     // En cada barra y no en la gráfica: en un contenedor pisaba lo de dentro.
-                    .accessibilityIdentifier("strip-bar-\(index)")
+                    .accessibilityIdentifier(AccessibilityID.stripBar(index))
                     .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         if selection.selected == index { bubble(bar) }
                     }

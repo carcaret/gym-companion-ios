@@ -1,4 +1,3 @@
-import Charts
 import Domain
 import Presentation
 import SwiftUI
@@ -30,7 +29,7 @@ struct ProgressScreen: View {
         }
         .navigationTitle(ProgressText.title)
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
-        .navigationDestination(isPresented: Binding(get: { model.charts != nil }, set: { if !$0 { model.closeCharts() } })) {
+        .navigationDestination(isPresented: Binding(presentedWhile: { model.charts != nil }, onDismiss: { model.closeCharts() })) {
             if let charts = model.charts {
                 ChartsScreen(model: charts).screenBackground().syncToolbar()
             }
@@ -42,7 +41,7 @@ struct ProgressScreen: View {
     private var exercises: some View {
         ListSection {
             // Los márgenes de cada fila van dentro de su botón: se toca la fila entera.
-            DisclosureHeader(isExpanded: model.isExpanded, identifier: "stats-exercises",
+            DisclosureHeader(isExpanded: model.isExpanded, identifier: AccessibilityID.statsExercises,
                              padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16), minHeight: 48,
                              toggle: model.toggleExpanded) {
                 Text(model.exercisesSubtitle).scaledFont(13).foregroundStyle(Theme.textSecondary)

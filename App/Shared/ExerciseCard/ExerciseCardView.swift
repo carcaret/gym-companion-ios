@@ -23,7 +23,7 @@ struct ExerciseCardView: View {
     var body: some View {
         // El identificador, en el botón de la cabecera: puesto en toda la tarjeta pisaba el de cada
         // control de dentro (`weight-plus`, `series-0`…; `.xcresult` del CI, 2026-10-27).
-        CardDisclosure(isExpanded: card.isOpen, identifier: "card-\(card.exerciseID.rawValue)", toggle: toggle) {
+        CardDisclosure(isExpanded: card.isOpen, identifier: AccessibilityID.card(card.exerciseID.rawValue), toggle: toggle) {
             header
         } content: {
             content
@@ -82,7 +82,7 @@ struct ExerciseCardView: View {
                         ForEach(card.chips, id: \.value) { chip in
                             Button("\(chip.value)") { actions.chooseRep(chip.value, focused) }
                                 .buttonStyle(ChipButtonStyle(chip: chip))
-                                .accessibilityIdentifier("chip-\(chip.value)")
+                                .accessibilityIdentifier(AccessibilityID.chip(chip.value))
                         }
                     }
                     // Los chips miden 44 de alto para el dedo y 32 a la vista: arriba y abajo no

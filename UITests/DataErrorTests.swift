@@ -10,10 +10,10 @@ final class DataErrorTests: XCTestCase {
     func testDatosIlegiblesLoDice() {
         let app = XCUIApplication.launchDemo(.unreadableData)
         XCTAssertTrue(app.staticTexts["No se pudieron leer los datos"].appears(timeout: 20), app.debugDescription)
-        let retry = app.buttons["data-retry"]
+        let retry = app.buttons[AccessibilityID.dataRetry]
         XCTAssertTrue(retry.exists)
         // Con `-demo` no hay GitHub: no se ofrece descargar.
-        XCTAssertFalse(app.buttons["data-download"].exists)
+        XCTAssertFalse(app.buttons[AccessibilityID.dataDownload].exists)
         // Reintentar con el fichero aún estropeado sigue diciéndolo.
         retry.tap()
         XCTAssertTrue(app.staticTexts["No se pudieron leer los datos"].appears(timeout: 10))

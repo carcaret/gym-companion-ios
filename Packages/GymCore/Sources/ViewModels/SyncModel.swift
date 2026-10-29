@@ -67,6 +67,11 @@ public final class SyncModel {
         }
     }
 
+    /// Lo pendiente de subir sale ya, con tiempo pedido al sistema.
+    public func flush() async {
+        await repository.flush()
+    }
+
     public func refresh() async {
         status = await repository.status
     }
@@ -74,23 +79,24 @@ public final class SyncModel {
     /// Al arrancar, al volver a la app o al volver la red. Solo avisa si los datos han cambiado: lo
     /// subido lo dice el indicador.
     public func synchronize() async {
-        if case .remoteApplied(let remote) = await repository.synchronize() {
-            app.replace(with: remote)
-            notice = SyncText.remoteApplied
-        }
+        _ = await synchronizeAndApply()
         await refresh()
+    }
+
+    /// Sincroniza y, si lo remoto sustituye a lo local, lo aplica y lo dice. Devuelve si lo aplicó.
+    private func synchronizeAndApply() async -> Bool {
+        guard case .remoteApplied(let remote) = await repository.synchronize() else { return false }
+        app.replace(with: remote)
+        notice = SyncText.remoteApplied
+        return true
     }
 
     /// Tirar hacia abajo en Historial o «Sincronizar ahora» en el menú del indicador: sincroniza al
     /// momento y, como lo ha pedido el usuario, dice siempre cómo ha quedado.
     public func pullToRefresh() async {
-        if case .remoteApplied(let remote) = await repository.synchronize() {
-            app.replace(with: remote)
-            notice = SyncText.remoteApplied
-            await refresh()
-            return
-        }
+        let applied = await synchronizeAndApply()
         await refresh()
+        guard !applied else { return }
         if status.conflict {
             isConflictPresented = true
             return
@@ -193,11 +199,13 @@ public final class SyncModel {
         guard let location = Self.location(name, branch, path), let token = Self.trimmed(token) else { return nil }
         return switch await repository.testConnection(location, token: token) {
         case nil: SyncText.connected
-        case .status(let code): SyncText.connectionError(status: code)
+        case .unauthorized: SyncText.tokenRejected
+        case .notFound: SyncText.remoteNotFound
+        case .failed: SyncText.remoteFailed
         case .unreachable: SyncText.offline
         case .invalidContent: SyncText.invalidRemoteContent
-        // Leer no da conflicto; si llegara, como el 409 de GitHub.
-        case .conflict: SyncText.connectionError(status: 409)
+        // Leer no da conflicto; si llegara, como cualquier otro error.
+        case .conflict: SyncText.remoteFailed
         }
     }
 

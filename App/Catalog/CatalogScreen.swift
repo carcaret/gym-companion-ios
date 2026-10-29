@@ -53,7 +53,7 @@ struct CatalogScreen: View {
         .screenBackground()
         .keyboardDismissal()
         .onDisappear { model.leave() }
-        .sheet(isPresented: Binding(get: { model.editor != nil }, set: { if !$0 { model.closeEditor() } })) {
+        .sheet(isPresented: Binding(presentedWhile: { model.editor != nil }, onDismiss: { model.closeEditor() })) {
             CatalogEditor(model: model)
         }
     }
@@ -84,13 +84,7 @@ private struct CatalogEditor: View {
                     TextField(CatalogText.nameLabel, text: Binding(get: { model.editor?.name ?? "" }, set: { model.editor?.name = $0 }))
                 }
                 Section(CatalogText.groupLabel) {
-                    Picker(CatalogText.groupLabel, selection: Binding(get: { model.editor?.group }, set: { model.setGroup($0) })) {
-                        Text(CatalogText.noGroup).tag(MuscleGroup?.none)
-                        ForEach(MuscleGroup.all, id: \.self) { group in
-                            Text(GroupText.name(group)).tag(MuscleGroup?.some(group))
-                        }
-                    }
-                    .pickerStyle(.menu)
+                    MuscleGroupPicker(selection: Binding(get: { model.editor?.group }, set: { model.setGroup($0) }))
                 }
                 Section {
                     ForEach(model.chips) { chip in
@@ -113,7 +107,6 @@ private struct CatalogEditor: View {
                 ToolbarItem(placement: .cancellationAction) {
                     // Con cambios, pregunta antes de tirarlos, como las demás hojas.
                     Button(role: .close) { model.requestClose() }
-                        .accessibilityIdentifier("catalog-cancel")
                         .discardChangesDialog(isPresented: model.isDiscardPromptPresented,
                                               discard: model.discardChanges, keep: model.keepEditing)
                 }

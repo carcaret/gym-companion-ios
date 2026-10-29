@@ -60,10 +60,10 @@ extension TrainingData {
 
     /// El entreno sin terminar del día, si lo hay.
     public func activeWorkout(on day: LocalDate) -> Session? {
-        history.session(on: day).flatMap { $0.completed ? nil : $0 }
+        history.activeSession(on: day)
     }
 
-    // MARK: - El selector de ejercicios
+    // MARK: - El selector de ejercicios (añadir, cambiar, crear y el cambio recíproco)
 
     /// Lo que se puede añadir al entreno del día: los del catálogo que no están ni en su rutina ni
     /// en el entreno, por orden alfabético.
@@ -100,9 +100,6 @@ extension TrainingData {
         else { return nil }
         return (target, swap)
     }
-
-    /// Sin historial ni catálogo: la app recién instalada (las rutinas por defecto no cuentan).
-    public var isEmpty: Bool { history.isEmpty && catalog.ids.isEmpty }
 
     private mutating func editRoutine(_ id: RoutineID, _ change: (inout [ExerciseID]) -> Void) {
         guard let index = routines.firstIndex(where: { $0.id == id }) else { return }

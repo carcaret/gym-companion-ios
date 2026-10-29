@@ -11,7 +11,7 @@ final class DisclosureTests: XCTestCase {
     func testLaTarjetaDiceSiEstaDesplegada() {
         let app = XCUIApplication.launchDemo()
         app.startWorkout(timeout: 20)
-        let card = app.buttons["card-press_banca"].firstMatch
+        let card = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(card.appears(timeout: 10))
 
         let before = card.value as? String

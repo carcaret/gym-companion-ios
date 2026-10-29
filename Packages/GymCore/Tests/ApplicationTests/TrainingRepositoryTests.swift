@@ -169,8 +169,8 @@ struct TrainingRepositoryTests {
     func testConnectionErrors() async throws {
         let harness = SyncHarness()
         let repository = harness.repository()
-        await harness.remote.fail(fetch: .status(401))
-        #expect(await repository.testConnection(SyncFixtures.location, token: "malo") == .status(401))
+        await harness.remote.fail(fetch: .unauthorized)
+        #expect(await repository.testConnection(SyncFixtures.location, token: "malo") == .unauthorized)
         await harness.remote.fail(fetch: .unreachable)
         #expect(await repository.testConnection(SyncFixtures.location, token: "x") == .unreachable)
         await harness.remote.fail(fetch: .invalidContent)

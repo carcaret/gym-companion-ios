@@ -10,7 +10,7 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testDeslizarUnaTarjetaLaSaltaYLaReactiva() {
         let app = startWorkout()
-        let card = app.buttons["card-curl_biceps"].firstMatch
+        let card = app.buttons[AccessibilityID.card("curl_biceps")].firstMatch
 
         card.swipeRight()
         let skip = app.buttons["Saltar"].firstMatch
@@ -24,7 +24,7 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testDeslizarUnaTarjetaALaDerechaOfreceCambiarla() {
         let app = startWorkout()
-        let card = app.buttons["card-curl_biceps"].firstMatch
+        let card = app.buttons[AccessibilityID.card("curl_biceps")].firstMatch
 
         card.swipeRight()
         let swap = app.buttons["Cambiar por otro"].firstMatch
@@ -38,8 +38,8 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testDeslizarUnaTarjetaLaQuitaTrasConfirmar() {
         let app = startWorkout()
-        let card = app.buttons["card-curl_biceps"].firstMatch
-        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'card-'"))
+        let card = app.buttons[AccessibilityID.card("curl_biceps")].firstMatch
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.cardPrefix))
         let before = rows.count
 
         card.swipeLeft()
@@ -62,8 +62,8 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testLosDosBotonesDeAbajoMidenLoMismo() {
         let app = startWorkout()
-        let add = app.buttons["add-exercise"].frame
-        let finish = app.buttons["finish-workout"].frame
+        let add = app.buttons[AccessibilityID.addExercise].frame
+        let finish = app.buttons[AccessibilityID.finishWorkout].frame
         XCTAssertEqual(add.width, finish.width, accuracy: 1)
         XCTAssertEqual(add.height, finish.height, accuracy: 1)
     }
@@ -73,7 +73,7 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testLosBotonesDeAbajoMiden50DeAlto() {
         let app = startWorkout()
-        for name in ["add-exercise", "finish-workout"] {
+        for name in [AccessibilityID.addExercise, AccessibilityID.finishWorkout] {
             let height = app.buttons[name].frame.height
             XCTAssertGreaterThanOrEqual(height, 50, "\(name) mide \(height) pt de alto")
         }
@@ -84,37 +84,37 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testCrearUnEjercicioEnSuPantalla() {
         let app = startWorkout()
-        app.buttons["add-exercise"].tap()
-        let create = app.buttons["create-exercise"]
+        app.buttons[AccessibilityID.addExercise].tap()
+        let create = app.buttons[AccessibilityID.createExercise]
         XCTAssertTrue(create.appears(timeout: 10))
         create.tap()
         XCTAssertTrue(app.navigationBars["Crear nuevo ejercicio"].appears(timeout: 10))
         XCTAssertFalse(app.alerts.firstMatch.exists)
-        let confirm = app.buttons["create-confirm"]
+        let confirm = app.buttons[AccessibilityID.createConfirm]
         XCTAssertFalse(confirm.isEnabled, "Sin nombre, la ✓ sale apagada")
 
-        let name = app.textFields["create-name"]
+        let name = app.textFields[AccessibilityID.createName]
         XCTAssertTrue(name.appears(timeout: 5))
         name.tap()
         name.typeText("Press Arnold")
         XCTAssertTrue(confirm.isEnabled)
         confirm.tap()
 
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'card-press_arnold'")).firstMatch.appears(timeout: 10))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.card("press_arnold"))).firstMatch.appears(timeout: 10))
     }
 
     /// Con el entreno de hoy terminado, empezar otra rutina pregunta antes de sustituirlo
-    /// (2026-10-27; la PWA lo borraba sin decir nada). «Cancelar» lo deja y «Sustituir» empieza.
+    /// (2026-10-27; la PWA lo borraba sin decir nada). Tocar fuera del globo lo deja y «Sustituir» empieza.
     @MainActor
     func testEmpezarOtraRutinaElMismoDiaPregunta() {
         let app = startWorkout()
-        app.buttons["finish-workout"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["workout-completed"].firstMatch.appears(timeout: 10))
+        app.buttons[AccessibilityID.finishWorkout].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
         // Tocar otra vez la pestaña vuelve a las rutinas.
         app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA2"].appears(timeout: 10))
-        app.buttons["routine-DIA2"].tap()
-        let start = app.buttons["start-workout"]
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA2")].appears(timeout: 10))
+        app.buttons[AccessibilityID.routine("DIA2")].tap()
+        let start = app.buttons[AccessibilityID.startWorkout]
         XCTAssertTrue(start.appears(timeout: 10))
 
         start.tap()
@@ -124,12 +124,12 @@ final class WorkoutTests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: replace)
         wait(for: [closed], timeout: 5)
-        XCTAssertFalse(app.buttons["finish-workout"].exists, "Cancelar no empieza nada")
+        XCTAssertFalse(app.buttons[AccessibilityID.finishWorkout].exists, "Tocar fuera no empieza nada")
 
         start.tap()
         XCTAssertTrue(replace.appears(timeout: 5))
         replace.tap()
-        XCTAssertTrue(app.buttons["finish-workout"].appears(timeout: 10), "Sustituir empieza el entreno nuevo")
+        XCTAssertTrue(app.buttons[AccessibilityID.finishWorkout].appears(timeout: 10), "Sustituir empieza el entreno nuevo")
     }
 
     /// Si la búsqueda no encuentra el ejercicio, se crea de un toque con el teclado abierto, sin
@@ -137,24 +137,24 @@ final class WorkoutTests: XCTestCase {
     @MainActor
     func testCrearLoBuscadoDeUnToque() {
         let app = startWorkout()
-        app.buttons["add-exercise"].tap()
+        app.buttons[AccessibilityID.addExercise].tap()
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.appears(timeout: 5))
         search.tap()
         search.typeText("Press Arnold")
         XCTAssertTrue(app.keyboards.firstMatch.exists)
-        let create = app.buttons["create-from-search"].firstMatch
+        let create = app.buttons[AccessibilityID.createFromSearch].firstMatch
         XCTAssertTrue(create.appears(timeout: 5))
         XCTAssertEqual(create.label, "Crear «Press Arnold»")
         create.tap()
-        XCTAssertTrue(app.buttons["card-press_arnold"].firstMatch.appears(timeout: 5), "Un toque lo crea y lo añade al entreno")
+        XCTAssertTrue(app.buttons[AccessibilityID.card("press_arnold")].firstMatch.appears(timeout: 5), "Un toque lo crea y lo añade al entreno")
     }
 
     @MainActor
     private func startWorkout() -> XCUIApplication {
         let app = XCUIApplication.launchDemo()
         app.startWorkout()
-        XCTAssertTrue(app.buttons["card-curl_biceps"].firstMatch.appears(timeout: 10))
+        XCTAssertTrue(app.buttons[AccessibilityID.card("curl_biceps")].firstMatch.appears(timeout: 10))
         return app
     }
 }

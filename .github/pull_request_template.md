@@ -3,7 +3,7 @@ Closes #
 ## Qué cambia
 
 
-## Tests portados de la PWA
+## Tests portados de la PWA (si los hay)
 
 | Test de la PWA (`tests/unit/…` o `tests/e2e/…`) | Test nativo | Notas |
 |---|---|---|

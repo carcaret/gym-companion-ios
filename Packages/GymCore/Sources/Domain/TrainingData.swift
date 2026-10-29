@@ -19,3 +19,8 @@ public struct TrainingData: Hashable, Sendable {
         self.history = history
     }
 }
+
+extension TrainingData {
+    /// Sin historial ni catálogo: la app recién instalada (las rutinas por defecto no cuentan).
+    public var isEmpty: Bool { history.isEmpty && catalog.ids.isEmpty }
+}

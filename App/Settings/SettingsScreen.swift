@@ -21,29 +21,28 @@ struct SettingsScreen: View {
                 LabeledContent(SettingsText.status, value: model.statusText)
                 field(SettingsText.repository, .repository) {
                     TextField(SettingsText.repository, text: $model.repository, prompt: Text(SettingsText.repositoryPlaceholder))
-                        .accessibilityIdentifier("settings-repository")
+                        .accessibilityIdentifier(AccessibilityID.settingsRepository)
                 }
                 field(SettingsText.token, .token) {
                     // Sin `textContentType(.password)`: no es una contraseña, y iOS ofrecía
                     // guardarla en Contraseñas (2026-10-27).
                     SecureField(SettingsText.token, text: $model.token, prompt: Text(SettingsText.tokenPlaceholder))
-                        .accessibilityIdentifier("settings-token")
+                        .accessibilityIdentifier(AccessibilityID.settingsToken)
                 }
                 // Por qué no se guardó (la conexión falló), debajo de los campos.
                 if let result = model.connectionResult {
                     NoticeLabel(notice: result)
-                        .accessibilityIdentifier("settings-connection-result")
                 }
             }
             .listRowBackground(Theme.surface)
             Section {
                 field(SettingsText.branch, .branch) {
                     TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))
-                        .accessibilityIdentifier("settings-branch")
+                        .accessibilityIdentifier(AccessibilityID.settingsBranch)
                 }
                 field(SettingsText.path, .path) {
                     TextField(SettingsText.path, text: $model.path, prompt: Text(SettingsText.pathPlaceholder))
-                        .accessibilityIdentifier("settings-path")
+                        .accessibilityIdentifier(AccessibilityID.settingsPath)
                 }
                 Button(role: .destructive) { model.requestDownload() } label: {
                     HStack {
@@ -67,7 +66,7 @@ struct SettingsScreen: View {
                 Text(model.versionLabel)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
-                    .accessibilityIdentifier("settings-version")
+                    .accessibilityIdentifier(AccessibilityID.settingsVersion)
             }
             .listRowBackground(Theme.surface)
         }
@@ -77,7 +76,7 @@ struct SettingsScreen: View {
             ToolbarItem(placement: .cancellationAction) {
                 // Con algo escrito sin guardar, pregunta antes de tirarlo (antes lo tiraba).
                 Button(role: .close) { model.requestClose() }
-                    .accessibilityIdentifier("settings-close")
+                    .accessibilityIdentifier(AccessibilityID.settingsClose)
                     .discardChangesDialog(isPresented: model.isDiscardPromptPresented,
                                           discard: model.discardChanges, keep: model.keepEditing)
             }
@@ -88,7 +87,6 @@ struct SettingsScreen: View {
                 } else {
                     ConfirmButton { Task { await model.save() } }
                         .disabled(!model.canSave)
-                        .accessibilityIdentifier("settings-save")
                 }
             }
         }

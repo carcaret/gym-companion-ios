@@ -11,26 +11,25 @@ final class TouchTargetTests: XCTestCase {
     @MainActor
     func testLosControlesDeLaTarjetaMiden44YNoSeMontan() {
         let app = XCUIApplication.launchDemo()
-        app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
-        app.buttons["start-workout"].tap()
-        let header = app.buttons["card-press_banca"].firstMatch
+        app.startWorkout()
+        let header = app.buttons[AccessibilityID.card("press_banca")].firstMatch
         XCTAssertTrue(header.appears(timeout: 10))
         if header.value as? String == "Plegado" { header.tap() }
-        let firstSeries = app.descendants(matching: .any)["series-0"].firstMatch
+        let firstSeries = app.descendants(matching: .any)[AccessibilityID.series(0)].firstMatch
         XCTAssertTrue(firstSeries.appears(timeout: 5))
         // Con una serie elegida salen los chips de reps, debajo de las series.
         firstSeries.tap()
-        let chips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'chip-'"))
+        let chips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.chipPrefix))
         XCTAssertTrue(chips.firstMatch.appears(timeout: 5))
 
         var targets: [(String, CGRect)] = [("cabecera", header.frame)]
-        for parameter in ["weight", "series", "target-reps"] {
-            targets.append(("\(parameter)-minus", app.buttons["\(parameter)-minus"].firstMatch.frame))
-            targets.append(("\(parameter)-field", app.textFields["\(parameter)-field"].firstMatch.frame))
-            targets.append(("\(parameter)-plus", app.buttons["\(parameter)-plus"].firstMatch.frame))
+        for parameter in AccessibilityID.Parameter.allCases {
+            let minus = AccessibilityID.parameter(parameter, .minus)
+            let field = AccessibilityID.parameter(parameter, .field)
+            let plus = AccessibilityID.parameter(parameter, .plus)
+            targets.append((minus, app.buttons[minus].firstMatch.frame))
+            targets.append((field, app.textFields[field].firstMatch.frame))
+            targets.append((plus, app.buttons[plus].firstMatch.frame))
         }
         let series = app.descendants(matching: .any).matching(NSPredicate(format: "identifier MATCHES 'series-[0-9]+'"))
         for index in 0..<series.count {
@@ -56,7 +55,7 @@ final class TouchTargetTests: XCTestCase {
 
         // La caja del peso se ve de 36 pt: tocar a 20 pt de su centro, ya fuera de la caja pero
         // dentro de los 44, abre el teclado.
-        let field = app.textFields["weight-field"].firstMatch
+        let field = app.textFields[AccessibilityID.parameter(.weight, .field)].firstMatch
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -20)).tap()
         XCTAssertTrue(app.keyboards.firstMatch.appears(timeout: 5), "Tocar junto al borde de la caja no abre el teclado")
     }
@@ -67,15 +66,15 @@ final class TouchTargetTests: XCTestCase {
     func testLasFilasDeProgresoSeTocanEnteras() {
         let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Progreso"].tap()
-        let expand = app.buttons["stats-exercises"]
+        let expand = app.buttons[AccessibilityID.statsExercises]
         XCTAssertTrue(expand.appears(timeout: 20))
         expand.tap()
-        let row = app.buttons["stats-row-press_banca"]
+        let row = app.buttons[AccessibilityID.statsRow("press_banca")]
         XCTAssertTrue(row.appears(timeout: 10))
         row.tap()
         let open = app.buttons["Ver en Gráficas"].firstMatch
         XCTAssertTrue(open.appears(timeout: 10))
-        let group = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'stats-group-'")).firstMatch
+        let group = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.statsGroupPrefix)).firstMatch
         XCTAssertTrue(group.appears(timeout: 10))
 
         // Las secciones van a 16 pt de cada borde: la fila entera mide el ancho de la pantalla

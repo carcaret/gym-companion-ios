@@ -5,6 +5,8 @@ import ViewModels
 /// debajo, las reps de las sesiones anteriores, una por fila.
 struct ExercisePageView: View {
     let page: WatchModel.Page
+    /// El ancho de la fecha de las sesiones anteriores, que crece con la letra.
+    @ScaledMetric(relativeTo: .body) private var dateWidth: CGFloat = 56
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -52,7 +54,7 @@ struct ExercisePageView: View {
                 HStack(spacing: 8) {
                     Text(row.date)
                         .foregroundStyle(Theme.textSecondary)
-                        .frame(width: 56, alignment: .leading)
+                        .frame(width: dateWidth, alignment: .leading)
                     Text(row.reps)
                         .monospacedDigit()
                 }

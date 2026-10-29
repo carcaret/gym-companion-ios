@@ -113,12 +113,12 @@ struct SettingsConnectionTests {
     func unauthorized() async {
         let settings = await SettingsHarness.make(configured: true)
         settings.sync.showSettings()
-        await settings.harness.remote.fail(fetch: .status(401))
+        await settings.harness.remote.fail(fetch: .unauthorized)
         settings.model.token = "ghp_otro"
         await settings.model.save()
         // Cambiado con la aprobación del usuario (repaso de la HIG F2, 2026-10-28): el error ya no
         // lleva el código («Error 401 — …»), sino qué pasa y qué revisar. En la PWA, contiene "401".
-        #expect(settings.model.connectionResult == SyncText.connectionError(status: 401))
+        #expect(settings.model.connectionResult == SyncText.tokenRejected)
         #expect(settings.model.connectionResult?.text.contains("token") == true)
         #expect(settings.model.connectionResult?.kind == .error)
         #expect(settings.sync.isSettingsPresented, "Con error, la hoja sigue abierta")

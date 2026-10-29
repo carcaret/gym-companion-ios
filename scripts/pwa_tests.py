@@ -23,7 +23,6 @@ PARITY = ROOT / "docs/paridad.md"
 JS_BLOCK = re.compile(r"^(\s*)(test\.describe|describe|test|it)\(\s*(['\"`])(.*?)\3\s*,")
 SWIFT_SUITE = re.compile(r'@Suite\("((?:[^"\\]|\\.)*)"')
 SWIFT_TEST = re.compile(r'@Test\("((?:[^"\\]|\\.)*)"')
-SWIFT_TYPE = re.compile(r"^\s*(?:private |fileprivate )?struct (\w+)")
 
 
 def js_tests(path):
@@ -44,7 +43,7 @@ def js_tests(path):
 
 
 def swift_tests():
-    """{(suite, test): "Fichero.swift: Tipo"}."""
+    """{(suite, test): ruta del fichero de Swift}."""
     found = {}
     for base in SWIFT_TESTS:
         for path in sorted(base.rglob("*.swift")) if base.exists() else []:
@@ -53,7 +52,7 @@ def swift_tests():
                 if m := SWIFT_SUITE.search(line):
                     suite = m.group(1).replace('\\"', '"')
                 elif m := SWIFT_TEST.search(line):
-                    found.setdefault((suite, m.group(1).replace('\\"', '"')), f"{path.relative_to(ROOT)}")
+                    found.setdefault((suite, m.group(1).replace('\\"', '"')), str(path.relative_to(ROOT)))
     return found
 
 
@@ -95,17 +94,19 @@ def main(argv):
                 rows.append((name, describe, test, "—", skipped[(name, describe, test)]))
             else:
                 missing.append((name, describe, test))
+    not_applicable_count = sum(1 for r in rows if r[3] == "—")
+    summary = (f"{len(rows) - not_applicable_count} portados, {not_applicable_count} no aplican, "
+               f"{len(missing)} sin portar, de {len(rows) + len(missing)}.")
     if markdown:
-        print("\n".join(table(rows)))
+        print("\n".join(table(rows)) + f"\n\n**Total:** {summary}")
     stale = False
     if check:
-        current = [l for l in PARITY.read_text().splitlines() if l.startswith("|")]
-        stale = current != table(rows)
+        lines = PARITY.read_text().splitlines()
+        current = [l for l in lines if l.startswith("|")] + [l for l in lines if l.startswith("**Total:**")]
+        stale = current != table(rows) + [f"**Total:** {summary}"]
         if stale:
             print("docs/paridad.md no está al día: regenerar la tabla con --markdown.", file=sys.stderr)
-    total = len(rows) + len(missing)
-    print(f"\n{len(rows) - sum(1 for r in rows if r[3] == '—')} portados, {sum(1 for r in rows if r[3] == '—')} no aplican, "
-          f"{len(missing)} sin portar, de {total}.", file=sys.stderr)
+    print(f"\n{summary}", file=sys.stderr)
     for name, describe, test in missing:
         print(f"FALTA {name} › {describe} › {test}", file=sys.stderr)
     return 1 if missing or stale else 0

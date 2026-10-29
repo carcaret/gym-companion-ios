@@ -27,8 +27,12 @@ public struct RemoteSnapshot: Hashable, Sendable {
 public enum RemoteError: Error, Hashable, Sendable {
     /// Sin red, o el servidor no responde.
     case unreachable
-    /// Respuesta con un código de error (401 token malo, 404 no existe...).
-    case status(Int)
+    /// No acepta las credenciales (en GitHub, 401 o 403).
+    case unauthorized
+    /// No existe el repositorio, la rama o el fichero (en GitHub, 404).
+    case notFound
+    /// Otro error del remoto; el código, para el diagnóstico.
+    case failed(status: Int)
     /// La versión remota no es la que se creía (alguien la cambió): el 409/422 de GitHub.
     case conflict
     /// Lo que hay en el remoto no se puede leer como datos de la app.

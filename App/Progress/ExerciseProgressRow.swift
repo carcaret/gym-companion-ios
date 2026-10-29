@@ -1,4 +1,3 @@
-import Charts
 import Domain
 import Presentation
 import SwiftUI
@@ -14,7 +13,7 @@ struct ExerciseProgressRow: View {
     @ScaledMetric(relativeTo: .subheadline) private var iconSide: CGFloat = 28
 
     var body: some View {
-        CardDisclosure(isExpanded: row.isOpen, chevronSize: 12, identifier: "stats-row-\(row.exerciseID.rawValue)",
+        CardDisclosure(isExpanded: row.isOpen, chevronSize: 12, identifier: AccessibilityID.statsRow(row.exerciseID.rawValue),
                        headerPadding: EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16), toggle: toggle) {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
