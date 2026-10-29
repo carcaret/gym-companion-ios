@@ -10,3 +10,6 @@ App/Info.plist
 Watch/Info.plist
 # Lo local de Claude Code.
 .claude/
+# Los volcados de memoria de un test que falla.
+core
+core.*
