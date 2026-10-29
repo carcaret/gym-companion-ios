@@ -12,9 +12,7 @@ final class SyncMenuTests: XCTestCase {
     /// (decisión del usuario, 2026-10-26).
     @MainActor
     func testElMenuDelIndicadorAbreLosAjustes() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         XCTAssertTrue(app.navigationBars["Rutinas"].appears(timeout: 20))
         XCTAssertFalse(app.tabBars.buttons["Ajustes"].exists, "Ajustes ya no es una pestaña")
         XCTAssertEqual(app.buttons["sync-indicator"].firstMatch.label, "GitHub no configurado")

@@ -9,14 +9,8 @@ final class DisclosureTests: XCTestCase {
 
     @MainActor
     func testLaTarjetaDiceSiEstaDesplegada() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
-        app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 20))
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
-        app.buttons["start-workout"].tap()
+        let app = XCUIApplication.launchDemo()
+        app.startWorkout(timeout: 20)
         let card = app.buttons["card-press_banca"].firstMatch
         XCTAssertTrue(card.appears(timeout: 10))
 

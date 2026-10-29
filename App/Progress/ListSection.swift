@@ -29,6 +29,6 @@ struct ListSeparator: View {
     let inset: CGFloat
 
     var body: some View {
-        Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, inset)
+        Rectangle().fill(Theme.separator).frame(height: 0.5).padding(.leading, inset)
     }
 }

@@ -11,9 +11,7 @@ final class HistoryTests: XCTestCase {
 
     @MainActor
     func testBorrarDeslizandoLaFila() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 10))
@@ -38,9 +36,7 @@ final class HistoryTests: XCTestCase {
     /// filas cambiadas de sitio a la vista (2026-10-25). Cancelar la deja igual.
     @MainActor
     func testConfirmarElBorradoNoQuitaLaFilaAntesDeTiempo() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'"))
         XCTAssertTrue(rows.firstMatch.appears(timeout: 10))
@@ -68,9 +64,7 @@ final class HistoryTests: XCTestCase {
     /// grabación del CI se ve la lista bajar, la ruedita y el aviso; 2026-10-26).
     @MainActor
     func testTirarHaciaAbajoSincroniza() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-avisos-largos"]
-        app.launch()
+        let app = XCUIApplication.launchDemo(.longNotices)
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 20))
@@ -152,9 +146,7 @@ final class HistoryTests: XCTestCase {
     /// Abre la primera sesión del Historial y la tarjeta de press banca.
     @MainActor
     private func openFirstSessionCard() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Historial"].tap()
         let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'history-'")).firstMatch
         XCTAssertTrue(first.appears(timeout: 10))

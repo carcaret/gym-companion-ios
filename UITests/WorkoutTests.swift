@@ -152,14 +152,8 @@ final class WorkoutTests: XCTestCase {
 
     @MainActor
     private func startWorkout() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
-        app.tabBars.buttons["Rutinas"].tap()
-        XCTAssertTrue(app.buttons["routine-DIA1"].appears(timeout: 10))
-        app.buttons["routine-DIA1"].tap()
-        XCTAssertTrue(app.buttons["start-workout"].appears(timeout: 10))
-        app.buttons["start-workout"].tap()
+        let app = XCUIApplication.launchDemo()
+        app.startWorkout()
         XCTAssertTrue(app.buttons["card-curl_biceps"].firstMatch.appears(timeout: 10))
         return app
     }

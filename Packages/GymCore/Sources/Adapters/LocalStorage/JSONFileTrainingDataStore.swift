@@ -27,6 +27,11 @@ public struct JSONFileTrainingDataStore: TrainingDataStore {
     }
 
     public func save(_ data: TrainingData) async throws {
+        try write(data)
+    }
+
+    /// Lo mismo que `save`, sin esperar (los datos de ejemplo, antes de arrancar).
+    public func write(_ data: TrainingData) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try JSONFile.write(encoder.encode(StoredTrainingData(data)), to: file)

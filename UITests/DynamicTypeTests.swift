@@ -12,28 +12,18 @@ final class DynamicTypeTests: XCTestCase {
     /// tarjeta del Día 1 mide unos 75 pt con la letra normal y unos 119 con esta.
     @MainActor
     func testLaLetraGrandeAgrandaLasTarjetas() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"]
-        app.launch()
+        let app = XCUIApplication.launchDemo(arguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"])
         app.tabBars.buttons["Rutinas"].tap()
         let card = app.buttons["routine-DIA1"]
         XCTAssertTrue(card.appears(timeout: 20))
         XCTAssertGreaterThan(card.frame.height, 100, "Con letra grande la tarjeta de la rutina tiene que crecer")
-        screenshot(app, "70-letra-grande-rutinas")
+        capture(app, "70-letra-grande-rutinas")
 
         card.tap()
         app.buttons["start-workout"].tap()
         let exercise = app.buttons["card-press_banca"].firstMatch
         XCTAssertTrue(exercise.appears(timeout: 20))
         exercise.tap()
-        screenshot(app, "70-letra-grande-entreno")
-    }
-
-    @MainActor
-    private func screenshot(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        capture(app, "70-letra-grande-entreno")
     }
 }

@@ -54,7 +54,7 @@ struct SeriesCellView: View {
     }
 
     private var colors: (text: Color, background: Color, border: Color) {
-        if cell.hasError { return (Color(hex: 0xFFA9A9), Theme.dangerTint, Theme.danger) }
+        if cell.hasError { return (Theme.dangerText, Theme.dangerTint, Theme.danger) }
         switch cell.state {
         case .done: return (Theme.accentSoft, Theme.accentTint, Theme.accent.opacity(0.5))
         case .filled: return (Theme.below, Theme.belowTint, Theme.below.opacity(0.5))

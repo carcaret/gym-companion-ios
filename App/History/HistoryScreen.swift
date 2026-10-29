@@ -7,8 +7,6 @@ import ViewModels
 struct HistoryScreen: View {
     @Bindable var model: HistoryModel
     let sync: SyncModel
-    /// Para los avisos de la hoja de editar (`CompositionRoot.noticeDuration`).
-    let noticeDuration: Duration
 
     var body: some View {
         list
@@ -20,7 +18,7 @@ struct HistoryScreen: View {
             )) {
                 // Su propia vista, que lee el modelo: construida aquí, el cambio le llegaba sin la
                 // animación y las tarjetas se abrían de golpe (vídeo del CI, 2026-10-27).
-                SessionDetail(model: model, sync: sync, noticeDuration: noticeDuration)
+                SessionDetail(model: model, sync: sync)
                     .syncToolbar {
                         Button(HistoryText.edit) { model.startEditing() }
                             .accessibilityIdentifier("session-edit")

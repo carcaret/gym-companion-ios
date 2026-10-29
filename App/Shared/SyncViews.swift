@@ -91,8 +91,6 @@ private struct SyncToolbar<Action: View>: ViewModifier {
 /// también avisan y pueden abrir el conflicto, y lo que cuelga de la raíz queda debajo de la hoja).
 struct SyncPresentation: ViewModifier {
     @Bindable var sync: SyncModel
-    /// Lo que dura el aviso (`CompositionRoot.noticeDuration`).
-    let noticeDuration: Duration
     /// El de la raíz se apaga mientras la hoja de los ajustes está abierta: lo pinta la hoja.
     let isActive: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -112,18 +110,18 @@ struct SyncPresentation: ViewModifier {
                         // Hacia arriba se va en cuanto el dedo sube, como un aviso del sistema, sin
                         // esperar a soltar: un arrastre que acaba fuera de la pantalla no termina.
                         .gesture(DragGesture(minimumDistance: 10).onChanged { drag in
-                            if drag.translation.height < -10 { sync.notice = nil }
+                            if drag.translation.height < -10 { sync.dismissNotice() }
                         })
-                        .onTapGesture { sync.notice = nil }
-                        .accessibilityAction(named: Notice.dismissLabel) { sync.notice = nil }
+                        .onTapGesture { sync.dismissNotice() }
+                        .accessibilityAction(named: Notice.dismissLabel) { sync.dismissNotice() }
                         // Con «Reducir movimiento», aparece fundido en vez de bajar.
                         .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                         // Un error espera a que lo cierren; lo demás se va solo (repaso de la HIG,
                         // 2026-10-28: «Sin conexión…» se iba a los 2,5 s).
                         .task(id: notice) {
                             guard !notice.staysUntilDismissed else { return }
-                            try? await Task.sleep(for: noticeDuration)
-                            if sync.notice == notice { sync.notice = nil }
+                            try? await Task.sleep(for: sync.noticeDuration)
+                            sync.expire(notice)
                         }
                 }
             }
@@ -146,8 +144,8 @@ struct SyncPresentation: ViewModifier {
 }
 
 extension View {
-    func syncPresentation(_ sync: SyncModel, noticeDuration: Duration, isActive: Bool = true) -> some View {
-        modifier(SyncPresentation(sync: sync, noticeDuration: noticeDuration, isActive: isActive))
+    func syncPresentation(_ sync: SyncModel, isActive: Bool = true) -> some View {
+        modifier(SyncPresentation(sync: sync, isActive: isActive))
     }
 }
 

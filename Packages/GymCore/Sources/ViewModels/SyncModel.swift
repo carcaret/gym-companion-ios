@@ -27,13 +27,33 @@ public final class SyncModel {
         case configure
     }
 
+    /// Lo que dura un aviso que no es un error: 2,5 s, como el toast de la PWA. Los tests de
+    /// interfaz que lo buscan tras una animación larga lo alargan (`-avisos-largos`).
+    public let noticeDuration: Duration
+
     private let repository: TrainingRepository
     private let app: AppModel
 
-    public init(repository: TrainingRepository, app: AppModel) {
+    public init(repository: TrainingRepository, app: AppModel, noticeDuration: Duration = .seconds(2.5)) {
         self.repository = repository
         self.app = app
+        self.noticeDuration = noticeDuration
     }
+
+    /// Cerrar el aviso (tocarlo, deslizarlo hacia arriba o la acción de VoiceOver).
+    public func dismissNotice() {
+        notice = nil
+    }
+
+    /// Se le acaba el tiempo a `expired`: se va, salvo que sea un error (espera a que lo cierren) o
+    /// que ya lo haya sustituido otro.
+    public func expire(_ expired: Notice) {
+        guard !expired.staysUntilDismissed, notice == expired else { return }
+        notice = nil
+    }
+
+    /// La pantalla del error de los datos ofrece bajarlos de GitHub, si está configurado.
+    public var offersDownload: Bool { status.state != .disabled }
 
     /// Escucha lo que pasa sin que nadie lo pida (subidas diferidas, cambios de estado). Dura
     /// mientras viva la vista que la lanza.

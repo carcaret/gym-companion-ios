@@ -23,14 +23,8 @@ struct SessionEditor: View {
                 // ✕ y ✓ de iOS 26, como todas las hojas de la app (decisión del usuario, 2026-10-28).
                 Button(role: .close) { model.requestClose() }
                     .accessibilityIdentifier("session-cancel")
-                    // Colgado de la ✕: en iOS 26 el diálogo sale como globo que apunta a su vista, y
-                    // se cierra tocando fuera (sigue editando).
-                    .confirmationDialog(HistoryText.discardTitle, isPresented: Binding(
-                        get: { model.isDiscardPromptPresented }, set: { if !$0 { model.keepEditing() } }
-                    ), titleVisibility: .visible) {
-                        Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
-                        Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
-                    }
+                    .discardChangesDialog(HistoryText.discardTitle, isPresented: model.isDiscardPromptPresented,
+                                          discard: model.discardChanges, keep: model.keepEditing)
             }
             ToolbarItem(placement: .confirmationAction) {
                 ConfirmButton { Task { await model.finishEditing() } }

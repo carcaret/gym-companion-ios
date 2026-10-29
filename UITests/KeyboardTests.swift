@@ -37,9 +37,7 @@ final class KeyboardTests: XCTestCase {
     /// buscador lo cierra.
     @MainActor
     func testTocarFueraEnUnaLista() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.tabBars.buttons["Gráficas"].tap()
         let exercise = app.buttons["chart-exercise"]
         XCTAssertTrue(exercise.appears(timeout: 10))
@@ -55,9 +53,7 @@ final class KeyboardTests: XCTestCase {
 
     @MainActor
     private func openSettingsWithKeyboard() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.openSyncSettings()
         let repository = app.textFields["settings-repository"]
         XCTAssertTrue(repository.appears(timeout: 10))

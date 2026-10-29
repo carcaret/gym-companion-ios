@@ -65,7 +65,7 @@ targets:
   GymCompanionUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [UITests]
+    sources: [UITests, App/Shared/LaunchArgument.swift]
     dependencies:
       - target: GymCompanion
     settings:
@@ -80,7 +80,8 @@ targets:
     platform: watchOS
     sources:
       - Watch
-      - App/DemoData.swift
+      - App/Demo/DemoData.swift
+      - App/Shared/LaunchArgument.swift
       - App/Shared/Theme.swift
       - App/Assets.xcassets
     dependencies:
@@ -116,7 +117,7 @@ targets:
     type: bundle.ui-testing
     platform: watchOS
     # Las esperas, las mismas que en los tests del iPhone (`appears(timeout:)`).
-    sources: [WatchUITests, UITests/Waiting.swift]
+    sources: [WatchUITests, UITests/Waiting.swift, UITests/Capture.swift, App/Shared/LaunchArgument.swift]
     dependencies:
       - target: GymCompanionWatch
     settings:

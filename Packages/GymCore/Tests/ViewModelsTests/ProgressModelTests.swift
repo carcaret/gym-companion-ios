@@ -38,11 +38,10 @@ private func statsData() -> TrainingData {
 
 @MainActor
 private func progress(_ data: TrainingData = statsData()) async -> (ProgressModel, NavigationModel, AppModel) {
-    let app = AppModel(repository: SyncHarness(local: data, configured: false).repository())
-    await app.start()
+    let base = await AppHarness.start(local: data)
     let navigation = NavigationModel()
     navigation.select(.progress)
-    return (ProgressModel(app: app, clock: FixedClock(SyncFixtures.today)), navigation, app)
+    return (ProgressModel(app: base.app, clock: base.clock), navigation, base.app)
 }
 
 // tests/e2e/estadisticas.spec.js

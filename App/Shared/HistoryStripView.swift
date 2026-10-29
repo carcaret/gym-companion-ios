@@ -14,8 +14,6 @@ struct HistoryStripView: View {
     @State private var selection = TapSelection<Int>()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let bubbleDuration: Duration = .seconds(3)
-
     /// El alto de las barras, en puntos: los 44 de la tira de la PWA menos la fecha. Las vacías,
     /// las saltadas y las muy bajas tienen 3.
     private static let plotHeight: CGFloat = 30
@@ -34,12 +32,7 @@ struct HistoryStripView: View {
             }
             chart
         }
-        .task(id: selection.selected) {
-            guard let shown = selection.selected else { return }
-            // Cancelado por otro toque, no cierra nada: el bocadillo que se ve ya es otro.
-            guard (try? await Task.sleep(for: Self.bubbleDuration)) != nil else { return }
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { selection.expire(shown) }
-        }
+        .expiringBubble($selection)
         .accessibilityElement(children: .contain)
     }
 
@@ -122,12 +115,7 @@ struct HistoryStripView: View {
                     Text(secondary).scaledFont(11).foregroundStyle(Theme.textSecondary)
                 }
             }
-            .monospacedDigit()
-            .fixedSize()
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(Theme.surface2, in: .rect(cornerRadius: 10))
-            .shadow(color: .black.opacity(0.45), radius: 9, y: 4)
+            .chartBubble()
             .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
         }
     }

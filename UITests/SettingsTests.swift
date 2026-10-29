@@ -9,9 +9,7 @@ final class SettingsTests: XCTestCase {
 
     @MainActor
     func testRetornoPasaAlCampoSiguiente() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo"]
-        app.launch()
+        let app = XCUIApplication.launchDemo()
         app.openSyncSettings()
         let repository = app.textFields["settings-repository"]
         XCTAssertTrue(repository.appears(timeout: 10))

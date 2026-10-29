@@ -9,7 +9,6 @@ import ViewModels
 struct SessionDetail: View {
     @Bindable var model: HistoryModel
     let sync: SyncModel
-    let noticeDuration: Duration
 
     var body: some View {
         ScrollView {
@@ -39,7 +38,7 @@ struct SessionDetail: View {
         .sheet(isPresented: Binding(get: { model.isEditing }, set: { if !$0 { model.requestClose() } })) {
             NavigationStack { SessionEditor(model: model) }
                 // Lo que cuelga de la raíz queda debajo de la hoja: avisos y conflicto, aquí.
-                .syncPresentation(sync, noticeDuration: noticeDuration)
+                .syncPresentation(sync)
         }
     }
 }

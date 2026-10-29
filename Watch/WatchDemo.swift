@@ -4,8 +4,8 @@ import Domain
 /// acabara de empezar en el iPhone, o nada con `-demo-sin-entreno`. Nunca se usa en el reloj.
 enum WatchDemo {
     static func snapshot(arguments: [String], today: LocalDate) -> WatchSnapshot? {
-        if arguments.contains("-demo-sin-entreno") { return WatchSnapshot(workout: nil) }
-        guard arguments.contains("-demo") else { return nil }
+        if LaunchArgument.demoWithoutWorkout.isPresent(in: arguments) { return WatchSnapshot(workout: nil) }
+        guard LaunchArgument.demo.isPresent(in: arguments) else { return nil }
         var data = DemoData.make(today: today)
         let history = data.history
         let routine = data.routines[0]

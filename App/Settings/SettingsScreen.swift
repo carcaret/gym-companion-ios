@@ -78,11 +78,8 @@ struct SettingsScreen: View {
                 // Con algo escrito sin guardar, pregunta antes de tirarlo (antes lo tiraba).
                 Button(role: .close) { model.requestClose() }
                     .accessibilityIdentifier("settings-close")
-                    .confirmationDialog(FormText.discardTitle, isPresented: $model.isDiscardPromptPresented,
-                                        titleVisibility: .visible) {
-                        Button(FormText.discardConfirm, role: .destructive) { model.discardChanges() }
-                        Button(FormText.keepEditing, role: .cancel) { model.keepEditing() }
-                    }
+                    .discardChangesDialog(isPresented: model.isDiscardPromptPresented,
+                                          discard: model.discardChanges, keep: model.keepEditing)
             }
             ToolbarItem(placement: .confirmationAction) {
                 // Prueba la conexión y, si va bien, guarda y cierra (como al añadir una cuenta).

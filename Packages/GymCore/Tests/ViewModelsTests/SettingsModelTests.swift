@@ -13,15 +13,10 @@ private struct SettingsHarness {
     let model: SettingsModel
 
     static func make(configured: Bool = false, remote: TrainingData? = SyncFixtures.base) async -> SettingsHarness {
-        let harness = SyncHarness(local: PWATestDB.data, remote: remote, configured: configured)
-        let repository = harness.repository()
-        let app = AppModel(repository: repository)
-        let sync = SyncModel(repository: repository, app: app)
-        await app.start()
-        await sync.refresh()
-        let model = SettingsModel(sync: sync, repository: repository, version: AppVersion(marketing: "0.1", build: "15"))
+        let base = await AppHarness.start(SyncHarness(local: PWATestDB.data, remote: remote, configured: configured))
+        let model = SettingsModel(sync: base.sync, repository: base.repository, version: AppVersion(marketing: "0.1", build: "15"))
         await model.load()
-        return SettingsHarness(harness: harness, app: app, sync: sync, model: model)
+        return SettingsHarness(harness: base.harness, app: base.app, sync: base.sync, model: model)
     }
 }
 
