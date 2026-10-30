@@ -52,6 +52,7 @@ final class WatchCompositionRoot {
         Task {
             await healthWorkouts.requestAccess()
             let pending = notFound
+            HealthLog.logger.notice("Permisos de Salud pedidos; pendientes: \(pending.count)")
             notFound = []
             for day in pending { await delete(day) }
         }
@@ -80,7 +81,13 @@ final class WatchCompositionRoot {
     /// app, mientras siga abierta en segundo plano.
     private func delete(_ day: LocalDate) async {
         deleting += 1
-        let found = (try? await healthWorkouts.deleteAll(on: day)) ?? 0
+        var found = 0
+        do {
+            found = try await healthWorkouts.deleteAll(on: day)
+            HealthLog.logger.notice("Borrar \(day.iso, privacy: .public): \(found) entrenos borrados")
+        } catch {
+            HealthLog.logger.error("Borrar \(day.iso, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
         if found == 0 { notFound.insert(day) }
         deleting -= 1
     }

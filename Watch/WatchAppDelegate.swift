@@ -1,4 +1,5 @@
 import HealthKit
+import WatchAdapters
 import WatchKit
 
 /// El delegado de la app del reloj: tiene la raíz de composición, recibe el entreno cuando el
@@ -18,6 +19,7 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate {
                 task.setTaskCompletedWithSnapshot(false)
                 continue
             }
+            HealthLog.logger.notice("Despertado por WatchConnectivity")
             Task {
                 await root.finishPendingDeletions()
                 connectivity.setTaskCompletedWithSnapshot(false)
