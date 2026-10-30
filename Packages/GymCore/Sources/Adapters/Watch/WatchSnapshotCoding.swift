@@ -4,7 +4,8 @@ import Foundation
 /// Lo que viaja del iPhone al reloj, en JSON versionado: si un día cambia, un reloj con la app
 /// vieja no lee mal lo que le llega de una nueva (ni al revés).
 public enum WatchSnapshotCoding {
-    static let currentVersion = 1
+    /// 2: el plan de hoy y las sesiones de referencia en vez de las reps de hoy y las anteriores.
+    static let currentVersion = 2
 
     /// Por qué no se puede leer lo recibido.
     public enum FormatError: Error, Hashable {
@@ -33,13 +34,16 @@ private struct Payload: Codable {
     struct Exercise: Codable {
         var name: String
         var weight: Double
-        var reps: [Int]
+        var series: Int
+        var targetReps: Int
         var skipped: Bool
-        var previous: [Previous]
+        var best: Reference?
+        var last: Reference?
     }
 
-    struct Previous: Codable {
+    struct Reference: Codable {
         var date: String
+        var weight: Double
         var reps: [Int?]
     }
 
@@ -50,8 +54,8 @@ private struct Payload: Codable {
         version = WatchSnapshotCoding.currentVersion
         workout = snapshot.workout.map { workout in
             Workout(date: workout.date.iso, routineName: workout.routineName, exercises: workout.exercises.map { exercise in
-                Exercise(name: exercise.name, weight: exercise.weight, reps: exercise.reps, skipped: exercise.skipped,
-                         previous: exercise.previous.map { Previous(date: $0.date.iso, reps: $0.reps) })
+                Exercise(name: exercise.name, weight: exercise.weight, series: exercise.series, targetReps: exercise.targetReps,
+                         skipped: exercise.skipped, best: exercise.best.map(Reference.init), last: exercise.last.map(Reference.init))
             })
         }
     }
@@ -59,14 +63,25 @@ private struct Payload: Codable {
     func snapshot() throws -> WatchSnapshot {
         try WatchSnapshot(workout: workout.map { workout in
             try WatchSnapshot.Workout(date: Self.date(workout.date), routineName: workout.routineName, exercises: workout.exercises.map { exercise in
-                try WatchSnapshot.Exercise(name: exercise.name, weight: exercise.weight, reps: exercise.reps, skipped: exercise.skipped,
-                                           previous: exercise.previous.map { try WatchSnapshot.Previous(date: Self.date($0.date), reps: $0.reps) })
+                try WatchSnapshot.Exercise(name: exercise.name, weight: exercise.weight, series: exercise.series, targetReps: exercise.targetReps,
+                                           skipped: exercise.skipped, best: exercise.best.map { try $0.reference() },
+                                           last: exercise.last.map { try $0.reference() })
             })
         })
     }
 
-    private static func date(_ iso: String) throws -> LocalDate {
+    fileprivate static func date(_ iso: String) throws -> LocalDate {
         guard let date = LocalDate(iso: iso) else { throw WatchSnapshotCoding.FormatError.invalidDate(iso) }
         return date
+    }
+}
+
+private extension Payload.Reference {
+    init(_ reference: WatchSnapshot.Reference) {
+        self.init(date: reference.date.iso, weight: reference.weight, reps: reference.reps)
+    }
+
+    func reference() throws -> WatchSnapshot.Reference {
+        try WatchSnapshot.Reference(date: Payload.date(date), weight: weight, reps: reps)
     }
 }

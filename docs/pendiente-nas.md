@@ -105,6 +105,26 @@ del simulador del Series 10 de 46 mm). Falta lo que necesita el NAS o el reloj e
       reinstalación en el reloj al renovar a los 7 días.
 - [ ] **WatchConnectivity con la app instalada directamente en el reloj**: con un entreno en curso
       en el iPhone, el reloj enseña sus ejercicios; al cambiar un peso o unas reps en el iPhone,
-      el reloj se pone al día; al terminar el entreno, dice "Sin entreno en curso". Nadie documenta
+      el reloj se pone al día; al terminar el entreno, dice "Empieza el entreno en el iPhone". Nadie documenta
       si WatchConnectivity empareja una app del reloj que no instaló el iPhone: si no, la salida es
       que el reloj lea el `db.json` de GitHub él mismo (otro adaptador del mismo `WatchModel`).
+
+### #17 El reloj como app de entreno (HealthKit)
+
+Hecho y probado en Docker (las reglas, los textos y el `WatchModel`) y en el CI (compilación,
+firma ad hoc con los entitlements y capturas del simulador). Falta lo que necesita el reloj en la
+mano:
+
+- [ ] **plumesign activa Salud en los dos App ID** (el del iPhone y el del reloj) con los
+      entitlements de cada binario, como en #3: en el log de ios-signer y en el perfil de cada uno
+      (`com.apple.developer.healthkit`).
+- [ ] **Los permisos de Salud**: la hoja del sistema sale en el reloj la primera vez que se empieza
+      a medir, y con ellos aceptados el entreno se guarda (Fitness y Salud, con el nombre de Gym).
+- [ ] **«Empezar» en el iPhone abre el reloj** (`startWatchApp`) con la app del reloj instalada
+      directamente por ios-signer (#2). Si no la abre, se empieza en el reloj y no pasa nada más.
+- [ ] **La app sigue en primer plano** al bajar y levantar la muñeca durante el entreno, y con la
+      muñeca bajada: si los segundos se refrescan o solo una vez por minuto.
+- [ ] **La vibración a 1:30** con la pantalla apagada, y el doble toque para el descanso.
+- [ ] **Terminar en el iPhone** termina también el del reloj y enseña el resumen.
+- [ ] **La música**: la página de la izquierda controla lo que suena en el iPhone y la corona sube y
+      baja el volumen.

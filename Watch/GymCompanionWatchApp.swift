@@ -1,13 +1,14 @@
 import SwiftUI
+import WatchKit
 
 @main
 struct GymCompanionWatchApp: App {
-    private let root = WatchCompositionRoot()
+    @WKApplicationDelegateAdaptor private var delegate: WatchAppDelegate
 
     var body: some Scene {
         WindowGroup {
-            WatchRootView(model: root.model)
-                .task { await root.listen() }
+            WatchRootView(model: delegate.root.model)
+                .task { await delegate.root.listen() }
         }
     }
 }

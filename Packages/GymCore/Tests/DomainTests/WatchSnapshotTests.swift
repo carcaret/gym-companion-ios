@@ -1,8 +1,9 @@
 import Domain
 import Testing
 
-// Lo que enseña el reloj (#16): el entreno en curso, ejercicio a ejercicio, con el peso y las reps
-// de hoy y las reps de las últimas sesiones terminadas.
+// Lo que enseña el reloj: el entreno en curso, ejercicio a ejercicio, con el plan de hoy y las
+// sesiones de referencia. Hasta la app de entreno (#17) llevaba las reps de hoy y las 4 últimas
+// sesiones; el usuario eligió el plan, la mejor reciente y la última (2026-10-29).
 
 @Suite("Lo que enseña el reloj")
 struct WatchSnapshotTests {
@@ -18,6 +19,14 @@ struct WatchSnapshotTests {
 
     private func active(_ logs: [ExerciseLog]) -> Session {
         makeSession(today, completed: false, logs: logs)
+    }
+
+    private func done(_ date: LocalDate, _ log: ExerciseLog) -> Session {
+        makeSession(date, completed: true, logs: [log])
+    }
+
+    private func firstExercise(in history: [Session]) throws -> WatchSnapshot.Exercise {
+        try #require(data(history: history).watchSnapshot(today: today).workout).exercises[0]
     }
 
     @Test("sin sesión hoy, no hay entreno")
@@ -49,16 +58,11 @@ struct WatchSnapshotTests {
         #expect(workout.exercises.map(\.weight) == [80, 62.5])
     }
 
-    @Test("las reps de hoy son las del log; una serie sin rellenar lleva las reps objetivo")
-    func todayReps() throws {
-        let snapshot = data(history: [active([makeLog(series: 4, expected: 8, actual: [12, nil, 11, nil])])]).watchSnapshot(today: today)
-        #expect(try #require(snapshot.workout).exercises[0].reps == [12, 8, 11, 8])
-    }
-
-    @Test("una serie añadida sin reps también lleva las reps objetivo")
-    func addedSeries() throws {
-        let snapshot = data(history: [active([makeLog(series: 4, expected: 10, actual: [12, 12, 11])])]).watchSnapshot(today: today)
-        #expect(try #require(snapshot.workout).exercises[0].reps == [12, 12, 11, 10])
+    @Test("el plan de hoy: las series y las reps objetivo, aunque ya haya reps apuntadas")
+    func plan() throws {
+        let exercise = try firstExercise(in: [active([makeLog(series: 4, expected: 8, actual: [12, nil, 11, nil])])])
+        #expect(exercise.series == 4)
+        #expect(exercise.targetReps == 8)
     }
 
     @Test("un ejercicio saltado hoy se marca")
@@ -79,41 +83,64 @@ struct WatchSnapshotTests {
         #expect(try #require(snapshot.workout).routineName == "DIA9")
     }
 
-    @Test("las sesiones anteriores: solo terminadas, de la más reciente a la más antigua, como mucho 4")
-    func previous() throws {
-        let history = [
-            makeSession("2026-10-01", completed: true, logs: [makeLog(actual: [1, 1, 1])]),
-            makeSession("2026-10-21", completed: true, logs: [makeLog(actual: [12, 12, 11])]),
-            makeSession("2026-10-10", completed: true, logs: [makeLog(actual: [11, 10, 9])]),
-            makeSession("2026-10-17", completed: true, logs: [makeLog(actual: [12, 11, nil])]),
-            makeSession("2026-10-19", completed: false, logs: [makeLog(actual: [2, 2, 2])]),
-            makeSession("2026-10-14", completed: true, logs: [makeLog(actual: [11, 11, 10])]),
-            active([makeLog(actual: [12, 12, 12])]),
-        ]
-        let previous = try #require(data(history: history).watchSnapshot(today: today).workout).exercises[0].previous
-        #expect(previous == [
-            WatchSnapshot.Previous(date: "2026-10-21", reps: [12, 12, 11]),
-            WatchSnapshot.Previous(date: "2026-10-17", reps: [12, 11, nil]),
-            WatchSnapshot.Previous(date: "2026-10-14", reps: [11, 11, 10]),
-            WatchSnapshot.Previous(date: "2026-10-10", reps: [11, 10, 9]),
+    @Test("la mejor es la de la semilla del plan: más peso; a igualdad, más volumen; con su fecha, peso y reps")
+    func best() throws {
+        let exercise = try firstExercise(in: [
+            done("2026-10-01", makeLog(weight: 60, actual: [12, 12, 12])),
+            done("2026-10-08", makeLog(weight: 62.5, actual: [10, 9, 8])),
+            done("2026-10-15", makeLog(weight: 62.5, actual: [11, 10, 10])),
+            done("2026-10-21", makeLog(weight: 62.5, actual: [10, 9, 8])),
+            active([makeLog(weight: 62.5)]),
         ])
+        #expect(exercise.best == WatchSnapshot.Reference(date: "2026-10-15", weight: 62.5, reps: [11, 10, 10]))
     }
 
-    @Test("las sesiones anteriores son las de ese ejercicio y no cuentan las que se saltó")
-    func previousOfExercise() throws {
-        let history = [
-            makeSession("2026-10-17", completed: true, logs: [makeLog(actual: [9, 9, 9])]),
-            makeSession("2026-10-19", completed: true, logs: [makeLog("sentadilla", actual: [5, 5, 5])]),
-            makeSession("2026-10-21", completed: true, logs: [makeLog(actual: [10, 10, 10], skipped: true)]),
+    @Test("la última, solo si no es la mejor")
+    func last() throws {
+        let exercise = try firstExercise(in: [
+            done("2026-10-14", makeLog(weight: 16, actual: [11, 11, 11])),
+            done("2026-10-21", makeLog(weight: 12, actual: [10, 10, 10])),
+            active([makeLog(weight: 16)]),
+        ])
+        #expect(exercise.best?.date == "2026-10-14")
+        #expect(exercise.last == WatchSnapshot.Reference(date: "2026-10-21", weight: 12, reps: [10, 10, 10]))
+    }
+
+    @Test("si la última es la mejor, no se repite")
+    func lastIsBest() throws {
+        let exercise = try firstExercise(in: [
+            done("2026-10-14", makeLog(weight: 60, actual: [10, 10, 10])),
+            done("2026-10-21", makeLog(weight: 62.5, actual: [10, 10, 10])),
+            active([makeLog(weight: 62.5)]),
+        ])
+        #expect(exercise.best?.date == "2026-10-21")
+        #expect(exercise.last == nil)
+    }
+
+    @Test("no cuentan las sesiones sin terminar, las saltadas ni las de otros ejercicios")
+    func onlyCompletedOfExercise() throws {
+        let exercise = try firstExercise(in: [
+            done("2026-10-17", makeLog(weight: 50, actual: [9, 9, 9])),
+            makeSession("2026-10-19", completed: false, logs: [makeLog(weight: 90, actual: [10, 10, 10])]),
+            done("2026-10-20", makeLog("sentadilla", weight: 100, actual: [5, 5, 5])),
+            done("2026-10-21", makeLog(weight: 80, actual: [10, 10, 10], skipped: true)),
             active([makeLog()]),
-        ]
-        let previous = try #require(data(history: history).watchSnapshot(today: today).workout).exercises[0].previous
-        #expect(previous == [WatchSnapshot.Previous(date: "2026-10-17", reps: [9, 9, 9])])
+        ])
+        #expect(exercise.best == WatchSnapshot.Reference(date: "2026-10-17", weight: 50, reps: [9, 9, 9]))
+        #expect(exercise.last == nil)
     }
 
-    @Test("un ejercicio nunca hecho no tiene sesiones anteriores")
+    @Test("sin sesiones en las últimas 6 semanas no hay mejor, pero sí la última")
+    func dormant() throws {
+        let exercise = try firstExercise(in: [done("2026-08-01", makeLog(weight: 40, actual: [12, 12, 12])), active([makeLog()])])
+        #expect(exercise.best == nil)
+        #expect(exercise.last == WatchSnapshot.Reference(date: "2026-08-01", weight: 40, reps: [12, 12, 12]))
+    }
+
+    @Test("un ejercicio nunca hecho no tiene referencias")
     func neverDone() throws {
-        let snapshot = data(history: [active([makeLog()])]).watchSnapshot(today: today)
-        #expect(try #require(snapshot.workout).exercises[0].previous.isEmpty)
+        let exercise = try firstExercise(in: [active([makeLog()])])
+        #expect(exercise.best == nil)
+        #expect(exercise.last == nil)
     }
 }

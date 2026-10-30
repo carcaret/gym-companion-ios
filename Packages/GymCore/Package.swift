@@ -3,9 +3,10 @@
 // arquitectura: Domain no depende de nada; Presentation (textos en español para la interfaz) y
 // Application, de Domain; ViewModels (estado de cada pantalla, @Observable), de Application,
 // Presentation y Domain; Adapters, de Application y Domain; AppleAdapters, solo de Application;
-// WatchAdapters, de Adapters, Application y Domain. Solo las apps conocen los adaptadores. Nada salvo AppleAdapters y
-// WatchAdapters importa frameworks solo de Apple (y lo hacen tras `#if canImport`): los tests
-// corren también en Linux.
+// WatchAdapters, de Adapters, Application y Domain; HealthAdapters, de Application y Domain. Solo
+// las apps conocen los adaptadores. Nada salvo AppleAdapters, WatchAdapters y HealthAdapters
+// importa frameworks solo de Apple (y lo hacen tras `#if canImport`): los tests corren también en
+// Linux.
 import PackageDescription
 
 let package = Package(
@@ -19,6 +20,7 @@ let package = Package(
         .library(name: "Adapters", targets: ["Adapters"]),
         .library(name: "AppleAdapters", targets: ["AppleAdapters"]),
         .library(name: "WatchAdapters", targets: ["WatchAdapters"]),
+        .library(name: "HealthAdapters", targets: ["HealthAdapters"]),
     ],
     targets: [
         .target(name: "Domain"),
@@ -28,9 +30,12 @@ let package = Package(
         .target(name: "Adapters", dependencies: ["Application", "Domain"]),
         // Adaptadores que solo existen en Apple (Llavero, UIKit, Network): en Linux compila vacío.
         .target(name: "AppleAdapters", dependencies: ["Application"]),
-        // El enlace con el reloj (WatchConnectivity), en su módulo: lo usan la app del iPhone y la
-        // del reloj, que no tiene UIKit. En Linux compila vacío.
+        // El enlace con el reloj (WatchConnectivity) y su vibración, en su módulo: lo usan la app
+        // del iPhone y la del reloj, que no tiene UIKit. En Linux compila vacío.
         .target(name: "WatchAdapters", dependencies: ["Adapters", "Application", "Domain"]),
+        // Salud (HealthKit): la sesión de entreno del reloj y abrir el reloj desde el iPhone. En
+        // Linux compila vacío.
+        .target(name: "HealthAdapters", dependencies: ["Application", "Domain"]),
         // Para los tests: dobles de los puertos y tests de contrato que cualquier adaptador de un
         // puerto con estado debe pasar (el fichero, el Llavero, GitHub y, un día, iCloud).
         .target(name: "GymCoreTesting", dependencies: ["Application", "Domain"]),

@@ -35,10 +35,13 @@ public final class TodayModel {
 
     let app: AppModel
     private let clock: any Clock
+    /// Abre el reloj al empezar el entreno, para que lo mida. `nil` sin reloj (la demo).
+    private let watchLauncher: (any WatchWorkoutLauncher)?
 
-    public init(app: AppModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock, watchLauncher: (any WatchWorkoutLauncher)? = nil) {
         self.app = app
         self.clock = clock
+        self.watchLauncher = watchLauncher
     }
 
     var data: TrainingData { app.current }
@@ -151,7 +154,8 @@ public final class TodayModel {
         replacePrompt = nil
     }
 
-    /// Empieza sin preguntar: el entreno de hoy, si lo hay, se sustituye.
+    /// Empieza sin preguntar: el entreno de hoy, si lo hay, se sustituye. Abre el reloj para que
+    /// mida el entreno.
     public func start() async {
         guard case .preview(let routine) = storedStage else { return }
         var data = data
@@ -159,6 +163,7 @@ public final class TodayModel {
         openExercise = nil
         editing.reset()
         await app.update(data)
+        await watchLauncher?.launch()
     }
 
     // MARK: - Ayudas

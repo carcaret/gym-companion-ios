@@ -1,9 +1,6 @@
-/// Lo que enseña el reloj: el entreno en curso, ejercicio a ejercicio, con el peso y las reps de
-/// hoy y las reps de las últimas sesiones terminadas. El reloj solo lo lee; manda el iPhone.
+/// Lo que enseña el reloj: el entreno en curso, ejercicio a ejercicio, con el plan de hoy y las
+/// sesiones de referencia (la mejor reciente y la última). El reloj solo lo lee; manda el iPhone.
 public struct WatchSnapshot: Hashable, Sendable {
-    /// Sesiones anteriores que se enseñan de cada ejercicio.
-    public static let previousLimit = 4
-
     public struct Workout: Hashable, Sendable {
         public let date: LocalDate
         public let routineName: String
@@ -19,31 +16,42 @@ public struct WatchSnapshot: Hashable, Sendable {
 
     public struct Exercise: Hashable, Sendable {
         public let name: String
-        /// En kg (0 = peso corporal).
+        /// El plan de hoy: el peso en kg (0 = peso corporal), las series y las reps objetivo.
         public let weight: Double
-        /// Las reps de cada serie de hoy; una serie sin rellenar lleva las reps objetivo.
-        public let reps: [Int]
+        public let series: Int
+        public let targetReps: Int
         public let skipped: Bool
-        /// De la más reciente a la más antigua, como mucho `previousLimit`.
-        public let previous: [Previous]
+        /// La mejor sesión reciente (`History.bestRecentSession`): de ella sale el plan.
+        public let best: Reference?
+        /// La última vez que se hizo, solo si no es la mejor.
+        public let last: Reference?
 
-        public init(name: String, weight: Double, reps: [Int], skipped: Bool, previous: [Previous]) {
+        public init(name: String, weight: Double, series: Int, targetReps: Int, skipped: Bool, best: Reference?, last: Reference?) {
             self.name = name
             self.weight = weight
-            self.reps = reps
+            self.series = series
+            self.targetReps = targetReps
             self.skipped = skipped
-            self.previous = previous
+            self.best = best
+            self.last = last
         }
     }
 
-    /// Una sesión anterior terminada: su día y las reps de cada serie (`nil` = sin rellenar).
-    public struct Previous: Hashable, Sendable {
+    /// Una sesión terminada del ejercicio: su día, el peso y las reps de cada serie (`nil` = sin
+    /// rellenar).
+    public struct Reference: Hashable, Sendable {
         public let date: LocalDate
+        public let weight: Double
         public let reps: [Int?]
 
-        public init(date: LocalDate, reps: [Int?]) {
+        public init(date: LocalDate, weight: Double, reps: [Int?]) {
             self.date = date
+            self.weight = weight
             self.reps = reps
+        }
+
+        init(_ session: ExerciseSession) {
+            self.init(date: session.date, weight: session.log.weight, reps: session.log.actualReps)
         }
     }
 
@@ -63,13 +71,16 @@ extension TrainingData {
             date: today,
             routineName: routines.name(of: session.routineID),
             exercises: session.logs.map { log in
-                WatchSnapshot.Exercise(
+                let best = history.bestRecentSession(for: log.exerciseID, today: today)
+                let last = history.lastSessions(for: log.exerciseID, excluding: today, limit: 1).first
+                return WatchSnapshot.Exercise(
                     name: catalog.name(of: log.exerciseID),
                     weight: log.weight,
-                    reps: log.repsOrTarget,
+                    series: log.series,
+                    targetReps: log.targetReps,
                     skipped: log.skipped,
-                    previous: history.lastSessions(for: log.exerciseID, excluding: today, limit: WatchSnapshot.previousLimit)
-                        .map { WatchSnapshot.Previous(date: $0.date, reps: $0.log.actualReps) }
+                    best: best.map(WatchSnapshot.Reference.init),
+                    last: last.flatMap { $0.date == best?.date ? nil : WatchSnapshot.Reference($0) }
                 )
             }
         ))
