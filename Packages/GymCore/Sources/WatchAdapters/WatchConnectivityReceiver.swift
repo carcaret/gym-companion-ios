@@ -40,6 +40,7 @@ public final class WatchConnectivityReceiver: NSObject, WCSessionDelegate, Senda
 
     public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
         guard let iso = userInfo[WatchContext.deleteWorkoutsKey] as? String, let day = LocalDate(iso: iso) else { return }
+        HealthLog.logger.notice("Borrar \(iso, privacy: .public): recibido del iPhone")
         deletionContinuation.yield(day)
     }
 

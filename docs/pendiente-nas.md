@@ -126,7 +126,16 @@ mano:
       de permisos de Salud) y comprobar que el entreno desaparece de Fitness y de los anillos. Lo
       borra el reloj (desde el iPhone, Salud no dejaba: 2026-10-30): con la app del reloj cerrada
       debería llegarle en segundo plano; si no, al abrirla. La primera vez que se empiece a medir
-      tras esta versión, el reloj vuelve a pedir permisos (ahora también para borrar).
+      tras esta versión, el reloj vuelve a pedir permisos (ahora también para borrar); también
+      al abrir la app del reloj, si falta alguno. 2026-10-30: el primer intento no borró nada
+      (sin error): sin permiso de lectura, Salud no le enseña los entrenos al reloj; ahora los
+      pide al abrir la app y repite lo que no encontró.
+      Si sigue sin borrar, el registro del reloj dice dónde se para (subsistema
+      `com.carcaret.gymcompanion`, categoría `salud`: «pedido al reloj», «recibido del iPhone»,
+      «N entrenos borrados» o el error). Se lee desde el NAS con pymobiledevice3, por el mismo
+      camino que `watch_install.py` (túnel del iPhone y companion proxy hasta el lockdown del
+      reloj) y el servicio `OsTraceService` (`syslog()`), filtrando el proceso `GymCompanionWatch`;
+      el del iPhone, igual por el túnel, proceso `GymCompanion`.
 - [ ] **«Empezar» en el iPhone abre el reloj** (`startWatchApp`) con la app del reloj instalada
       directamente por ios-signer (#2). Si no la abre, se empieza en el reloj y no pasa nada más.
 - [ ] **La app sigue en primer plano** al bajar y levantar la muñeca durante el entreno, y con la

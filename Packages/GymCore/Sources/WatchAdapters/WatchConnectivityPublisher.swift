@@ -30,9 +30,14 @@ public final class WatchConnectivityPublisher: NSObject, WatchPublisher, WCSessi
     func requestWorkoutDeletion(on day: LocalDate) throws {
         let session = WCSession.default
         guard WCSession.isSupported(), session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else {
+            HealthLog.logger.error("""
+                Borrar \(day.iso, privacy: .public): sin reloj (activada \(session.activationState == .activated), \
+                emparejado \(session.isPaired), app instalada \(session.isWatchAppInstalled))
+                """)
             throw WatchUnavailable()
         }
         session.transferUserInfo([WatchContext.deleteWorkoutsKey: day.iso])
+        HealthLog.logger.notice("Borrar \(day.iso, privacy: .public): pedido al reloj (\(session.outstandingUserInfoTransfers.count) sin entregar)")
     }
 
     /// Sin reloj emparejado o sin la app del reloj, `updateApplicationContext` falla: no pasa

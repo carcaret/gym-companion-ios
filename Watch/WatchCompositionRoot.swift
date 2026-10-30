@@ -19,6 +19,10 @@ final class WatchCompositionRoot {
     private let receiver: WatchConnectivityReceiver?
     /// Cuántos borrados de Salud están en marcha.
     private var deleting = 0
+    /// Días cuyo entreno no se ha encontrado, quizá por no tener aún permiso: se repiten al
+    /// abrir la app, después de pedirlo.
+    private var notFound: Set<LocalDate> = []
+    private let healthWorkouts = HealthKitWorkoutStore()
 
     init(arguments: [String] = ProcessInfo.processInfo.arguments) {
         let clock = SystemClock()
@@ -43,6 +47,15 @@ final class WatchCompositionRoot {
             return
         }
         guard let receiver else { return }
+        // Con la app delante: la hoja de permisos de Salud, si falta alguno (en segundo plano no
+        // puede salir), y lo que no se encontró sin ellos.
+        Task {
+            await healthWorkouts.requestAccess()
+            let pending = notFound
+            HealthLog.logger.notice("Permisos de Salud pedidos; pendientes: \(pending.count)")
+            notFound = []
+            for day in pending { await delete(day) }
+        }
         for await snapshot in receiver.snapshots {
             await model.receive(snapshot)
         }
@@ -58,14 +71,24 @@ final class WatchCompositionRoot {
         }
     }
 
-    /// Lo que no se puede borrar (sin permiso) se queda en Salud: el iPhone ya avisó al pedirlo
-    /// si el reloj no estaba.
     private func deleteWorkouts(from receiver: WatchConnectivityReceiver) async {
-        let store = HealthKitWorkoutStore()
         for await day in receiver.workoutDeletions {
-            deleting += 1
-            try? await store.deleteWorkouts(on: day)
-            deleting -= 1
+            await delete(day)
         }
+    }
+
+    /// Lo que no se puede borrar se queda en Salud; lo que no se encuentra se repite al abrir la
+    /// app, mientras siga abierta en segundo plano.
+    private func delete(_ day: LocalDate) async {
+        deleting += 1
+        var found = 0
+        do {
+            found = try await healthWorkouts.deleteAll(on: day)
+            HealthLog.logger.notice("Borrar \(day.iso, privacy: .public): \(found) entrenos borrados")
+        } catch {
+            HealthLog.logger.error("Borrar \(day.iso, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
+        if found == 0 { notFound.insert(day) }
+        deleting -= 1
     }
 }
