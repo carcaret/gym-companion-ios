@@ -5,6 +5,7 @@ enum AccessibilityID {
     // El reloj
     static let watchStart = "watch-start"
     static let watchRest = "watch-rest"
+    static let watchHeartRate = "watch-heart-rate"
     static let watchExercises = "watch-exercises"
     static let watchFinish = "watch-finish"
     static let watchDone = "watch-done"
