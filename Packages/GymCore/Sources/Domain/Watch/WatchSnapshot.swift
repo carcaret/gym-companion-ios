@@ -63,6 +63,24 @@ public struct WatchSnapshot: Hashable, Sendable {
     }
 }
 
+extension WatchSnapshot.Exercise {
+    /// La mejor, si es del peso de hoy: las reps de otro peso no dicen nada de la serie que toca
+    /// (con el peso cambiado en el iPhone).
+    public var bestAtTodayWeight: WatchSnapshot.Reference? {
+        best?.weight == weight ? best : nil
+    }
+
+    /// La última, si es del peso de hoy.
+    public var lastAtTodayWeight: WatchSnapshot.Reference? {
+        last?.weight == weight ? last : nil
+    }
+
+    /// Nunca hecho: sin ninguna sesión, ni con otro peso.
+    public var isFirstTime: Bool {
+        best == nil && last == nil
+    }
+}
+
 extension TrainingData {
     /// Lo que enseña el reloj el día `today`: el entreno sin terminar de ese día, si lo hay.
     public func watchSnapshot(today: LocalDate) -> WatchSnapshot {

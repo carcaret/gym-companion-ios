@@ -55,7 +55,7 @@ UITests/                     XCUITest: pocos flujos y las capturas de pantalla; 
                              y los recorridos que se repiten), Waiting y Capture (estos dos, también en
                              WatchUITests/). Los identificadores, los de App/Shared/AccessibilityID.swift
 Watch/                       app del reloj (#16, #17), la app de entreno: WatchRootView (según la fase; midiendo,
-                             tres páginas: música, entreno y controles), un fichero por componente, WatchAppDelegate
+                             tres páginas: controles, entreno y música), un fichero por componente, WatchAppDelegate
                              (el entreno cuando lo abre el iPhone) y WatchCompositionRoot. Diseñada para el Series
                              10 de 46 mm. Con `-demo` mide un entreno de mentira con datos de ejemplo, o
                              `-demo-sin-entreno` (WatchDemo, capturas del CI)

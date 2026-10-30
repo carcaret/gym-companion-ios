@@ -8,7 +8,6 @@ public enum WatchText {
     public static let skipped = "Saltado"
     public static let start = "Empezar"
     public static let startFailed = "No se ha podido empezar a medir. Mira los permisos de Salud en el iPhone."
-    public static let best = "Mejor"
     public static let last = "Última"
     public static let total = "total"
     public static let restIdle = "toca para descansar"
@@ -40,16 +39,6 @@ public enum WatchText {
     /// "2/6": la posición `index` (desde 0) de `count`.
     public static func position(_ index: Int, of count: Int) -> String {
         "\(index + 1)/\(count)"
-    }
-
-    /// "62,5 kg · 4 × 11": el plan de hoy.
-    public static func plan(weight: Double, series: Int, reps: Int) -> String {
-        "\(self.weight(weight)) · \(series) × \(reps)"
-    }
-
-    /// "12 kg · 10·10·10": una sesión de referencia con otro peso que el plan.
-    public static func reference(weight: Double, reps: [Int?]) -> String {
-        "\(self.weight(weight)) · \(LogText.reps(reps))"
     }
 
     /// "7 ejercicios".

@@ -1,19 +1,23 @@
+import Presentation
 import SwiftUI
 import ViewModels
 
-/// El ejercicio que se ve: el nombre y su posición, el plan de hoy y las sesiones de referencia (la
-/// mejor reciente y, si es otra, la última). Saltado, atenuado salvo el «Saltado».
+/// El ejercicio que se ve: el nombre y su posición, el peso de hoy con las reps de la mejor sesión
+/// reciente y, si es otra, las de la última (solo las del peso de hoy). Saltado, atenuado salvo el
+/// «Saltado».
 struct ExerciseView: View {
     let exercise: WatchModel.Exercise
     let isDimmed: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                // Todo el ancho hasta la posición: con un `Spacer` en medio, el nombre saltaba de
+                // línea antes de hacerle falta («Press Inclinado | en Máquina»).
                 Text(exercise.name)
                     .font(.headline)
                     .lineLimit(2)
-                Spacer(minLength: 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 if !isDimmed {
                     Text(exercise.position)
                         .font(.footnote.monospacedDigit())
@@ -35,16 +39,33 @@ struct ExerciseView: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(exercise.plan)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Theme.accentLight)
+            // "60 kg · 10·10·8": el peso en azul y las reps de la mejor, que son lo que se mira.
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(exercise.weight)
+                    .foregroundStyle(Theme.accentLight)
+                if let reps = exercise.bestReps {
+                    Text("·")
+                        .foregroundStyle(Theme.textSecondary)
+                    Text(reps)
+                        .foregroundStyle(Theme.text)
+                }
+            }
+            .font(.body.weight(.semibold).monospacedDigit())
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .accessibilityElement(children: .combine)
+            if let reps = exercise.lastReps, !isDimmed {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(WatchText.last)
+                        .foregroundStyle(Theme.textSecondary)
+                    Text(reps)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                }
+                .font(.footnote)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            if let best = exercise.best {
-                ReferenceRow(reference: best, isPrimary: true)
-            }
-            if let last = exercise.last, !isDimmed {
-                ReferenceRow(reference: last, isPrimary: false)
+                .accessibilityElement(children: .combine)
             }
             if let firstTime = exercise.firstTime {
                 Text(firstTime)
@@ -52,29 +73,5 @@ struct ExerciseView: View {
                     .foregroundStyle(Theme.textSecondary)
             }
         }
-    }
-}
-
-/// "Mejor 11·11·10·8 · 26 oct": la mejor, más visible que la última.
-private struct ReferenceRow: View {
-    let reference: WatchModel.Reference
-    let isPrimary: Bool
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(reference.label)
-                .foregroundStyle(Theme.textSecondary)
-            Text(reference.detail)
-                .foregroundStyle(isPrimary ? Theme.text : Theme.textSecondary)
-                .fontWeight(isPrimary ? .semibold : .regular)
-                .monospacedDigit()
-            Text(reference.date)
-                .font(.caption2)
-                .foregroundStyle(Theme.textSecondary)
-        }
-        .font(isPrimary ? .footnote : .caption2)
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
-        .accessibilityElement(children: .combine)
     }
 }

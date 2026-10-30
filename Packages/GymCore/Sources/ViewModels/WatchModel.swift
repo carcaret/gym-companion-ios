@@ -98,14 +98,12 @@ public final class WatchModel {
                 id: index,
                 name: exercise.name,
                 position: WatchText.position(index, of: count),
-                plan: WatchText.plan(weight: exercise.weight, series: exercise.series, reps: exercise.targetReps),
+                weight: WatchText.weight(exercise.weight),
+                bestReps: exercise.bestAtTodayWeight.map { LogText.reps($0.reps) },
+                lastReps: exercise.lastAtTodayWeight.map { LogText.reps($0.reps) },
                 isSkipped: exercise.skipped,
                 status: exercise.skipped ? WatchText.skipped : nil,
-                best: exercise.best.map { Reference(label: WatchText.best, detail: LogText.reps($0.reps), date: DateText.dayMonth($0.date)) },
-                last: exercise.last.map {
-                    Reference(label: WatchText.last, detail: WatchText.reference(weight: $0.weight, reps: $0.reps), date: DateText.dayMonth($0.date))
-                },
-                firstTime: exercise.best == nil && exercise.last == nil ? WatchText.firstTime : nil
+                firstTime: exercise.isFirstTime ? WatchText.firstTime : nil
             )
         }
     }

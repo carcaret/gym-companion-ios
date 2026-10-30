@@ -14,7 +14,7 @@ extension WatchModel {
 
     /// Las páginas mientras se mide, de izquierda a derecha.
     public enum Tab: Hashable, Sendable {
-        case music, workout, controls
+        case controls, workout, music
     }
 
     public struct Ready: Hashable, Sendable {
@@ -39,29 +39,18 @@ extension WatchModel {
         public let name: String
         /// "2/6".
         public let position: String
-        /// "62,5 kg · 4 × 11".
-        public let plan: String
+        /// El peso de hoy: "62,5 kg" o "Peso corporal".
+        public let weight: String
+        /// "11·11·10·8": las reps de la mejor sesión reciente, si es del peso de hoy.
+        public let bestReps: String?
+        /// "10·10·9": las de la última, si es otra sesión y del peso de hoy.
+        public let lastReps: String?
         /// Saltado hoy: se pinta atenuado.
         public let isSkipped: Bool
-        /// "Saltado", encima del plan: no basta con que se vea más apagado.
+        /// "Saltado", encima del peso: no basta con que se vea más apagado.
         public let status: String?
-        public let best: Reference?
-        public let last: Reference?
         /// "Primera vez", si nunca se ha hecho.
         public let firstTime: String?
-    }
-
-    /// Una sesión de referencia: "Mejor 11·11·10·8 · 26 oct" o "Última 12 kg · 10·10·10 · 21 oct".
-    public struct Reference: Hashable, Sendable {
-        public let label: String
-        public let detail: String
-        public let date: String
-
-        public init(label: String, detail: String, date: String) {
-            self.label = label
-            self.detail = detail
-            self.date = date
-        }
     }
 
     public enum RestPhase: Hashable, Sendable {
