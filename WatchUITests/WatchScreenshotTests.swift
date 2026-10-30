@@ -16,6 +16,15 @@ final class WatchScreenshotTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.staticTexts["Press Banca"].appears(timeout: 20))
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
+        // Pasados 10 minutos (la demo va por 23:41), nada se monta: el pulso, en la fila de la
+        // hora, queda encima del tiempo, y el tiempo no pisa su texto.
+        let heartRate = app.descendants(matching: .any)[AccessibilityID.watchHeartRate].firstMatch
+        let elapsed = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "^[0-9]+:[0-9]{2}$")).firstMatch
+        let restLabel = app.staticTexts["toca para descansar"]
+        XCTAssertTrue(heartRate.exists)
+        XCTAssertLessThanOrEqual(heartRate.frame.maxY, elapsed.frame.minY, "pulso \(heartRate.frame), tiempo \(elapsed.frame)")
+        XCTAssertFalse(elapsed.frame.intersects(restLabel.frame), "tiempo \(elapsed.frame), texto \(restLabel.frame)")
+        XCTAssertLessThanOrEqual(restLabel.frame.maxX, app.windows.firstMatch.frame.maxX, "el texto se sale: \(restLabel.frame)")
         capture(app, "70-reloj-entreno")
 
         // Los ejercicios son páginas de un `ScrollView`: todos están en la jerarquía y, recortados,
