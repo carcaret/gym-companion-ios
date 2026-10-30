@@ -70,6 +70,15 @@ struct MonthYearTests {
     }
 }
 
+@Suite("Día y mes")
+struct DayMonthTests {
+    @Test("día y mes abreviado")
+    func dayMonth() {
+        #expect(DateText.dayMonth("2026-10-21") == "21 oct")
+        #expect(DateText.dayMonth("2026-09-06") == "6 sept")
+    }
+}
+
 @Suite("dateBlock")
 struct DateBlockTests {
     @Test("día y mes abreviado en mayúsculas")

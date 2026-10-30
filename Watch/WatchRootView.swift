@@ -10,10 +10,7 @@ struct WatchRootView: View {
     var body: some View {
         switch model.screen {
         case .message(let text):
-            Text(text)
-                .font(.headline)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Theme.textSecondary)
+            MessageView(text: text)
         case .ready(let ready):
             ReadyView(ready: ready) {
                 Task { await model.start() }

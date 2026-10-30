@@ -104,8 +104,9 @@ del simulador del Series 10 de 46 mm). Falta lo que necesita el NAS o el reloj e
       `Payload/GymCompanion.app/embedded.mobileprovision` exactamente (ahora hay dos); y la
       reinstalación en el reloj al renovar a los 7 días.
 - [ ] **WatchConnectivity con la app instalada directamente en el reloj**: con un entreno en curso
-      en el iPhone, el reloj enseña sus ejercicios; al cambiar un peso o unas reps en el iPhone,
-      el reloj se pone al día; al terminar el entreno, dice "Empieza el entreno en el iPhone". Nadie documenta
+      en el iPhone, el reloj enseña sus ejercicios; al cambiar un peso, quitar o saltar un
+      ejercicio en el iPhone, el reloj se pone al día; al terminar el entreno en el iPhone, el reloj
+      deja de medir y enseña el resumen (y, tras «Listo», "Empieza el entreno en el iPhone"). Nadie documenta
       si WatchConnectivity empareja una app del reloj que no instaló el iPhone: si no, la salida es
       que el reloj lea el `db.json` de GitHub él mismo (otro adaptador del mismo `WatchModel`).
 

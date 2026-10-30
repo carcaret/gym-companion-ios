@@ -19,7 +19,7 @@ public struct RestTimer: Hashable, Sendable {
     }
 
     /// En qué momento del entreno empezó, si se ha tocado.
-    public private(set) var startedAt: Duration?
+    private var startedAt: Duration?
 
     public init() {}
 

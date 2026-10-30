@@ -13,14 +13,19 @@ import WatchAdapters
 final class WatchCompositionRoot {
     let model: WatchModel
     private let demo: WatchSnapshot?
-    private let receiver = WatchConnectivityReceiver()
+    /// Fuera de la demo: lo que envía el iPhone.
+    private let receiver: WatchConnectivityReceiver?
 
     init(arguments: [String] = ProcessInfo.processInfo.arguments) {
         let clock = SystemClock()
         demo = WatchDemo.snapshot(arguments: arguments, today: clock.today())
-        model = demo == nil
-            ? WatchModel(clock: clock, recorder: HealthKitWorkoutRecorder(), restAlert: WatchKitRestAlert())
-            : WatchModel(clock: clock, recorder: DemoWorkoutRecorder(), restAlert: DemoRestAlert())
+        if demo == nil {
+            model = WatchModel(clock: clock, recorder: HealthKitWorkoutRecorder(), restAlert: WatchKitRestAlert())
+            receiver = WatchConnectivityReceiver()
+        } else {
+            model = WatchModel(clock: clock, recorder: DemoWorkoutRecorder(), restAlert: DemoRestAlert())
+            receiver = nil
+        }
     }
 
     /// Lo que llega del iPhone, mientras la app esté abierta. En la demo, el entreno ya empezado.
@@ -30,6 +35,7 @@ final class WatchCompositionRoot {
             if demo.workout != nil { await model.start() }
             return
         }
+        guard let receiver else { return }
         receiver.start()
         for await snapshot in receiver.snapshots {
             await model.receive(snapshot)
