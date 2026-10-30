@@ -38,8 +38,7 @@ struct TimeView: View {
             }
             .font(.caption2)
             // A cero, la barra está pero no se ve: así la franja no cambia de alto.
-            ProgressView(value: time.restProgress)
-                .tint(restColor)
+            RestBar(progress: time.restProgress, color: restColor)
                 .opacity(time.restPhase == .idle || isDimmed ? 0 : 1)
         }
         .opacity(isDimmed ? Theme.wristDownOpacity : 1)
@@ -58,5 +57,26 @@ struct TimeView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .layoutPriority(1)
+    }
+}
+
+/// La barra del descanso hasta cumplirlo: fina, porque la de `ProgressView` en watchOS mide unos
+/// 15 pt y le quitaba sitio al ejercicio (foto del reloj, 2026-10-30).
+private struct RestBar: View {
+    let progress: Double
+    let color: Color
+
+    var body: some View {
+        Capsule()
+            .fill(color.opacity(0.3))
+            .overlay(alignment: .leading) {
+                GeometryReader { proxy in
+                    Capsule()
+                        .fill(color)
+                        .frame(width: proxy.size.width * min(max(progress, 0), 1))
+                }
+            }
+            .frame(height: 4)
+            .accessibilityHidden(true)
     }
 }

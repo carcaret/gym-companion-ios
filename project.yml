@@ -122,7 +122,7 @@ targets:
         # La sesión de entreno sigue con la pantalla apagada y la app vuelve al levantar la muñeca.
         WKBackgroundModes: [workout-processing]
         NSHealthShareUsageDescription: Gym lee el pulso y las kcal del entreno para enseñártelos.
-        NSHealthUpdateUsageDescription: Gym guarda cada entreno en Salud como fuerza tradicional.
+        NSHealthUpdateUsageDescription: Gym guarda cada entreno en Salud como fuerza tradicional, y lo borra si borras su sesión en el iPhone.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.carcaret.gymcompanion.watchkitapp

@@ -1,12 +1,13 @@
-#if canImport(HealthKit) && os(iOS)
+#if canImport(HealthKit) && (os(iOS) || os(watchOS))
 import Application
 import Domain
 import Foundation
 import HealthKit
 
-/// Los entrenos de Gym en Salud, desde el iPhone: los que guardó el reloj, por el día de la sesión
-/// con el que los marca (`GymWorkoutMetadata`). Los de antes de marcarlos (2026-10-30) no se
-/// encuentran. HealthKit solo deja borrar lo que guardó la app.
+/// Los entrenos de Gym en Salud: los que guardó el reloj, por el día de la sesión con el que los
+/// marca (`GymWorkoutMetadata`). Los de antes de marcarlos (2026-10-30) no se encuentran. HealthKit
+/// solo deja borrar lo que guardó la propia app: el iPhone los busca y el reloj los borra
+/// (`WatchConnectivityWorkoutDeleter`), porque ios-signer instala las dos como apps distintas.
 public struct HealthKitWorkoutStore: HealthWorkoutStore {
     public init() {}
 
@@ -26,7 +27,7 @@ public struct HealthKitWorkoutStore: HealthWorkoutStore {
         try await Self.authorize(store)
         for workout in try await Self.workouts(on: day, in: store) {
             // Lo medido no se va con el entreno: sin borrarlo, Fitness lo sigue contando.
-            for type in Self.measured {
+            for type in GymHealthTypes.measured {
                 let predicate = HKQuery.predicateForObjects(from: workout)
                 let samples = try await HKSampleQueryDescriptor(predicates: [.quantitySample(type: type, predicate: predicate)],
                                                                 sortDescriptors: []).result(for: store)
@@ -36,15 +37,9 @@ public struct HealthKitWorkoutStore: HealthWorkoutStore {
         }
     }
 
-    /// Lo que guarda el reloj con cada entreno.
-    private static var measured: [HKQuantityType] {
-        [HKQuantityType(.heartRate), HKQuantityType(.activeEnergyBurned), HKQuantityType(.basalEnergyBurned)]
-    }
-
     /// Para buscar y borrar hacen falta los dos permisos; la hoja del sistema sale solo la primera vez.
     private static func authorize(_ store: HKHealthStore) async throws {
-        let types: Set<HKSampleType> = Set([HKObjectType.workoutType()] + measured)
-        try await store.requestAuthorization(toShare: types, read: types)
+        try await store.requestAuthorization(toShare: GymHealthTypes.all, read: GymHealthTypes.all)
     }
 
     private static func workouts(on day: LocalDate, in store: HKHealthStore) async throws -> [HKWorkout] {

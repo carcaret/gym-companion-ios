@@ -39,13 +39,17 @@ struct CompositionRoot {
             background: UIKitBackgroundActivity()
         )
         // Con `-demo` el reloj no recibe nada: los datos de ejemplo no son los del usuario.
-        model = AppModel(repository: repository, watch: demo.isDemo ? nil : WatchRelay(publisher: WatchConnectivityPublisher(), clock: clock))
+        let watchPublisher = demo.isDemo ? nil : WatchConnectivityPublisher()
+        model = AppModel(repository: repository, watch: watchPublisher.map { WatchRelay(publisher: $0, clock: clock) })
         sync = SyncModel(repository: repository, app: model, noticeDuration: demo.noticeDuration)
         navigation = NavigationModel()
         // Empezar el entreno abre el reloj para que lo mida (en la demo no: no hay reloj).
         today = TodayModel(app: model, clock: clock, watchLauncher: demo.isDemo ? nil : HealthKitWatchLauncher())
-        // Borrar una sesión borra también su entreno de Fitness (en la demo no: no toca Salud).
-        history = HistoryModel(app: model, clock: clock, healthWorkouts: demo.isDemo ? nil : HealthKitWorkoutStore())
+        // Borrar una sesión borra también su entreno de Fitness: lo busca el iPhone y lo borra el
+        // reloj, que lo guardó (en la demo no: no toca Salud).
+        history = HistoryModel(app: model, clock: clock, healthWorkouts: watchPublisher.map {
+            WatchConnectivityWorkoutDeleter(finder: HealthKitWorkoutStore(), publisher: $0)
+        })
         charts = ChartsModel(app: model, clock: clock)
         progress = ProgressModel(app: model, clock: clock)
         catalog = CatalogModel(app: model)

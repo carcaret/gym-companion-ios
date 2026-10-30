@@ -5,14 +5,23 @@ import Foundation
 import WatchConnectivity
 
 /// En el reloj: lo que envía el iPhone. Al arrancar, lo último que llegó (WatchConnectivity lo
-/// guarda aunque el iPhone no esté a tiro); después, cada cosa nueva.
+/// guarda aunque el iPhone no esté a tiro); después, cada cosa nueva. Aparte, los días cuyo
+/// entreno hay que borrar de Salud, que llegan uno a uno.
 public final class WatchConnectivityReceiver: NSObject, WCSessionDelegate, Sendable {
     public let snapshots: AsyncStream<WatchSnapshot>
     private let continuation: AsyncStream<WatchSnapshot>.Continuation
+    public let workoutDeletions: AsyncStream<LocalDate>
+    private let deletionContinuation: AsyncStream<LocalDate>.Continuation
 
     override public init() {
         (snapshots, continuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(1))
+        (workoutDeletions, deletionContinuation) = AsyncStream.makeStream()
         super.init()
+    }
+
+    /// Si WatchConnectivity aún tiene algo por entregar (al despertar la app en segundo plano).
+    public var hasContentPending: Bool {
+        WCSession.isSupported() && WCSession.default.hasContentPending
     }
 
     public func start() {
@@ -27,6 +36,11 @@ public final class WatchConnectivityReceiver: NSObject, WCSessionDelegate, Senda
 
     public func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
         deliver(context)
+    }
+
+    public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        guard let iso = userInfo[WatchContext.deleteWorkoutsKey] as? String, let day = LocalDate(iso: iso) else { return }
+        deletionContinuation.yield(day)
     }
 
     /// Lo que no se puede leer (p. ej. de una versión más nueva de la app del iPhone) se ignora.
