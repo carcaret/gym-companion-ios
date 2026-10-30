@@ -121,6 +121,12 @@ mano:
       (`com.apple.developer.healthkit`).
 - [ ] **Los permisos de Salud**: la hoja del sistema sale en el reloj la primera vez que se empieza
       a medir, y con ellos aceptados el entreno se guarda (Fitness y Salud, con el nombre de Gym).
+- [ ] **Borrar una sesión del Historial la borra de Fitness**: entrenar con el reloj, borrar la
+      sesión en el iPhone (el globo dice «También se borra de Fitness»; la primera vez sale la hoja
+      de permisos de Salud) y comprobar que el entreno desaparece de Fitness y de los anillos. El
+      entreno lo guarda la app del reloj y lo borra la del iPhone: si Salud las trata como apps
+      distintas (ios-signer las instala por separado), sale el aviso de que no se ha podido; la
+      salida sería que lo borre el reloj cuando se lo pida el iPhone.
 - [ ] **«Empezar» en el iPhone abre el reloj** (`startWatchApp`) con la app del reloj instalada
       directamente por ios-signer (#2). Si no la abre, se empieza en el reloj y no pasa nada más.
 - [ ] **La app sigue en primer plano** al bajar y levantar la muñeca durante el entreno, y con la

@@ -20,7 +20,7 @@ final class DemoWorkoutRecorder: WorkoutRecorder {
     var onMetrics: (@MainActor (WorkoutMetrics) -> Void)?
     private var startedAt: ContinuousClock.Instant?
 
-    func start() async throws {
+    func start(on day: LocalDate) async throws {
         startedAt = .now
         onMetrics?(WorkoutMetrics(heartRate: 128, activeEnergy: 172, totalEnergy: 221))
     }

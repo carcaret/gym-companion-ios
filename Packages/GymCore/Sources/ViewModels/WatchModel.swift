@@ -124,7 +124,7 @@ public final class WatchModel {
         // Antes de empezar: la primera medida puede llegar mientras arranca.
         metrics = Metrics(WorkoutMetrics())
         do {
-            try await recorder.start()
+            try await recorder.start(on: clock.today())
         } catch {
             phase = .idle
             startError = WatchText.startFailed

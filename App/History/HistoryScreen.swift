@@ -46,7 +46,7 @@ struct HistoryScreen: View {
                             .swipeActions {
                                 // Sin `role: .destructive`: con ese rol la lista da la fila por borrada al
                                 // tocarlo y la quita antes de que se confirme. El rojo, a mano.
-                                Button(HistoryText.deleteConfirm, systemImage: "trash") { model.requestDelete(row.date) }
+                                Button(HistoryText.deleteConfirm, systemImage: "trash") { Task { await model.requestDelete(row.date) } }
                                     .tint(Theme.actionRed)
                             }
                             // Colgado de su fila, como quitar un ejercicio del entreno (repaso de la

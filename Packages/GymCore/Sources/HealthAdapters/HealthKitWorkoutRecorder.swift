@@ -24,7 +24,7 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
         super.init()
     }
 
-    public func start() async throws {
+    public func start(on day: LocalDate) async throws {
         try await completion { done in
             store.requestAuthorization(toShare: [HKObjectType.workoutType()], read: Self.measured) { success, error in done(success, error) }
         }
@@ -37,6 +37,9 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
         session.startActivity(with: date)
         try await completion { done in
             builder.beginCollection(withStart: date) { success, error in done(success, error) }
+        }
+        try await completion { done in
+            builder.addMetadata([GymWorkoutMetadata.sessionDay: day.iso]) { success, error in done(success, error) }
         }
         self.session = session
         self.builder = builder

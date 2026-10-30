@@ -37,6 +37,8 @@ public final class HistoryModel {
         public let date: LocalDate
         public let title: String
         public let message: String
+        /// El reloj guardó en Salud un entreno de ese día: se borra también.
+        public let deletesFromFitness: Bool
     }
 
     /// La sesión abierta en detalle; `nil` = la lista.
@@ -54,10 +56,13 @@ public final class HistoryModel {
 
     let app: AppModel
     private let clock: any Clock
+    /// Los entrenos de Gym en Salud; `nil` en la demo, que no toca Salud.
+    private let healthWorkouts: (any HealthWorkoutStore)?
 
-    public init(app: AppModel, clock: any Clock) {
+    public init(app: AppModel, clock: any Clock, healthWorkouts: (any HealthWorkoutStore)? = nil) {
         self.app = app
         self.clock = clock
+        self.healthWorkouts = healthWorkouts
     }
 
     var data: TrainingData { app.current }
@@ -114,8 +119,11 @@ public final class HistoryModel {
 
     // MARK: - Borrar
 
-    public func requestDelete(_ date: LocalDate) {
-        deletePrompt = DeletePrompt(date: date, title: HistoryText.deleteTitle, message: HistoryText.deleteMessage(date))
+    /// Antes de preguntar, mira si hay un entreno de Gym en Salud ese día, para decirlo.
+    public func requestDelete(_ date: LocalDate) async {
+        let fromFitness = await healthWorkouts?.hasWorkouts(on: date) ?? false
+        deletePrompt = DeletePrompt(date: date, title: HistoryText.deleteTitle,
+                                    message: HistoryText.deleteMessage(date, fromFitness: fromFitness), deletesFromFitness: fromFitness)
     }
 
     /// Recibe el aviso que se confirma, no lo lee de `deletePrompt`: SwiftUI cierra el diálogo
@@ -126,6 +134,12 @@ public final class HistoryModel {
         data.history.removeAll { $0.date == prompt.date }
         if selectedDate == prompt.date { back() }
         await app.update(data)
+        guard prompt.deletesFromFitness, let healthWorkouts else { return }
+        do {
+            try await healthWorkouts.deleteWorkouts(on: prompt.date)
+        } catch {
+            app.notice = HistoryText.fitnessDeleteFailed
+        }
     }
 
     public func cancelDelete() {

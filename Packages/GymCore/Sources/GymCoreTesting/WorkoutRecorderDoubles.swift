@@ -17,13 +17,16 @@ public final class FakeWorkoutRecorder: WorkoutRecorder {
     public var failsToStart = false
     public var failsToEnd = false
     public private(set) var starts = 0
+    /// El día con el que se marca cada sesión que empieza.
+    public private(set) var days: [LocalDate] = []
     public private(set) var ends = 0
     public private(set) var isRecording = false
 
     public init() {}
 
-    public func start() async throws {
+    public func start(on day: LocalDate) async throws {
         starts += 1
+        days.append(day)
         if failsToStart { throw Failure() }
         isRecording = true
         if let metricsOnStart { onMetrics?(metricsOnStart) }
