@@ -117,7 +117,7 @@ struct HistoryFullTests {
     func delete() async throws {
         let history = await HistoryHarness.make()
         let initial = history.model.rows.count
-        history.model.requestDelete(history.model.rows[0].date)
+        await history.model.requestDelete(history.model.rows[0].date)
         #expect(history.model.deletePrompt?.title.contains("Borrar") == true)
         try await history.model.confirmDelete(#require(history.model.deletePrompt))
         #expect(history.model.rows.count == initial - 1)
@@ -131,7 +131,7 @@ struct HistoryFullTests {
         let history = await HistoryHarness.make()
         let initial = history.model.rows.count
         let date = history.model.rows[0].date
-        history.model.requestDelete(date)
+        await history.model.requestDelete(date)
         let prompt = try #require(history.model.deletePrompt)
         history.model.cancelDelete()
         await history.model.confirmDelete(prompt)
@@ -145,7 +145,7 @@ struct HistoryFullTests {
     func cancelDelete() async {
         let history = await HistoryHarness.make()
         let initial = history.model.rows.count
-        history.model.requestDelete(history.model.rows[0].date)
+        await history.model.requestDelete(history.model.rows[0].date)
         history.model.cancelDelete()
         #expect(history.model.rows.count == initial)
     }

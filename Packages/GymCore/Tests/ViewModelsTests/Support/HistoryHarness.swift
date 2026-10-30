@@ -1,3 +1,4 @@
+import Application
 import Domain
 import GymCoreTesting
 import ViewModels
@@ -9,9 +10,10 @@ struct HistoryHarness {
     let app: AppModel
     let model: HistoryModel
 
-    static func make(_ data: TrainingData = PWATestDB.data) async -> HistoryHarness {
+    static func make(_ data: TrainingData = PWATestDB.data, healthWorkouts: (any HealthWorkoutStore)? = nil) async -> HistoryHarness {
         let base = await AppHarness.start(local: data)
-        return HistoryHarness(harness: base.harness, app: base.app, model: HistoryModel(app: base.app, clock: base.clock))
+        return HistoryHarness(harness: base.harness, app: base.app,
+                              model: HistoryModel(app: base.app, clock: base.clock, healthWorkouts: healthWorkouts))
     }
 
     var saved: TrainingData? {

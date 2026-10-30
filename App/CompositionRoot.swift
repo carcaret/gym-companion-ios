@@ -44,7 +44,8 @@ struct CompositionRoot {
         navigation = NavigationModel()
         // Empezar el entreno abre el reloj para que lo mida (en la demo no: no hay reloj).
         today = TodayModel(app: model, clock: clock, watchLauncher: demo.isDemo ? nil : HealthKitWatchLauncher())
-        history = HistoryModel(app: model, clock: clock)
+        // Borrar una sesión borra también su entreno de Fitness (en la demo no: no toca Salud).
+        history = HistoryModel(app: model, clock: clock, healthWorkouts: demo.isDemo ? nil : HealthKitWorkoutStore())
         charts = ChartsModel(app: model, clock: clock)
         progress = ProgressModel(app: model, clock: clock)
         catalog = CatalogModel(app: model)

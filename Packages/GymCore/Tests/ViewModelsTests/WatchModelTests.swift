@@ -194,6 +194,8 @@ struct WatchModelTests {
     func start() async {
         let watch = await WatchHarness.recording(threeExercises, today: today)
         #expect(watch.recorder.starts == 1)
+        // Marcado con el día, para que borrar la sesión en el Historial lo borre de Fitness.
+        #expect(watch.recorder.days == [today])
         #expect(watch.model.screen == .workout)
         #expect(watch.model.tab == .workout)
     }

@@ -27,9 +27,13 @@ public enum HistoryText {
     public static func detailSubtitle(_ date: LocalDate) -> String { DateText.long(date) }
 
     public static let deleteTitle = "¿Borrar entreno?"
-    public static func deleteMessage(_ date: LocalDate) -> String {
-        "Se eliminará el entreno del \(DateText.long(date)). Esta acción no se puede deshacer."
+    /// Con `fromFitness`, también el entreno que guardó el reloj en Salud.
+    public static func deleteMessage(_ date: LocalDate, fromFitness: Bool = false) -> String {
+        let message = "Se eliminará el entreno del \(DateText.long(date)). Esta acción no se puede deshacer."
+        return fromFitness ? message + " También se borra de Fitness." : message
     }
+    /// La sesión ya está borrada; el entreno de Fitness, no.
+    public static let fitnessDeleteFailed = Notice("No se ha podido borrar el entreno de Fitness. Bórralo desde la app Fitness.", .error)
     /// La acción de deslizar la fila.
     public static let deleteConfirm = "Borrar"
     /// El botón del globo que lo confirma (repaso de la HIG, 2026-10-28).
