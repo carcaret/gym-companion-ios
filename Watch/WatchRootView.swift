@@ -2,8 +2,8 @@ import SwiftUI
 import ViewModels
 import WatchKit
 
-/// La app del reloj, según en qué punto está el entreno. Mientras se mide, tres páginas: la música
-/// (la vista del sistema, como en Entreno), el entreno y los controles.
+/// La app del reloj, según en qué punto está el entreno. Mientras se mide, tres páginas, en el
+/// orden de Entreno: los controles, el entreno y la música (la vista del sistema).
 struct WatchRootView: View {
     @Bindable var model: WatchModel
 
@@ -17,12 +17,12 @@ struct WatchRootView: View {
             }
         case .workout:
             TabView(selection: $model.tab) {
-                NowPlayingView()
-                    .tag(WatchModel.Tab.music)
-                WorkoutPage(model: model)
-                    .tag(WatchModel.Tab.workout)
                 ControlsPage(model: model)
                     .tag(WatchModel.Tab.controls)
+                WorkoutPage(model: model)
+                    .tag(WatchModel.Tab.workout)
+                NowPlayingView()
+                    .tag(WatchModel.Tab.music)
             }
             .tabViewStyle(.page)
         case .summary(let summary):

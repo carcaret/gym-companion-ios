@@ -143,3 +143,37 @@ struct WatchSnapshotTests {
         #expect(exercise.last == nil)
     }
 }
+
+/// Lo que se compara en el reloj: solo las sesiones con el peso de hoy (decisión del usuario,
+/// 2026-10-30): las reps de otro peso no dicen nada de la serie que toca.
+@Suite("Las referencias con el peso de hoy")
+struct WatchReferenceWeightTests {
+    private func reference(_ weight: Double, _ reps: [Int?] = [10, 10, 10]) -> WatchSnapshot.Reference {
+        WatchSnapshot.Reference(date: "2026-10-21", weight: weight, reps: reps)
+    }
+
+    private func exercise(weight: Double = 60, best: WatchSnapshot.Reference?, last: WatchSnapshot.Reference?) -> WatchSnapshot.Exercise {
+        WatchSnapshot.Exercise(name: "Press Banca", weight: weight, series: 3, targetReps: 10, skipped: false, best: best, last: last)
+    }
+
+    @Test("la mejor y la última con el peso de hoy se enseñan")
+    func sameWeight() {
+        let exercise = exercise(best: reference(60, [10, 10, 8]), last: reference(60, [10, 10, 9]))
+        #expect(exercise.bestAtTodayWeight == reference(60, [10, 10, 8]))
+        #expect(exercise.lastAtTodayWeight == reference(60, [10, 10, 9]))
+        #expect(!exercise.isFirstTime)
+    }
+
+    @Test("con otro peso no se enseñan, y tampoco es la primera vez")
+    func otherWeight() {
+        let exercise = exercise(weight: 62.5, best: reference(60), last: reference(55))
+        #expect(exercise.bestAtTodayWeight == nil)
+        #expect(exercise.lastAtTodayWeight == nil)
+        #expect(!exercise.isFirstTime)
+    }
+
+    @Test("sin ninguna sesión, es la primera vez")
+    func firstTime() {
+        #expect(exercise(best: nil, last: nil).isFirstTime)
+    }
+}

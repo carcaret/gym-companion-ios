@@ -20,17 +20,6 @@ struct WatchTextTests {
         #expect(WatchText.position(1, of: 6) == "2/6")
     }
 
-    @Test("el plan de hoy: peso, series y reps objetivo")
-    func plan() {
-        #expect(WatchText.plan(weight: 62.5, series: 4, reps: 11) == "62,5 kg · 4 × 11")
-        #expect(WatchText.plan(weight: 0, series: 3, reps: 8) == "Peso corporal · 3 × 8")
-    }
-
-    @Test("una sesión de referencia con su peso y sus reps")
-    func reference() {
-        #expect(WatchText.reference(weight: 12, reps: [10, 10, nil]) == "12 kg · 10·10·—")
-    }
-
     @Test("el tiempo en minutos y segundos; desde una hora, con las horas")
     func duration() {
         #expect(WatchText.duration(.zero) == "0:00")

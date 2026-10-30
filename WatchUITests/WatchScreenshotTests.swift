@@ -38,12 +38,13 @@ final class WatchScreenshotTests: XCTestCase {
         rest.tap()
         XCTAssertTrue(app.staticTexts["toca para descansar"].appears(timeout: 5))
 
-        app.swipeRight()
-        capture(app, "73-reloj-musica")
+        // Como en Entreno: a la derecha, la música; a la izquierda, los controles.
         app.swipeLeft()
+        capture(app, "73-reloj-musica")
+        app.swipeRight()
         XCTAssertTrue(rest.appears(timeout: 5))
 
-        app.swipeLeft()
+        app.swipeRight()
         let finish = app.buttons[AccessibilityID.watchFinish]
         XCTAssertTrue(finish.appears(timeout: 5))
         capture(app, "74-reloj-controles")

@@ -61,34 +61,57 @@ struct WatchModelTests {
 
     // MARK: - Los ejercicios
 
-    @Test("cada ejercicio con su nombre, su posición y el plan de hoy")
+    @Test("cada ejercicio con su nombre, su posición y el peso de hoy")
     func exercises() async {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca"), exercise("Dominadas", weight: 0, series: 3, targetReps: 8)]))
         #expect(watch.model.exercises.map(\.name) == ["Press Banca", "Dominadas"])
         #expect(watch.model.exercises.map(\.position) == ["1/2", "2/2"])
-        #expect(watch.model.exercises.map(\.plan) == ["62,5 kg · 4 × 11", "Peso corporal · 3 × 8"])
+        #expect(watch.model.exercises.map(\.weight) == ["62,5 kg", "Peso corporal"])
     }
 
-    @Test("la mejor sesión reciente: sus reps y su fecha")
+    // Sin fechas, sin las series ni las reps objetivo, y solo las sesiones con el peso de hoy
+    // (decisión del usuario, 2026-10-30: con un nombre de dos líneas no cabía «Última»).
+
+    @Test("la mejor sesión reciente con el peso de hoy: sus reps, junto al peso")
     func best() async {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca", best: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 62.5, reps: [11, 11, 10, 8]))]))
         let exercise = watch.model.exercises[0]
-        #expect(exercise.best == WatchModel.Reference(label: "Mejor", detail: "11·11·10·8", date: "21 oct"))
-        #expect(exercise.last == nil)
+        #expect(exercise.bestReps == "11·11·10·8")
+        #expect(exercise.lastReps == nil)
         #expect(exercise.firstTime == nil)
     }
 
-    @Test("la última, cuando no es la mejor: con su peso, que puede no ser el del plan")
+    @Test("la mejor con otro peso (cambiado en el iPhone) no enseña sus reps, y no es la primera vez")
+    func bestOtherWeight() async {
+        let watch = WatchHarness(today: today)
+        await watch.model.receive(workout([exercise("Press Banca", best: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 60, reps: [11, 11, 10, 8]))]))
+        let exercise = watch.model.exercises[0]
+        #expect(exercise.bestReps == nil)
+        #expect(exercise.firstTime == nil)
+    }
+
+    @Test("la última, cuando no es la mejor y tiene el peso de hoy: sus reps")
     func last() async {
+        let watch = WatchHarness(today: today)
+        await watch.model.receive(workout([exercise(
+            "Hammer curl", weight: 16,
+            best: WatchSnapshot.Reference(date: date("2026-09-21"), weight: 16, reps: [11, 11, 11]),
+            last: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 16, reps: [10, nil, 10])
+        )]))
+        #expect(watch.model.exercises[0].lastReps == "10·—·10")
+    }
+
+    @Test("la última con otro peso no se enseña")
+    func lastOtherWeight() async {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise(
             "Hammer curl", weight: 16,
             best: WatchSnapshot.Reference(date: date("2026-09-21"), weight: 16, reps: [11, 11, 11]),
             last: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 12, reps: [10, nil, 10])
         )]))
-        #expect(watch.model.exercises[0].last == WatchModel.Reference(label: "Última", detail: "12 kg · 10·—·10", date: "21 oct"))
+        #expect(watch.model.exercises[0].lastReps == nil)
     }
 
     @Test("un ejercicio nunca hecho dice que es la primera vez")

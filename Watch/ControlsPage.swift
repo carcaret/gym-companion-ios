@@ -2,7 +2,7 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La página de la derecha mientras se mide: el pulso y las kcal, y «Terminar».
+/// La página de la izquierda mientras se mide: el pulso y las kcal, y «Terminar».
 struct ControlsPage: View {
     let model: WatchModel
 
