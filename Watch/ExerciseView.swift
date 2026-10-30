@@ -27,9 +27,9 @@ struct ExerciseView: View {
                     .foregroundStyle(Theme.redSoft)
             }
             details
-                .opacity(exercise.isSkipped ? 0.45 : 1)
+                .opacity(exercise.isSkipped ? Theme.skippedOpacity : 1)
         }
-        .opacity(isDimmed ? 0.6 : 1)
+        .opacity(isDimmed ? Theme.wristDownOpacity : 1)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 

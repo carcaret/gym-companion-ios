@@ -14,7 +14,8 @@ public enum WatchText {
     public static let restIdle = "toca para descansar"
     public static let resting = "descanso"
     public static let restOverdue = "a por la siguiente"
-    public static let rest = "Descanso"
+    // Las unidades, en mayúsculas mientras se mide (como en Entreno de Apple); en el resumen son
+    // etiquetas («Kcal activas», «ppm»).
     public static let heartRateUnit = "PPM"
     public static let activeEnergyUnit = "KCAL ACTIVAS"
     public static let totalEnergyUnit = "KCAL TOTALES"
@@ -27,20 +28,13 @@ public enum WatchText {
     public static let activeEnergy = "Kcal activas"
     public static let totalEnergy = "Kcal totales"
     public static let averageHeartRate = "Pulso medio"
-
-    /// "12·12·11·10": las reps de cada serie, aunque se repitan; una serie sin reps, "—".
-    public static func reps(_ reps: [Int?]) -> String {
-        LogText.reps(reps)
-    }
+    /// Sin medida aún (el pulso).
+    public static let noMeasure = "—"
+    public static let bodyweight = "Peso corporal"
 
     /// "62,5 kg", o "Peso corporal" sin peso.
     public static func weight(_ weight: Double) -> String {
-        weight > 0 ? LogText.weight(weight) : "Peso corporal"
-    }
-
-    /// "21 oct".
-    public static func date(_ date: LocalDate) -> String {
-        DateText.dayMonth(date)
+        weight > 0 ? LogText.weight(weight) : bodyweight
     }
 
     /// "2/6": la posición `index` (desde 0) de `count`.
@@ -55,7 +49,7 @@ public enum WatchText {
 
     /// "12 kg · 10·10·10": una sesión de referencia con otro peso que el plan.
     public static func reference(weight: Double, reps: [Int?]) -> String {
-        "\(self.weight(weight)) · \(self.reps(reps))"
+        "\(self.weight(weight)) · \(LogText.reps(reps))"
     }
 
     /// "7 ejercicios".
@@ -79,9 +73,9 @@ public enum WatchText {
         }
     }
 
-    /// "128", o "--" sin medida aún.
+    /// "128", o "—" sin medida aún.
     public static func heartRate(_ beatsPerMinute: Double?) -> String {
-        beatsPerMinute.map { "\(Int($0.rounded()))" } ?? "--"
+        beatsPerMinute.map { "\(Int($0.rounded()))" } ?? noMeasure
     }
 
     /// "172".
@@ -89,9 +83,9 @@ public enum WatchText {
         "\(Int(kilocalories.rounded()))"
     }
 
-    /// "128 ppm", o "--" sin medidas: el pulso medio del resumen.
+    /// "128 ppm", o "—" sin medidas: el pulso medio del resumen.
     public static func averageHeartRate(_ beatsPerMinute: Double?) -> String {
-        beatsPerMinute.map { "\(heartRate($0)) ppm" } ?? "--"
+        beatsPerMinute.map { "\(heartRate($0)) ppm" } ?? noMeasure
     }
 
     private static func twoDigits(_ value: Int) -> String {

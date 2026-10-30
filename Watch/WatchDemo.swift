@@ -8,11 +8,7 @@ enum WatchDemo {
         if LaunchArgument.demoWithoutWorkout.isPresent(in: arguments) { return WatchSnapshot(workout: nil) }
         guard LaunchArgument.demo.isPresent(in: arguments) else { return nil }
         var data = DemoData.make(today: today)
-        let history = data.history
-        let routine = data.routines[0]
-        data.history.append(.planned(date: today, routine: routine.id, exerciseIDs: routine.exerciseIDs) { id, _ in
-            history.bestRecentSeed(for: id, today: today)
-        })
+        data.startWorkout(routine: data.routines[0].id, on: today)
         return data.watchSnapshot(today: today)
     }
 }

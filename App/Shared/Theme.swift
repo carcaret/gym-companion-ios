@@ -67,6 +67,12 @@ enum Theme {
     /// La línea fina entre dos filas de una sección.
     static let separator = Color.white.opacity(0.08)
 
+    // El reloj
+    /// Con la muñeca bajada, todo atenuado.
+    static let wristDownOpacity = 0.6
+    /// Los detalles de un ejercicio saltado (el «Saltado», no).
+    static let skippedOpacity = 0.45
+
     // Radios
     /// Las tarjetas, con las esquinas de las secciones de lista de iOS 26 (la PWA usaba 14): así las
     /// tarjetas y las listas nativas son de la misma familia (decisión del usuario, 2026-10-27).

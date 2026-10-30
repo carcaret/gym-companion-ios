@@ -2,8 +2,7 @@ import Domain
 import Testing
 
 // Lo que enseña el reloj: el entreno en curso, ejercicio a ejercicio, con el plan de hoy y las
-// sesiones de referencia. Hasta la app de entreno (#17) llevaba las reps de hoy y las 4 últimas
-// sesiones; el usuario eligió el plan, la mejor reciente y la última (2026-10-29).
+// sesiones de referencia: la mejor reciente y la última (decisión del usuario, 2026-10-29).
 
 @Suite("Lo que enseña el reloj")
 struct WatchSnapshotTests {

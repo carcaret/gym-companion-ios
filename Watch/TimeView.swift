@@ -39,7 +39,7 @@ struct TimeView: View {
                 .font(.footnote.weight(.semibold))
             }
         }
-        .opacity(isDimmed ? 0.6 : 1)
+        .opacity(isDimmed ? Theme.wristDownOpacity : 1)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }

@@ -44,7 +44,7 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
 
     public func elapsed() -> Duration {
         guard let builder else { return .zero }
-        return .milliseconds(Int64(builder.elapsedTime(at: Date()) * 1000))
+        return .seconds(builder.elapsedTime(at: Date()))
     }
 
     public func end() async throws -> WorkoutSummary {
@@ -61,11 +61,11 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
                 if let error { continuation.resume(throwing: error) } else { continuation.resume(returning: workout?.duration) }
             }
         }
-        let active = Self.energy(builder, .activeEnergyBurned)
+        let measured = Self.metrics(of: builder)
         return WorkoutSummary(
-            duration: .milliseconds(Int64((duration ?? builder.elapsedTime(at: date)) * 1000)),
-            activeEnergy: active,
-            totalEnergy: active + Self.energy(builder, .basalEnergyBurned),
+            duration: .seconds(duration ?? builder.elapsedTime(at: date)),
+            activeEnergy: measured.activeEnergy,
+            totalEnergy: measured.totalEnergy,
             averageHeartRate: builder.statistics(for: HKQuantityType(.heartRate))?.averageQuantity()?.doubleValue(for: Self.beatsPerMinute)
         )
     }

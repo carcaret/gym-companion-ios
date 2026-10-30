@@ -35,6 +35,20 @@ struct SmartRepsTests {
     func fewer() { #expect(LogText.repsDetail([10, 8], series: 3, target: 10) == "10·8") }
 }
 
+@Suite("Las reps de cada serie")
+struct RepsTests {
+    @Test("las reps de cada serie, separadas por un punto aunque se repitan")
+    func reps() {
+        #expect(LogText.reps([12, 12, 11, 10]) == "12·12·11·10")
+        #expect(LogText.reps([12, 12, 12, 12]) == "12·12·12·12")
+    }
+
+    @Test("una serie sin reps sale como una raya")
+    func emptyRep() {
+        #expect(LogText.reps([12, nil, 10]) == "12·—·10")
+    }
+}
+
 @Suite("formatLogSummary")
 struct LogSummaryTests {
     @Test("con peso → incluye \"X kg · \"")
