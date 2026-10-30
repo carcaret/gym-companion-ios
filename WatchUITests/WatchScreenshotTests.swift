@@ -25,6 +25,10 @@ final class WatchScreenshotTests: XCTestCase {
         let first = app.staticTexts["Press Banca"], second = app.staticTexts["Curl Bíceps"]
         func frames() -> String { "lista \(exercises.frame), primero \(first.frame), segundo \(second.frame)" }
         XCTAssertTrue(first.isShown(in: exercises), frames())
+        // La lista llega hasta abajo: antes se cortaba unos 30 pt por encima de los puntos de las
+        // páginas y «Última» no cabía (foto del reloj, 2026-10-30).
+        let screen = app.windows.firstMatch.frame
+        XCTAssertGreaterThan(exercises.frame.maxY, screen.maxY - 12, "la lista no llega abajo: \(frames()), pantalla \(screen)")
         XCTAssertFalse(second.isShown(in: exercises), "se ve más de un ejercicio a la vez: \(frames())")
         exercises.swipeUp()
         XCTAssertTrue(second.becomesShown(in: exercises, timeout: 5), frames())

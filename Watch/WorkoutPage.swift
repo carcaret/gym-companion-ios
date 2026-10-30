@@ -36,13 +36,15 @@ struct WorkoutPage: View {
                 }
                 .scrollTargetBehavior(.paging)
                 .scrollPosition(id: exercisePosition)
-                // Hasta el borde de abajo: cada página mide lo que se ve (con el margen de watchOS
-                // medía 36 pt menos, el siguiente ejercicio asomaba y uno largo no cabía).
                 .ignoresSafeArea(edges: .bottom)
                 .clipShape(Rectangle())
                 .accessibilityIdentifier(AccessibilityID.watchExercises)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            // Hasta el borde de abajo, también la página: solo en la lista, el margen de watchOS
+            // (los puntos de las páginas) la seguía cortando unos 30 pt antes (foto del reloj,
+            // 2026-10-30). Cada página de la lista mide lo que se ve.
+            .ignoresSafeArea(edges: .bottom)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 3) {

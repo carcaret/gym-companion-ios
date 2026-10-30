@@ -25,6 +25,16 @@ public final class WatchConnectivityPublisher: NSObject, WatchPublisher, WCSessi
         send()
     }
 
+    /// Pide al reloj que borre de Salud los entrenos de Gym de `day`. `transferUserInfo` guarda
+    /// la petición hasta que el reloj la recibe, aunque no esté a tiro.
+    func requestWorkoutDeletion(on day: LocalDate) throws {
+        let session = WCSession.default
+        guard WCSession.isSupported(), session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else {
+            throw WatchUnavailable()
+        }
+        session.transferUserInfo([WatchContext.deleteWorkoutsKey: day.iso])
+    }
+
     /// Sin reloj emparejado o sin la app del reloj, `updateApplicationContext` falla: no pasa
     /// nada, lo siguiente que se publique lo vuelve a intentar.
     private func send() {
@@ -36,6 +46,9 @@ public final class WatchConnectivityPublisher: NSObject, WatchPublisher, WCSessi
     public func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: (any Error)?) {
         send()
     }
+
+    /// Sin reloj emparejado, con la app del reloj, y con la sesión activa.
+    struct WatchUnavailable: Error {}
 
     public func sessionDidBecomeInactive(_ session: WCSession) {}
 

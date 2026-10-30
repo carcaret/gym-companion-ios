@@ -123,10 +123,10 @@ mano:
       a medir, y con ellos aceptados el entreno se guarda (Fitness y Salud, con el nombre de Gym).
 - [ ] **Borrar una sesión del Historial la borra de Fitness**: entrenar con el reloj, borrar la
       sesión en el iPhone (el globo dice «También se borra de Fitness»; la primera vez sale la hoja
-      de permisos de Salud) y comprobar que el entreno desaparece de Fitness y de los anillos. El
-      entreno lo guarda la app del reloj y lo borra la del iPhone: si Salud las trata como apps
-      distintas (ios-signer las instala por separado), sale el aviso de que no se ha podido; la
-      salida sería que lo borre el reloj cuando se lo pida el iPhone.
+      de permisos de Salud) y comprobar que el entreno desaparece de Fitness y de los anillos. Lo
+      borra el reloj (desde el iPhone, Salud no dejaba: 2026-10-30): con la app del reloj cerrada
+      debería llegarle en segundo plano; si no, al abrirla. La primera vez que se empiece a medir
+      tras esta versión, el reloj vuelve a pedir permisos (ahora también para borrar).
 - [ ] **«Empezar» en el iPhone abre el reloj** (`startWatchApp`) con la app del reloj instalada
       directamente por ios-signer (#2). Si no la abre, se empieza en el reloj y no pasa nada más.
 - [ ] **La app sigue en primer plano** al bajar y levantar la muñeca durante el entreno, y con la

@@ -26,7 +26,7 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
 
     public func start(on day: LocalDate) async throws {
         try await completion { done in
-            store.requestAuthorization(toShare: [HKObjectType.workoutType()], read: Self.measured) { success, error in done(success, error) }
+            store.requestAuthorization(toShare: GymHealthTypes.all, read: GymHealthTypes.all) { success, error in done(success, error) }
         }
         let configuration = HKWorkoutConfiguration.strengthTraining
         let session = try HKWorkoutSession(healthStore: store, configuration: configuration)
@@ -71,11 +71,6 @@ public final class HealthKitWorkoutRecorder: NSObject, WorkoutRecorder {
             totalEnergy: measured.totalEnergy,
             averageHeartRate: builder.statistics(for: HKQuantityType(.heartRate))?.averageQuantity()?.doubleValue(for: Self.beatsPerMinute)
         )
-    }
-
-    /// Lo que se lee de Salud mientras se mide.
-    private static var measured: Set<HKObjectType> {
-        [HKQuantityType(.heartRate), HKQuantityType(.activeEnergyBurned), HKQuantityType(.basalEnergyBurned)]
     }
 
     nonisolated private static var beatsPerMinute: HKUnit {
