@@ -23,23 +23,46 @@ public struct HealthKitWorkoutStore: HealthWorkoutStore {
     }
 
     public func deleteWorkouts(on day: LocalDate) async throws {
-        let store = HKHealthStore()
-        try await Self.authorize(store)
-        for workout in try await Self.workouts(on: day, in: store) {
-            // Lo medido no se va con el entreno: sin borrarlo, Fitness lo sigue contando.
-            for type in GymHealthTypes.measured {
-                let predicate = HKQuery.predicateForObjects(from: workout)
-                let samples = try await HKSampleQueryDescriptor(predicates: [.quantitySample(type: type, predicate: predicate)],
-                                                                sortDescriptors: []).result(for: store)
-                if !samples.isEmpty { try await store.delete(samples) }
-            }
-            try await store.delete(workout)
-        }
+        _ = try await deleteAll(on: day)
     }
 
-    /// Para buscar y borrar hacen falta los dos permisos; la hoja del sistema sale solo la primera vez.
+    /// Borra los entrenos de ese día y dice cuántos ha encontrado: sin permiso para leerlos, Salud
+    /// no enseña ninguno y no da error. No pide permiso: en el reloj llega en segundo plano, donde
+    /// la hoja no puede salir y la petición se quedaba esperando (`requestAccess`, con la app
+    /// delante).
+    public func deleteAll(on day: LocalDate) async throws -> Int {
+        let store = HKHealthStore()
+        let workouts = try await Self.workouts(on: day, in: store)
+        for workout in workouts {
+            // Lo medido no se va con el entreno: se busca antes y se borra después, si se puede.
+            // Primero el entreno, que es lo que se ve en Fitness: si lo medido falla, no lo para.
+            let samples = await Self.samples(of: workout, in: store)
+            try await store.delete(workout)
+            if !samples.isEmpty { try? await store.delete(samples) }
+        }
+        return workouts.count
+    }
+
+    /// Pide los permisos para buscar y borrar; la hoja del sistema sale solo si falta alguno. Con
+    /// la app delante.
+    public func requestAccess() async {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        try? await Self.authorize(HKHealthStore())
+    }
+
     private static func authorize(_ store: HKHealthStore) async throws {
         try await store.requestAuthorization(toShare: GymHealthTypes.all, read: GymHealthTypes.all)
+    }
+
+    private static func samples(of workout: HKWorkout, in store: HKHealthStore) async -> [HKQuantitySample] {
+        var samples: [HKQuantitySample] = []
+        for type in GymHealthTypes.measured {
+            let predicate = HKQuery.predicateForObjects(from: workout)
+            let found = try? await HKSampleQueryDescriptor(predicates: [.quantitySample(type: type, predicate: predicate)],
+                                                           sortDescriptors: []).result(for: store)
+            samples += found ?? []
+        }
+        return samples
     }
 
     private static func workouts(on day: LocalDate, in store: HKHealthStore) async throws -> [HKWorkout] {
