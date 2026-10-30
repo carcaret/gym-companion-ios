@@ -63,6 +63,8 @@ struct WorkoutPage: View {
         }
         .font(.footnote.monospacedDigit())
         .foregroundStyle(Theme.redSoft)
+        // Tan lejos del borde como la hora del suyo: pegado, la esquina redonda lo cortaba.
+        .padding(.leading, 12)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(AccessibilityID.watchHeartRate)
     }
