@@ -32,6 +32,7 @@ struct ReadyView: View {
                 .foregroundStyle(Theme.onAccent)
                 .disabled(ready.isStarting)
                 .accessibilityIdentifier(AccessibilityID.watchStart)
+                .centeredInRow()
                 .padding(.top, 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -19,6 +19,7 @@ struct ControlsPage: View {
                         .frame(maxWidth: .infinity)
                 }
                 .accessibilityIdentifier(AccessibilityID.watchFinish)
+                .centeredInRow()
                 .padding(.top, 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

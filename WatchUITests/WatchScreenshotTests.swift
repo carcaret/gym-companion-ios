@@ -60,6 +60,7 @@ final class WatchScreenshotTests: XCTestCase {
         app.swipeRight()
         let finish = app.buttons[AccessibilityID.watchFinish]
         XCTAssertTrue(finish.appears(timeout: 5))
+        assertCentered(finish, in: app)
         capture(app, "74-reloj-controles")
 
         // Pregunta antes de terminar (decisión del usuario, 2026-10-31).
@@ -72,12 +73,24 @@ final class WatchScreenshotTests: XCTestCase {
         capture(app, "75-reloj-terminar")
         confirm.tap()
         XCTAssertTrue(app.staticTexts["Entreno terminado"].appears(timeout: 10))
+        let done = app.buttons[AccessibilityID.watchDone]
+        assertCentered(done, in: app)
         capture(app, "76-reloj-resumen")
 
         // En la demo no hay iPhone que lo termine: el entreno sigue ahí y se puede volver a empezar.
-        app.buttons[AccessibilityID.watchDone].tap()
-        XCTAssertTrue(app.buttons[AccessibilityID.watchStart].appears(timeout: 5))
+        done.tap()
+        let start = app.buttons[AccessibilityID.watchStart]
+        XCTAssertTrue(start.appears(timeout: 5))
+        assertCentered(start, in: app)
         capture(app, "77-reloj-empezar")
+    }
+
+    /// Los botones a lo ancho van centrados, como los de las alertas del sistema: watchOS no los
+    /// deja pasar de 178 pt y, alineados a la izquierda, sobraba un hueco a la derecha (2026-10-31).
+    private func assertCentered(_ button: XCUIElement, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let screen = app.windows.firstMatch.frame
+        XCTAssertEqual(button.frame.midX, screen.midX, accuracy: 2,
+                       "«\(button.label)» no está centrado: \(button.frame), pantalla \(screen)", file: file, line: line)
     }
 
     @MainActor
