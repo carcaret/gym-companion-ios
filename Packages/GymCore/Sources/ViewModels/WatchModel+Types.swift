@@ -41,8 +41,9 @@ extension WatchModel {
         public let position: String
         /// El peso de hoy: "62,5 kg" o "Peso corporal".
         public let weight: String
-        /// "11·11·10·8": las reps de la mejor sesión reciente, si es del peso de hoy.
-        public let bestReps: String?
+        /// Junto al peso: "11·11·10·8", las reps de la mejor sesión reciente del peso de hoy, o
+        /// "4×11", las objetivo, si no hay ninguna (`WatchText.planReps`).
+        public let planReps: String
         /// "10·10·9": las de la última, si es otra sesión y del peso de hoy.
         public let lastReps: String?
         /// Saltado hoy: se pinta atenuado.

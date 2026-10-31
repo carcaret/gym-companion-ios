@@ -70,25 +70,25 @@ struct WatchModelTests {
         #expect(watch.model.exercises.map(\.weight) == ["62,5 kg", "Peso corporal"])
     }
 
-    // Sin fechas, sin las series ni las reps objetivo, y solo las sesiones con el peso de hoy
-    // (decisión del usuario, 2026-10-30: con un nombre de dos líneas no cabía «Última»).
+    // Sin fechas y solo las sesiones con el peso de hoy (decisión del usuario, 2026-10-30: con un
+    // nombre de dos líneas no cabía «Última»). Sin ninguna con ese peso, las objetivo (2026-10-31).
 
     @Test("la mejor sesión reciente con el peso de hoy: sus reps, junto al peso")
     func best() async {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca", best: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 62.5, reps: [11, 11, 10, 8]))]))
         let exercise = watch.model.exercises[0]
-        #expect(exercise.bestReps == "11·11·10·8")
+        #expect(exercise.planReps == "11·11·10·8")
         #expect(exercise.lastReps == nil)
         #expect(exercise.firstTime == nil)
     }
 
-    @Test("la mejor con otro peso (cambiado en el iPhone) no enseña sus reps, y no es la primera vez")
+    @Test("la mejor con otro peso (subido en el iPhone): las objetivo en vez de sus reps, y no es la primera vez")
     func bestOtherWeight() async {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca", best: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 60, reps: [11, 11, 10, 8]))]))
         let exercise = watch.model.exercises[0]
-        #expect(exercise.bestReps == nil)
+        #expect(exercise.planReps == "4×11")
         #expect(exercise.firstTime == nil)
     }
 
@@ -119,6 +119,7 @@ struct WatchModelTests {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca")]))
         #expect(watch.model.exercises[0].firstTime == "Primera vez")
+        #expect(watch.model.exercises[0].planReps == "4×11")
     }
 
     @Test("un ejercicio saltado hoy se marca")

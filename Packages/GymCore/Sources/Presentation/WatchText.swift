@@ -38,6 +38,14 @@ public enum WatchText {
         weight > 0 ? LogText.weight(weight) : bodyweight
     }
 
+    /// Lo que va junto al peso: las reps de la mejor sesión reciente si es del peso de hoy
+    /// ("11·11·10·8") y, si no hay ninguna con ese peso (peso subido o ejercicio nuevo), las
+    /// objetivo ("4×11", como en el iPhone; decisión del usuario, 2026-10-31).
+    public static func planReps(_ exercise: WatchSnapshot.Exercise) -> String {
+        exercise.bestAtTodayWeight.map { LogText.reps($0.reps) }
+            ?? LogText.target(series: exercise.series, reps: exercise.targetReps)
+    }
+
     /// "2/6": la posición `index` (desde 0) de `count`.
     public static func position(_ index: Int, of count: Int) -> String {
         "\(index + 1)/\(count)"
