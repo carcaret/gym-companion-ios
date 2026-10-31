@@ -92,6 +92,7 @@ targets:
       - App/Demo/DemoData.swift
       - App/Shared/LaunchArgument.swift
       - App/Shared/AccessibilityID.swift
+      - App/Shared/PresentationBinding.swift
       - App/Shared/Theme.swift
       - App/Assets.xcassets
     dependencies:

@@ -50,8 +50,9 @@ struct TodayHarness {
     }
 
     /// Terminar con todo relleno (`fillAllWorkoutReps` + finalizar): las reps ya vienen
-    /// prerrellenadas al empezar.
+    /// prerrellenadas al empezar. «Finalizar entreno» y, si pregunta, «Finalizar» en el globo.
     func finish() async {
-        await model.finish()
+        await model.requestFinish()
+        if model.isFinishPromptPresented { await model.confirmFinish() }
     }
 }

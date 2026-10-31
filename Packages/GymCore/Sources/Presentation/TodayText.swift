@@ -3,7 +3,7 @@
 public enum TodayText {
     // Títulos
     public static let selectorTitle = "Rutinas"
-    // La vista previa, el entreno en curso y el terminado llevan de título el nombre de la rutina y
+    // La vista previa y el entreno en curso llevan de título el nombre de la rutina y
     // debajo, de subtítulo, en qué punto está (decisión del usuario, 2026-10-27; la PWA ponía
     // «Rutina de …» y «Entreno …»).
     public static let previewStatus = "Vista previa"
@@ -14,8 +14,6 @@ public enum TodayText {
     public static let inProgress = "En curso"
     /// Junto a «En curso» cuando el entreno ya tiene un récord.
     public static let record = "récord"
-    public static let completedSubtitle = "Terminado"
-    public static let completedStatus = "Entreno completado"
 
     /// "3 ejercicios · Press Banca, Curl Bíceps, Remo…" (los tres primeros); vacía, "Sin ejercicios".
     public static func routineSummary(_ names: [String]) -> String {
@@ -43,6 +41,9 @@ public enum TodayText {
     // Botones
     public static let start = "Iniciar entreno"
     public static let finish = "Finalizar entreno"
+    /// El globo que confirma «Finalizar entreno» (decisión del usuario, 2026-10-31).
+    public static let finishTitle = "¿Finalizar el entreno?"
+    public static let finishConfirm = "Finalizar"
     public static let addExercise = "Añadir ejercicio"
 
     // Selectores de ejercicio

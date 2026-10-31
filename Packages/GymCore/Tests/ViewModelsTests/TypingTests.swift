@@ -31,7 +31,7 @@ struct TodayTypingTests {
     func finishCommits() async throws {
         let today = await started()
         today.model.type(.weight, text: "88,5", at: 0)
-        await today.model.finish()
+        await today.finish()
         let session = try #require(await today.savedToday)
         #expect(session.completed)
         #expect(session.logs[0].weight == 88.5)

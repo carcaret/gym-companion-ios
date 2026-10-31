@@ -50,8 +50,11 @@ final class ScreenshotTests: XCTestCase {
         capture(app, "15-hoy-tira-bocadillo")
 
         app.buttons[AccessibilityID.finishWorkout].tap()
-        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
-        capture(app, "14-hoy-terminado")
+        let confirmFinish = app.buttons["Finalizar"].firstMatch
+        XCTAssertTrue(confirmFinish.appears(timeout: 5))
+        capture(app, "14-hoy-finalizar")
+        confirmFinish.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA1")].appears(timeout: 10))
 
         app.tabBars.buttons["Historial"].tap()
         let first = app.firstHistorySession

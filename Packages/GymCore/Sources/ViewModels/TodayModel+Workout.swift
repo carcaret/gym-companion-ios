@@ -1,7 +1,7 @@
 import Domain
 import Presentation
 
-/// El entreno en curso, quitar ejercicios y el entreno terminado.
+/// El entreno en curso, terminarlo y quitar ejercicios.
 extension TodayModel {
     // MARK: - Entreno en curso
 
@@ -73,26 +73,45 @@ extension TodayModel {
         await reorder(from: source, to: offset > source ? offset - 1 : offset)
     }
 
-    /// Terminar: si falta algo, se marca y se abre la primera tarjeta con errores; si no, se
-    /// termina, se borra el pendiente de la rutina y se sube ya.
-    public func finish() async {
+    /// «Finalizar entreno»: si falta algo, se marca y se abre la primera tarjeta con errores; si no,
+    /// pregunta antes de terminar (`confirmFinish`).
+    public func requestFinish() async {
         await commitTyping()
-        guard let session = activeSession else { return }
+        guard activeSession != nil else { return }
         editing.unfocus()
-        let validation = session.validation
-        guard validation.isValid else {
-            editing.validationErrors = validation.errorsByLog
-            if let first = validation.errorsByLog.keys.min() { openExercise = session.logs[first].exerciseID }
-            app.notice = ValidationText.reviewMarked
-            return
-        }
-        editing.validationErrors = [:]
+        guard validateForFinish() else { return }
+        isFinishPromptPresented = true
+    }
+
+    /// «Finalizar» en el globo: se termina, se borra el pendiente de la rutina, se sube ya y se
+    /// vuelve a las rutinas (sin pantalla de entreno terminado: decisión del usuario, 2026-10-31).
+    /// Vuelve a validar: los datos pueden haber cambiado mientras el globo estaba abierto.
+    public func confirmFinish() async {
+        isFinishPromptPresented = false
+        guard activeSession != nil, validateForFinish() else { return }
         var data = data
         data.finishWorkout(on: today)
-        storedStage = .completed
+        storedStage = .selector
         openExercise = nil
         // Si no se puede subir, no se interrumpe: la nube se queda pendiente y se sube sola.
         _ = await app.finishWorkout(data)
+    }
+
+    public func cancelFinish() {
+        isFinishPromptPresented = false
+    }
+
+    /// Marca los errores del entreno en curso y avisa; devuelve si se puede terminar.
+    private func validateForFinish() -> Bool {
+        guard let session = activeSession else { return false }
+        let validation = session.validation
+        editing.validationErrors = validation.errorsByLog
+        guard validation.isValid else {
+            if let first = validation.errorsByLog.keys.min() { openExercise = session.logs[first].exerciseID }
+            app.notice = ValidationText.reviewMarked
+            return false
+        }
+        return true
     }
 
     // MARK: - Quitar
@@ -131,13 +150,6 @@ extension TodayModel {
         editing.unfocus()
         editing.validationErrors = [:]
         await app.update(data)
-    }
-
-    // MARK: - Entreno terminado
-
-    public var completedRows: [SummaryRow] {
-        guard stage == .completed, let session = todaySession else { return [] }
-        return session.logs.map { SummaryRow(title: data.catalog.name(of: $0.exerciseID), subtitle: LogText.summary($0), isSkipped: $0.skipped) }
     }
 
     // MARK: - Ayudas

@@ -4,8 +4,8 @@ import SwiftUI
 import ViewModels
 
 /// El entreno en curso: una tarjeta por ejercicio (acordeón), arrastrables para cambiar el orden,
-/// deslizables para quitarlas (izquierda) o cambiarlas y saltarlas (derecha), y abajo terminar o
-/// añadir.
+/// deslizables para quitarlas (izquierda) o cambiarlas y saltarlas (derecha), y abajo terminar
+/// (con confirmación) o añadir.
 struct ActiveWorkoutView: View {
     @Bindable var model: TodayModel
 
@@ -63,9 +63,14 @@ struct ActiveWorkoutView: View {
                     .buttonStyle(.glassPill(.secondary))
                     .accessibilityIdentifier(AccessibilityID.addExercise)
             } primary: {
-                Button { Task { await model.finish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
+                Button { Task { await model.requestFinish() } } label: { Text(TodayText.finish).frame(maxWidth: .infinity) }
                     .buttonStyle(.glassPill())
                     .accessibilityIdentifier(AccessibilityID.finishWorkout)
+                    // Colgado del botón: en iOS 26 el globo apunta a él. Se cierra tocando fuera.
+                    .confirmationDialog(TodayText.finishTitle, isPresented: Binding(presentedWhile: { model.isFinishPromptPresented }, onDismiss: { model.cancelFinish() }), titleVisibility: .visible) {
+                        Button(TodayText.finishConfirm) { Task { await model.confirmFinish() } }
+                        Button(FormText.cancel, role: .cancel) { model.cancelFinish() }
+                    }
             }
         }
         .sheet(isPresented: Binding(presentedWhile: { model.picker != nil }, onDismiss: { model.closePicker() })) {

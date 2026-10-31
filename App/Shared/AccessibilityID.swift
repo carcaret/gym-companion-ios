@@ -14,7 +14,6 @@ enum AccessibilityID {
     static let startWorkout = "start-workout"
     static let finishWorkout = "finish-workout"
     static let addExercise = "add-exercise"
-    static let workoutCompleted = "workout-completed"
     static let createExercise = "create-exercise"
     static let createFromSearch = "create-from-search"
     static let createName = "create-name"
