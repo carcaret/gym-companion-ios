@@ -11,16 +11,16 @@ final class WatchScreenshotTests: XCTestCase {
     /// descanso, que un toque empieza y otro para; la música, los controles y el resumen.
     @MainActor
     func testEntreno() {
-        let app = XCUIApplication()
-        app.launchArguments = [LaunchArgument.demo.rawValue]
-        app.launch()
-        XCTAssertTrue(app.staticTexts["Press Inclinado en Máquina"].appears(timeout: 20))
-        capture(app, "90-prueba-press")
-        print("ARBOL-PRESS\n" + app.debugDescription)
-        app.descendants(matching: .any)[AccessibilityID.watchExercises].firstMatch.swipeUp()
-        sleep(2)
-        capture(app, "91-prueba-jalon")
-        print("ARBOL-JALON\n" + app.debugDescription)
+        for size in ["UICTContentSizeCategoryL", "UICTContentSizeCategoryXL", "UICTContentSizeCategoryXXL", "UICTContentSizeCategoryXXXL"] {
+            let app = XCUIApplication()
+            app.launchArguments = [LaunchArgument.demo.rawValue, "-UIPreferredContentSizeCategoryName", size]
+            app.launch()
+            XCTAssertTrue(app.staticTexts["Press Inclinado en Máquina"].appears(timeout: 20))
+            sleep(1)
+            capture(app, "9x-prueba-\(size)")
+            print("ARBOL-\(size)\n" + app.debugDescription)
+            app.terminate()
+        }
         return
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
         // Pasados 10 minutos (la demo va por 23:41), nada se monta: el pulso, en la fila de la
