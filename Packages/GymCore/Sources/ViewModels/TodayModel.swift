@@ -3,8 +3,8 @@ import Domain
 import Observation
 import Presentation
 
-/// La pestaña Rutinas (`views/hoy.js` de la PWA): elegir rutina, verla, entrenar y ver el entreno
-/// terminado. Todo lo que pinta la vista sale de aquí ya calculado; las reglas son del dominio
+/// La pestaña Rutinas (`views/hoy.js` de la PWA): elegir rutina, verla, entrenar y terminar. Todo
+/// lo que pinta la vista sale de aquí ya calculado; las reglas son del dominio
 /// (`TrainingData+Workout`) y los textos, de `TodayText`. Va en cuatro ficheros: los tipos, este (el
 /// selector y la vista previa), el entreno en curso (`+Workout`) y el selector de ejercicios
 /// (`+Picker`). El estado es `internal` para que lo vean las extensiones de los otros ficheros.
@@ -31,6 +31,8 @@ public final class TodayModel {
     public internal(set) var createMessage: String?
     public internal(set) var replacePrompt: ReplacePrompt?
     public internal(set) var removalPrompt: RemovalPrompt?
+    /// El globo de «Finalizar entreno».
+    public internal(set) var isFinishPromptPresented = false
     public internal(set) var reciprocalOffer: ReciprocalOffer?
 
     let app: AppModel
@@ -61,17 +63,15 @@ public final class TodayModel {
         case .selector: TodayText.selectorTitle
         case .preview(let routine): data.routines.name(of: routine)
         case .active: activeSession.map { data.routines.name(of: $0.routineID) } ?? ""
-        case .completed: todaySession.map { data.routines.name(of: $0.routineID) } ?? ""
         }
     }
 
-    /// Debajo del título: vista previa, en curso o terminado; el selector no lleva.
+    /// Debajo del título: vista previa o en curso; el selector no lleva.
     public var subtitle: String? {
         switch stage {
         case .selector: nil
         case .preview: TodayText.previewStatus
         case .active: TodayText.inProgress
-        case .completed: TodayText.completedSubtitle
         }
     }
 
@@ -155,11 +155,13 @@ public final class TodayModel {
     }
 
     /// Empieza sin preguntar: el entreno de hoy, si lo hay, se sustituye. Abre el reloj para que
-    /// mida el entreno.
+    /// mida el entreno. Debajo del entreno queda el selector: termine donde termine, se vuelve a
+    /// las rutinas.
     public func start() async {
         guard case .preview(let routine) = storedStage else { return }
         var data = data
         data.startWorkout(routine: routine, on: today)
+        storedStage = .selector
         openExercise = nil
         editing.reset()
         await app.update(data)

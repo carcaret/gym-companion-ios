@@ -103,15 +103,29 @@ final class WorkoutTests: XCTestCase {
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.card("press_arnold"))).firstMatch.appears(timeout: 10))
     }
 
+    /// «Finalizar entreno» pregunta antes (decisión del usuario, 2026-10-31): tocar fuera del globo
+    /// sigue con el entreno y «Finalizar» vuelve a las rutinas, sin pantalla de entreno terminado.
+    @MainActor
+    func testFinalizarPreguntaAntes() {
+        let app = startWorkout()
+        app.buttons[AccessibilityID.finishWorkout].tap()
+        let confirm = app.buttons["Finalizar"].firstMatch
+        XCTAssertTrue(confirm.appears(timeout: 5), "Tiene que preguntar antes de finalizar")
+        // En iOS 26 el diálogo es un globo sin «Cancelar»: se cierra tocando fuera.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: confirm)
+        wait(for: [closed], timeout: 5)
+        XCTAssertTrue(app.buttons[AccessibilityID.finishWorkout].exists, "Tocar fuera sigue con el entreno")
+
+        app.finishWorkout()
+    }
+
     /// Con el entreno de hoy terminado, empezar otra rutina pregunta antes de sustituirlo
     /// (2026-10-27; la PWA lo borraba sin decir nada). Tocar fuera del globo lo deja y «Sustituir» empieza.
     @MainActor
     func testEmpezarOtraRutinaElMismoDiaPregunta() {
         let app = startWorkout()
-        app.buttons[AccessibilityID.finishWorkout].tap()
-        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
-        // Tocar otra vez la pestaña vuelve a las rutinas.
-        app.tabBars.buttons["Rutinas"].tap()
+        app.finishWorkout()
         XCTAssertTrue(app.buttons[AccessibilityID.routine("DIA2")].appears(timeout: 10))
         app.buttons[AccessibilityID.routine("DIA2")].tap()
         let start = app.buttons[AccessibilityID.startWorkout]

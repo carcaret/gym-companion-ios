@@ -24,6 +24,8 @@ public final class WatchModel {
     /// El ejercicio que se ve, por posición (la corona).
     public private(set) var exerciseIndex = 0
     public var tab: Tab = .workout
+    /// La alerta de «Terminar».
+    public private(set) var isFinishPromptPresented = false
     public private(set) var metrics = Metrics(WorkoutMetrics())
 
     private var phase: Phase = .idle
@@ -147,9 +149,27 @@ public final class WatchModel {
         }
     }
 
-    /// «Terminar» en el reloj, o el entreno terminado en el iPhone: deja de medir, lo guarda en
-    /// Salud y enseña el resumen. En el iPhone el entreno sigue abierto hasta terminarlo allí.
+    /// «Terminar» en el reloj: pregunta antes (decisión del usuario, 2026-10-31).
+    public func requestFinish() {
+        guard phase == .recording else { return }
+        isFinishPromptPresented = true
+    }
+
+    /// «Terminar» en la alerta.
+    public func confirmFinish() async {
+        isFinishPromptPresented = false
+        await finish()
+    }
+
+    public func cancelFinish() {
+        isFinishPromptPresented = false
+    }
+
+    /// Lo confirmado en el reloj, o el entreno terminado en el iPhone (sin preguntar): deja de
+    /// medir, lo guarda en Salud y enseña el resumen. En el iPhone el entreno sigue abierto hasta
+    /// terminarlo allí.
     public func finish() async {
+        isFinishPromptPresented = false
         guard phase == .recording else { return }
         phase = .ending
         restAlert.cancel()

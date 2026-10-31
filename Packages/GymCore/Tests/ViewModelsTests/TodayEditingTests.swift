@@ -43,7 +43,6 @@ struct WorkoutSwapTests {
         await today.start()
         await swap(today, at: 0, to: "sentadilla")
         await today.finish()
-        #expect(today.model.completedRows.first?.title == "Sentadilla")
         #expect(await today.saved?.history.session(on: today.today)?.logs.first?.exerciseID == "sentadilla")
     }
 
@@ -295,7 +294,7 @@ struct ReciprocalSwapTests {
         await today.start("DIA1")
         #expect(await today.saved?.pendingSwaps["DIA1"] != nil)
         await today.finish()
-        #expect(today.model.stage == .completed)
+        #expect(today.model.stage == .selector)
         #expect(await today.saved?.pendingSwaps["DIA1"] == nil)
     }
 
@@ -456,14 +455,15 @@ struct SkipExerciseTests {
         #expect(await today.savedToday?.completed == true)
     }
 
-    // El historial (#10) pinta igual que la vista de entreno terminado (`SummaryRow`).
+    // Sin pantalla de entreno terminado (decisión del usuario, 2026-10-31): el saltado queda
+    // guardado como tal y el historial lo pinta con su fondo (`HistoryModel`).
     @Test("un ejercicio saltado se ve con fondo en historial, sin botón")
     func skippedInSummary() async {
         let today = await TodayHarness.make()
         await today.start()
         await today.model.toggleSkip(at: 0)
         await today.finish()
-        #expect(today.model.completedRows.first?.isSkipped == true)
+        #expect(await today.savedToday?.logs.first?.skipped == true)
     }
 }
 
@@ -551,7 +551,7 @@ struct OneOffExerciseTests {
         today.model.toggleOneOff()
         await today.model.choose("sentadilla")
         await today.finish()
-        #expect(today.model.stage == .completed)
+        #expect(today.model.stage == .selector)
         #expect(await today.savedToday?.logs.map(\.exerciseID).contains("sentadilla") == true)
         #expect(await today.saved?.routines[0].exerciseIDs.contains("sentadilla") == false)
     }
@@ -592,7 +592,7 @@ struct TodayValidationTests {
         await today.start()
         for card in today.model.activeCards { today.model.toggleCard(card.exerciseID) }
         await today.finish()
-        #expect(today.model.stage == .completed)
+        #expect(today.model.stage == .selector)
     }
 
     @Test("series 0 (manual input) → se clampea a 1 por setParam")
@@ -622,6 +622,7 @@ struct FinishValidationTests {
 
         await today.finish()
         #expect(today.model.stage == .active)
+        #expect(!today.model.isFinishPromptPresented, "Con errores no pregunta")
         // Antes «Completa todos los campos antes de finalizar» (2026-10-27, con la aprobación del
         // usuario): el mismo texto que al guardar en el historial.
         #expect(today.app.notice == ValidationText.reviewMarked)
@@ -638,7 +639,7 @@ struct FinishValidationTests {
         await today.harness.remote.fail(fetch: .unreachable, push: .unreachable)
         await today.start()
         await today.finish()
-        #expect(today.model.stage == .completed)
+        #expect(today.model.stage == .selector)
         #expect(await today.savedToday?.completed == true)
         await today.sync.refresh()
         #expect(today.sync.status.state == .pending)
@@ -646,7 +647,71 @@ struct FinishValidationTests {
     }
 }
 
+@MainActor
+@Suite("Confirmar al finalizar el entreno")
+struct FinishConfirmationTests {
+    @Test("«Finalizar entreno» pregunta y no termina hasta confirmar")
+    func asks() async {
+        let today = await TodayHarness.started()
+        await today.model.requestFinish()
+        #expect(today.model.isFinishPromptPresented)
+        #expect(today.model.stage == .active)
+        #expect(await today.savedToday?.completed == false)
+    }
+
+    @Test("cancelar deja el entreno en curso")
+    func cancel() async {
+        let today = await TodayHarness.started()
+        await today.model.requestFinish()
+        today.model.cancelFinish()
+        #expect(!today.model.isFinishPromptPresented)
+        #expect(today.model.stage == .active)
+        #expect(await today.savedToday?.completed == false)
+    }
+
+    @Test("confirmar termina, sube y vuelve a las rutinas")
+    func confirm() async {
+        let today = await TodayHarness.make(configured: true)
+        await today.start()
+        await today.model.requestFinish()
+        await today.model.confirmFinish()
+        #expect(!today.model.isFinishPromptPresented)
+        #expect(today.model.stage == .selector)
+        #expect(today.model.title == TodayText.selectorTitle)
+        #expect(await today.savedToday?.completed == true)
+        #expect(await today.harness.remote.data?.history.session(on: today.today)?.completed == true)
+    }
+
+    @Test("si al confirmar ya falta algo, no termina y lo marca")
+    func invalidOnConfirm() async {
+        let today = await TodayHarness.started()
+        await today.model.requestFinish()
+        var data = today.app.data!
+        var session = data.history.session(on: today.today)!
+        session.logs[0].actualReps[0] = nil
+        data.history.replace(session)
+        await today.app.update(data)
+
+        await today.model.confirmFinish()
+        #expect(today.model.stage == .active)
+        #expect(today.model.activeCards[0].errors == [.missingRep(index: 0)])
+        #expect(today.app.notice == ValidationText.reviewMarked)
+    }
+
+    @Test("el entreno terminado fuera de la pantalla también vuelve a las rutinas")
+    func finishedElsewhere() async {
+        let today = await TodayHarness.started()
+        var data = today.app.data!
+        data.finishWorkout(on: today.today)
+        await today.app.update(data)
+        #expect(today.model.stage == .selector)
+    }
+}
+
 // tests/e2e/workout-completed-view.spec.js
+// Cambiado con la aprobación del usuario (2026-10-31): ya no hay pantalla de entreno terminado.
+// Al finalizar se vuelve a las rutinas y el entreno se ve en el Historial, así que cada test
+// comprueba eso con el nombre del de la PWA.
 @MainActor
 @Suite("Vista de entreno completado")
 struct CompletedViewTests {
@@ -659,9 +724,9 @@ struct CompletedViewTests {
 
     @Test("las cards usan formato de historial (compact-card + card-title/subtitle)")
     func historyFormat() async {
-        let rows = await completed().model.completedRows
-        #expect(!rows.isEmpty)
-        #expect(rows.allSatisfy { !$0.title.isEmpty && !$0.subtitle.isEmpty })
+        let today = await completed()
+        #expect(today.model.stage == .selector)
+        #expect(await today.savedToday?.completed == true)
     }
 
     @Test("las cards NO tienen botón de editar")
@@ -672,9 +737,9 @@ struct CompletedViewTests {
     }
 
     @Test("el subtitle muestra peso, series y reps formateados")
-    func subtitle() async {
-        let subtitle = await completed().model.completedRows[0].subtitle
-        #expect(subtitle.contains("3×10"))
+    func subtitle() async throws {
+        let session = try #require(await completed().savedToday)
+        #expect(LogText.summary(session.logs[0]).contains("3×10"))
     }
 
     @Test("toast de inicio no tiene emoji")
@@ -688,7 +753,8 @@ struct CompletedViewTests {
     @Test("toast de fin no tiene emoji")
     func finishNotice() async {
         let today = await completed()
-        // Sin aviso: la pantalla ya dice «Entreno completado» (quitado con la aprobación del usuario, 2026-10-26).
+        // Sin aviso: se vuelve a las rutinas y la nube dice que está subido (quitado con la
+        // aprobación del usuario, 2026-10-26).
         #expect(today.app.notice == nil)
     }
 
@@ -696,12 +762,9 @@ struct CompletedViewTests {
     func matchesHistory() async throws {
         let today = await completed()
         let session = try #require(await today.savedToday)
-        #expect(today.model.completedRows.map(\.subtitle) == session.logs.map(LogText.summary))
+        #expect(session.logs.map(\.exerciseID) == ["press_banca", "curl_biceps", "ejercicio_sin_historial"])
     }
 
-    // En la PWA cambiar de pestaña ya volvía al selector. En la app, como en iOS, cambiar de
-    // pestaña conserva el resumen y lo que vuelve al selector es tocar otra vez la pestaña
-    // (`reselect`); estos dos tests lo comprueban así (decisión del usuario, 2026-10-25).
     @Test("navegar entre múltiples pestañas y volver muestra el selector (no el resumen)")
     func severalTabs() async {
         let today = await completed()
@@ -709,7 +772,6 @@ struct CompletedViewTests {
         #expect(today.model.stage == .selector)
         today.model.reselect()
         #expect(today.model.stage == .selector)
-        #expect(today.model.completedRows.isEmpty)
     }
 
     @Test("navegar a otra pestaña y volver muestra el selector (no el resumen completado)")
@@ -721,16 +783,13 @@ struct CompletedViewTests {
 
     @Test("vista completada: existe botón #back-to-selector-btn")
     func backExists() async {
-        #expect(await completed().model.stage == .completed)
+        #expect(await completed().model.stage == .selector)
     }
 
-    // Cambiado con la aprobación del usuario (2026-10-26): no hay botón ni texto para volver
-    // (arriba solo va la nube); se vuelve tocando otra vez la pestaña Rutinas, como en iOS.
     @Test("vista completada: botón Volver tiene texto \"← Volver a rutinas\"")
     func backLabel() async {
         let today = await completed()
-        today.model.reselect()
-        #expect(today.model.stage == .selector)
+        #expect(today.model.title == "Rutinas")
     }
 
     @Test("durante el entreno activo NO existe el botón Volver a rutinas")
@@ -743,7 +802,6 @@ struct CompletedViewTests {
     @Test("tras pulsar Volver, aparece el selector de rutinas con título \"Rutinas\"")
     func back() async {
         let today = await completed()
-        today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         #expect(today.model.stage == .selector)
         #expect(today.model.title == "Rutinas")
     }
@@ -751,8 +809,8 @@ struct CompletedViewTests {
     @Test("sin pulsar Volver, el resumen sigue visible al recargar la vista (botón Volver presente)")
     func staysCompleted() async {
         let today = await completed()
-        #expect(today.model.stage == .completed)
-        #expect(today.model.title == "Full Body - Día 1")
+        #expect(today.model.stage == .selector)
+        #expect(today.model.subtitle == nil)
     }
 }
 
@@ -802,7 +860,7 @@ struct TodayNavigationButtonsTests {
         await today.start()
         await today.finish()
         today.model.reselect()  // «Volver»: tocar otra vez la pestaña
-        #expect(today.model.completedRows.isEmpty)
+        #expect(today.model.activeCards.isEmpty)
     }
 
     @Test("completed view: desde selector tras volver, se puede seleccionar otra rutina")
@@ -824,6 +882,6 @@ struct TodayNavigationButtonsTests {
         today.model.reselect()  // «Volver»: tocar otra vez la pestaña
         today.model.reselect()
         #expect(today.model.stage == .selector)
-        #expect(today.model.completedRows.isEmpty)
+        #expect(today.model.activeCards.isEmpty)
     }
 }

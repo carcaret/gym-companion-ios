@@ -67,8 +67,9 @@ struct WorkoutFlowTests {
         let today = await TodayHarness.make()
         await today.start()
         await today.finish()
-        #expect(today.model.stage == .completed)
-        #expect(TodayText.completedStatus.contains("completado"))
+        // Sin pantalla de entreno terminado: vuelve a las rutinas (decisión del usuario, 2026-10-31).
+        #expect(today.model.stage == .selector)
+        #expect(await today.savedToday?.completed == true)
     }
 
     @Test("finalizar entreno y verificar en historial")

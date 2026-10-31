@@ -23,6 +23,17 @@ extension XCUIApplication {
         XCTAssertTrue(buttons[AccessibilityID.finishWorkout].appears(timeout: 10))
     }
 
+    /// «Finalizar entreno» y «Finalizar» en el globo que pregunta, hasta que se vuelve a las rutinas.
+    @MainActor
+    func finishWorkout() {
+        buttons[AccessibilityID.finishWorkout].tap()
+        let confirm = buttons["Finalizar"].firstMatch
+        XCTAssertTrue(confirm.appears(timeout: 5), "Tiene que preguntar antes de finalizar")
+        confirm.tap()
+        XCTAssertTrue(buttons[AccessibilityID.routine("DIA1")].appears(timeout: 10), "Al finalizar se vuelve a las rutinas")
+        XCTAssertFalse(buttons[AccessibilityID.finishWorkout].exists)
+    }
+
     /// La primera sesión del Historial (la más reciente).
     @MainActor
     var firstHistorySession: XCUIElement {

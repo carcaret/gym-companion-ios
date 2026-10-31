@@ -19,6 +19,8 @@ public enum WatchText {
     public static let activeEnergyUnit = "KCAL ACTIVAS"
     public static let totalEnergyUnit = "KCAL TOTALES"
     public static let finish = "Terminar"
+    /// La alerta que confirma «Terminar» (decisión del usuario, 2026-10-31).
+    public static let finishTitle = "¿Terminar el entreno?"
     public static let finished = "Entreno terminado"
     public static let activity = "Fuerza tradicional"
     public static let savedToHealth = "Guardado en Salud"

@@ -8,13 +8,13 @@ enum AccessibilityID {
     static let watchHeartRate = "watch-heart-rate"
     static let watchExercises = "watch-exercises"
     static let watchFinish = "watch-finish"
+    static let watchFinishConfirm = "watch-finish-confirm"
     static let watchDone = "watch-done"
 
     // Rutinas y entreno
     static let startWorkout = "start-workout"
     static let finishWorkout = "finish-workout"
     static let addExercise = "add-exercise"
-    static let workoutCompleted = "workout-completed"
     static let createExercise = "create-exercise"
     static let createFromSearch = "create-from-search"
     static let createName = "create-name"

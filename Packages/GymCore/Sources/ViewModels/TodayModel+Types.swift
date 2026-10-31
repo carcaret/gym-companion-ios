@@ -6,7 +6,6 @@ extension TodayModel {
         case selector
         case preview(RoutineID)
         case active
-        case completed
     }
 
     /// Empezar con el entreno de hoy ya terminado: el `db.json` guarda uno por día, así que el
@@ -23,14 +22,6 @@ extension TodayModel {
         /// "Próxima vez: B en vez de A", si hay un cambio recíproco pendiente esta semana.
         public let pendingNote: String?
         public let tint: RoutineTint?
-    }
-
-    /// Una línea del entreno terminado (el formato del historial).
-    public struct SummaryRow: Hashable, Sendable {
-        public let title: String
-        public let subtitle: String
-        /// Saltado: se pinta con el fondo de saltado.
-        public let isSkipped: Bool
     }
 
     public enum PickerPurpose: Hashable, Sendable {

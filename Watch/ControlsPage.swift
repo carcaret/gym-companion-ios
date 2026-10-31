@@ -2,7 +2,7 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// La página de la izquierda mientras se mide: el pulso y las kcal, y «Terminar».
+/// La página de la izquierda mientras se mide: el pulso y las kcal, y «Terminar», que pregunta antes.
 struct ControlsPage: View {
     let model: WatchModel
 
@@ -13,7 +13,7 @@ struct ControlsPage: View {
                 metric(model.metrics.activeEnergy, unit: WatchText.activeEnergyUnit, color: Theme.text)
                 metric(model.metrics.totalEnergy, unit: WatchText.totalEnergyUnit, color: Theme.text)
                 Button(role: .destructive) {
-                    Task { await model.finish() }
+                    model.requestFinish()
                 } label: {
                     Label(WatchText.finish, systemImage: "xmark")
                         .frame(maxWidth: .infinity)
@@ -22,6 +22,11 @@ struct ControlsPage: View {
                 .padding(.top, 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .alert(WatchText.finishTitle, isPresented: Binding(presentedWhile: { model.isFinishPromptPresented }, onDismiss: { model.cancelFinish() })) {
+            Button(WatchText.finish, role: .destructive) { Task { await model.confirmFinish() } }
+                .accessibilityIdentifier(AccessibilityID.watchFinishConfirm)
+            Button(FormText.cancel, role: .cancel) { model.cancelFinish() }
         }
     }
 

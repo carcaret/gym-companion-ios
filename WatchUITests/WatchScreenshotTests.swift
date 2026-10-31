@@ -62,14 +62,19 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(finish.appears(timeout: 5))
         capture(app, "74-reloj-controles")
 
+        // Pregunta antes de terminar (decisión del usuario, 2026-10-31).
         finish.tap()
+        let confirm = app.buttons[AccessibilityID.watchFinishConfirm]
+        XCTAssertTrue(confirm.appears(timeout: 5), "Tiene que preguntar antes de terminar")
+        capture(app, "75-reloj-terminar")
+        confirm.tap()
         XCTAssertTrue(app.staticTexts["Entreno terminado"].appears(timeout: 10))
-        capture(app, "75-reloj-resumen")
+        capture(app, "76-reloj-resumen")
 
         // El entreno sigue abierto en el iPhone: se puede volver a empezar.
         app.buttons[AccessibilityID.watchDone].tap()
         XCTAssertTrue(app.buttons[AccessibilityID.watchStart].appears(timeout: 5))
-        capture(app, "76-reloj-empezar")
+        capture(app, "77-reloj-empezar")
     }
 
     @MainActor

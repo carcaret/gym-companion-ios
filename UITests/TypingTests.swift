@@ -22,8 +22,12 @@ final class TypingTests: XCTestCase {
         weight.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 6) + "61")
         XCTAssertTrue(app.keyboards.firstMatch.exists, "El teclado tiene que seguir abierto")
 
-        app.buttons[AccessibilityID.finishWorkout].tap()
-        XCTAssertTrue(app.descendants(matching: .any)[AccessibilityID.workoutCompleted].firstMatch.appears(timeout: 10))
+        app.finishWorkout()
+        // Sin pantalla de entreno terminado: el peso se mira en la sesión del Historial.
+        app.tabBars.buttons["Historial"].tap()
+        let first = app.firstHistorySession
+        XCTAssertTrue(first.appears(timeout: 10))
+        first.tap()
         let typed = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '61 kg'")).firstMatch
         XCTAssertTrue(typed.appears(timeout: 5), "El entreno terminado no tiene el peso tecleado")
     }

@@ -335,6 +335,45 @@ struct WatchModelTests {
         #expect(watch.model.screen == .summary(WatchModel.Summary(duration: "50:00", activeEnergy: "412", totalEnergy: "520", averageHeartRate: "118 ppm")))
     }
 
+    @Test("«Terminar» pregunta antes y no termina hasta confirmar")
+    func asksBeforeFinishing() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        watch.model.requestFinish()
+        #expect(watch.model.isFinishPromptPresented)
+        #expect(watch.recorder.ends == 0)
+        await watch.model.confirmFinish()
+        #expect(!watch.model.isFinishPromptPresented)
+        #expect(watch.recorder.ends == 1)
+        guard case .summary = watch.model.screen else { Issue.record("sin resumen"); return }
+    }
+
+    @Test("cancelar sigue midiendo")
+    func cancelFinish() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        watch.model.requestFinish()
+        watch.model.cancelFinish()
+        #expect(!watch.model.isFinishPromptPresented)
+        #expect(watch.recorder.ends == 0)
+        #expect(watch.model.screen == .workout)
+    }
+
+    @Test("sin medir, «Terminar» no pregunta")
+    func noPromptWithoutRecording() async {
+        let watch = WatchHarness(today: today)
+        await watch.model.receive(threeExercises)
+        watch.model.requestFinish()
+        #expect(!watch.model.isFinishPromptPresented)
+    }
+
+    @Test("terminado en el iPhone con la pregunta abierta: termina sin preguntar y la cierra")
+    func finishedOnPhoneWhileAsking() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        watch.model.requestFinish()
+        await watch.model.receive(WatchSnapshot(workout: nil))
+        #expect(!watch.model.isFinishPromptPresented)
+        #expect(watch.recorder.ends == 1)
+    }
+
     @Test("el entreno terminado en el iPhone termina también el del reloj")
     func finishedOnPhone() async {
         let watch = await WatchHarness.recording(threeExercises, today: today)
