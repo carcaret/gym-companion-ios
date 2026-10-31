@@ -154,6 +154,12 @@ struct DomainHelpersTests {
         #expect(log.prefilledWithTarget.targetReps == 10)
     }
 
+    @Test("las reps de cada serie, tantas como series: las que faltan, vacías; las de más, fuera")
+    func seriesReps() {
+        #expect(makeLog(series: 3, expected: 10, actual: [8, nil]).seriesReps == [8, nil, nil])
+        #expect(makeLog(series: 2, expected: 10, actual: [10, 9, 8]).seriesReps == [10, 9])
+    }
+
     @Test("un paso de los botones −/+: el peso, con el escalón de su carga")
     func step() {
         var light = makeLog(weight: 10)

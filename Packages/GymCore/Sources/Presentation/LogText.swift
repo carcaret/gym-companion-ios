@@ -2,23 +2,14 @@ import Domain
 
 /// Resúmenes de lo hecho con un ejercicio.
 public enum LogText {
-    /// "60 kg · 3×10 · 10·10·8": el peso si lo hay, series × objetivo y, si alguna serie no fue al
-    /// objetivo, las reps de cada serie.
+    /// "60 kg · 10·10·8": el peso si lo hay y las reps de cada serie, también cuando todas fueron
+    /// al objetivo, como en el reloj (decisión del usuario, 2026-10-31; la PWA ponía «3×10» y solo
+    /// las reps que no llegaban: «60 kg · 3×10 · 10·10·8»).
     public static func summary(_ log: ExerciseLog) -> String {
         var parts: [String] = []
         if log.weight > 0 { parts.append(weight(log.weight)) }
-        parts.append("\(log.series)×\(log.targetReps)")
-        if let detail = repsDetail(log.actualReps, series: log.series, target: log.targetReps) { parts.append(detail) }
+        if log.series > 0 { parts.append(reps(log.seriesReps)) }
         return parts.joined(separator: " · ")
-    }
-
-    /// Las reps de cada serie ("10·8·10"), o `nil` si no hay ninguna rellenada o todas las series
-    /// fueron justo al objetivo. (`formatRepsInteligente`.)
-    public static func repsDetail(_ actual: [Int?], series: Int, target: Int) -> String? {
-        let filled = actual.compactMap { $0 }
-        guard !filled.isEmpty else { return nil }
-        if filled.count == series && filled.allSatisfy({ $0 == target }) { return nil }
-        return reps(actual)
     }
 
     /// La serie sin rellenar.

@@ -310,8 +310,8 @@ struct WorkoutSubtitleTests {
         today.model.focusSeries(2, at: 0)
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
-        #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10·10"))
+        // Sin «series×objetivo» y con todas las reps (aprobado por el usuario, 2026-10-31).
+        #expect(subtitle == "60 kg · 10·10·10")
     }
 
     @Test("subtítulo se actualiza al cambiar una rep")
@@ -335,9 +335,8 @@ struct WorkoutSubtitleTests {
     @Test("subtítulo incluye peso y series x reps esperadas junto a las reales")
     func full() async {
         let subtitle = await TodayHarness.started().model.activeCards[0].subtitle
-        #expect(subtitle.contains("60 kg"))
-        #expect(subtitle.contains("3×10"))
-        #expect(subtitle.contains("10·10·8"))
+        // Sin «series×objetivo» y con todas las reps (aprobado por el usuario, 2026-10-31).
+        #expect(subtitle == "60 kg · 10·10·8")
     }
 
     @Test("reps desaparecen del subtítulo si se corrigen para coincidir con expected")
@@ -345,8 +344,8 @@ struct WorkoutSubtitleTests {
         let today = await TodayHarness.started()
         await today.model.chooseRep(10, series: 2, at: 0)
         let subtitle = today.model.activeCards[0].subtitle
-        #expect(subtitle.contains("3×10"))
-        #expect(!subtitle.contains("10·10"))
+        // Sin «series×objetivo» y con todas las reps (aprobado por el usuario, 2026-10-31).
+        #expect(subtitle == "60 kg · 10·10·10")
     }
 }
 
