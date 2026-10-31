@@ -219,12 +219,12 @@ en bucle, así que Playwright lista los mismos 321).
 | `dates.test.js` › getWeekStartStr › sábado devuelve el lunes de esa semana | `LocalDateTests.swift` |  |
 | `dates.test.js` › getWeekStartStr › cruza cambio de mes hacia atrás | `LocalDateTests.swift` |  |
 | `dates.test.js` › getWeekStartStr › cruza cambio de año hacia atrás | `LocalDateTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › todos iguales a expected -> null | `LogTextTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › algunos diferentes -> "10-8-10" | `LogTextTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › con nulls -> "-" donde toque | `LogTextTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › array vacio -> null | `LogTextTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › null -> null | `LogTextTests.swift` |  |
-| `formatting.test.js` › formatRepsInteligente › menos reps completadas que series -> muestra lo que hay | `LogTextTests.swift` |  |
+| `formatting.test.js` › formatRepsInteligente › todos iguales a expected -> null | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
+| `formatting.test.js` › formatRepsInteligente › algunos diferentes -> "10-8-10" | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
+| `formatting.test.js` › formatRepsInteligente › con nulls -> "-" donde toque | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
+| `formatting.test.js` › formatRepsInteligente › array vacio -> null | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
+| `formatting.test.js` › formatRepsInteligente › null -> null | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
+| `formatting.test.js` › formatRepsInteligente › menos reps completadas que series -> muestra lo que hay | — | El subtítulo de las tarjetas ya no oculta las reps que llegan al objetivo: siempre todas, como en el reloj (decisión del usuario, 2026-10-31), y formatRepsInteligente ya no existe. |
 | `formatting.test.js` › formatLogSummary › con peso → incluye "X kg · " | `LogTextTests.swift` |  |
 | `formatting.test.js` › formatLogSummary › sin peso (0) → omite "kg" | `LogTextTests.swift` |  |
 | `formatting.test.js` › formatLogSummary › con actual que difiere de expected → añade "· X-X-X" | `LogTextTests.swift` |  |
@@ -844,5 +844,4 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 7 — quitar de rutina sobre log swapped: log desaparece, plantilla DIA1 intacta | `TodayEditingTests.swift` |  |
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 8 — tras swap A→B, "+ Ejercicio" no ofrece B (fix bug duplicado) | `TodayEditingTests.swift` |  |
 
-
-**Total:** 774 portados, 55 no aplican, 0 sin portar, de 829.
+**Total:** 768 portados, 61 no aplican, 0 sin portar, de 829.

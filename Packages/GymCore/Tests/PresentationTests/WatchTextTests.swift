@@ -31,12 +31,13 @@ struct WatchTextTests {
         #expect(WatchText.position(1, of: 6) == "2/6")
     }
 
-    @Test("el tiempo en minutos y segundos; desde una hora, con las horas")
+    @Test("el tiempo en minutos y segundos, también pasada la hora")
     func duration() {
         #expect(WatchText.duration(.zero) == "0:00")
         #expect(WatchText.duration(.seconds(65)) == "1:05")
         #expect(WatchText.duration(.seconds(1421)) == "23:41")
-        #expect(WatchText.duration(.seconds(3733)) == "1:02:13")
+        #expect(WatchText.duration(.seconds(3733)) == "62:13")
+        #expect(WatchText.duration(.seconds(6203)) == "103:23")
         #expect(WatchText.duration(.milliseconds(59_900)) == "0:59")
     }
 

@@ -739,7 +739,8 @@ struct CompletedViewTests {
     @Test("el subtitle muestra peso, series y reps formateados")
     func subtitle() async throws {
         let session = try #require(await completed().savedToday)
-        #expect(LogText.summary(session.logs[0]).contains("3×10"))
+        // Sin «series×objetivo» y con todas las reps (aprobado por el usuario, 2026-10-31).
+        #expect(LogText.summary(session.logs[0]) == "60 kg · 10·10·8")
     }
 
     @Test("toast de inicio no tiene emoji")

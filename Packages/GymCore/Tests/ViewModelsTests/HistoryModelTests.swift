@@ -25,7 +25,9 @@ struct HistoryFullTests {
         history.model.open(history.model.rows[0].date)
         let subtitle = history.model.cards[0].subtitle
         #expect(subtitle.contains("kg"))
-        #expect(subtitle.contains("3×8"))
+        // Sin «series×objetivo» y con todas las reps (aprobado por el usuario, 2026-10-31).
+        #expect(subtitle.contains("8·8·8"))
+        #expect(!subtitle.contains("×"))
     }
 
     // Cambiado con la aprobación del usuario (2026-10-27, modo «Editar»): abrir la tarjeta

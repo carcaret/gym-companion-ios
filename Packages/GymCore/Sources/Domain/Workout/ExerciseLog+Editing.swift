@@ -26,6 +26,11 @@ extension ExerciseLog {
         adjust(parameter, by: delta)
     }
 
+    /// Las reps de cada serie, tantas como series: las que faltan, vacías (`nil`).
+    public var seriesReps: [Int?] {
+        (0..<max(0, series)).map(rep(at:))
+    }
+
     /// Las reps de cada serie: las vacías y las que faltan valen el objetivo.
     public var repsOrTarget: [Int] {
         (0..<max(0, series)).map { index in (index < actualReps.count ? actualReps[index] : nil) ?? targetReps }
