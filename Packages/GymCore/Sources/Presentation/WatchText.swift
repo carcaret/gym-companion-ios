@@ -56,11 +56,11 @@ public enum WatchText {
         Plural.exercises(count)
     }
 
-    /// "23:41", o "1:02:13" a partir de una hora: el tiempo del entreno o del descanso.
+    /// "23:41", y pasada la hora, "63:23": el tiempo del entreno o del descanso, siempre en minutos
+    /// y segundos (decisión del usuario, 2026-10-31; antes, "1:03:23").
     public static func duration(_ duration: Duration) -> String {
         let total = max(0, Int(duration.components.seconds))
-        let hours = total / 3600, minutes = total / 60 % 60, seconds = total % 60
-        return hours > 0 ? "\(hours):\(twoDigits(minutes)):\(twoDigits(seconds))" : "\(minutes):\(twoDigits(seconds))"
+        return "\(total / 60):\(twoDigits(total % 60))"
     }
 
     /// Lo que dice el descanso según en qué punto está.
