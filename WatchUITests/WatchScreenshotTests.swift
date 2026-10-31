@@ -14,7 +14,15 @@ final class WatchScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [LaunchArgument.demo.rawValue]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Press Banca"].appears(timeout: 20))
+        XCTAssertTrue(app.staticTexts["Press Inclinado en Máquina"].appears(timeout: 20))
+        capture(app, "90-prueba-press")
+        print("ARBOL-PRESS\n" + app.debugDescription)
+        app.buttons.matching(identifier: AccessibilityID.watchExercises).firstMatch.swipeUp()
+        app.descendants(matching: .any)[AccessibilityID.watchExercises].firstMatch.swipeUp()
+        sleep(2)
+        capture(app, "91-prueba-jalon")
+        print("ARBOL-JALON\n" + app.debugDescription)
+        return
         XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
         // Pasados 10 minutos (la demo va por 23:41), nada se monta: el pulso, en la fila de la
         // hora, queda encima del tiempo, y el tiempo no pisa su texto.

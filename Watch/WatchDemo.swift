@@ -7,9 +7,14 @@ enum WatchDemo {
     static func snapshot(arguments: [String], today: LocalDate) -> WatchSnapshot? {
         if LaunchArgument.demoWithoutWorkout.isPresent(in: arguments) { return WatchSnapshot(workout: nil) }
         guard LaunchArgument.demo.isPresent(in: arguments) else { return nil }
-        var data = DemoData.make(today: today)
-        data.startWorkout(routine: data.routines[0].id, on: today)
-        return data.watchSnapshot(today: today)
+        // PRUEBA: el Día 3 real del usuario (2026-10-31).
+        func ref(_ d: String, _ w: Double, _ r: [Int?]) -> WatchSnapshot.Reference { .init(date: LocalDate(iso: d)!, weight: w, reps: r) }
+        return WatchSnapshot(workout: .init(date: today, routineName: "Día 3", exercises: [
+            .init(name: "Press Inclinado en Máquina", weight: 32.5, series: 4, targetReps: 11, skipped: false,
+                  best: ref("2026-09-25", 32.5, [11, 11, 11, 11]), last: ref("2026-10-24", 32.5, [12, 11, 10, 8])),
+            .init(name: "Jalón al pecho neutro", weight: 73, series: 4, targetReps: 10, skipped: false,
+                  best: ref("2026-10-02", 73, [10, 10, 10, 8]), last: ref("2026-10-24", 73, [10, 10, 9, 8])),
+        ]))
     }
 }
 

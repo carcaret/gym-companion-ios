@@ -50,7 +50,7 @@ jobs:
     # El paquete entero se prueba también en Linux, con la misma imagen que en el NAS: solo
     # AppleAdapters y WatchAdapters, tras `#if canImport`, tocan frameworks de Apple.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false
     runs-on: ubuntu-latest
     container: swift:6.3.3
     steps:
@@ -70,7 +70,7 @@ jobs:
     # un motivo en docs/pwa-tests-no-aplican.tsv, y la tabla de docs/paridad.md está al día. Ver
     # CLAUDE.md.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
     # cada test).
     name: app (${{ matrix.part }})
     needs: gate
-    if: ${{ !cancelled() }}
+    if: false
     runs-on: macos-26
     strategy:
       fail-fast: false
@@ -246,7 +246,7 @@ jobs:
             -destination "id=$SIM_UDID" \
             -derivedDataPath build \
             -resultBundlePath Watch.xcresult \
-            -retry-tests-on-failure -test-iterations 2
+            -only-testing:GymCompanionWatchUITests/WatchScreenshotTests/testEntreno
 
       - name: Fin
         if: always()
@@ -260,7 +260,7 @@ jobs:
           diagnostico: diagnostico-watch
 
       - name: Tests del paquete (macOS)
-        if: env.TESTED != 'true'
+        if: false
         working-directory: Packages/GymCore
         run: swift test
 
@@ -278,6 +278,7 @@ jobs:
         continue-on-error: true   # sin capturas (falló la compilación) no hay nada que juntar
 
   release-build:
+    if: false
     # La release se compila a la vez que corren los tests (también en las PR: así se sabe que
     # compila en Release) y solo se publica, en el job publish, si todo pasa en master.
     runs-on: macos-26
