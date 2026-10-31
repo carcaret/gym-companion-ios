@@ -4,8 +4,9 @@ import ViewModels
 
 /// El tiempo y el descanso, en una franja que mide lo mismo a cero que descansando, para dejar
 /// sitio al ejercicio. A cero, el tiempo del entreno y a su lado «toca para descansar»;
-/// descansando, el descanso (verde; cumplido, azul) con el tiempo del entreno a su lado, y debajo
-/// su barra hasta 1:30.
+/// descansando, el descanso (verde; cumplido, azul) con el tiempo del entreno a su lado, solo el
+/// número (decisión del usuario, 2026-10-31: sin «total»; VoiceOver sí lo dice), y debajo su barra
+/// hasta 1:30.
 struct TimeView: View {
     let time: WatchModel.Time
     let isDimmed: Bool
@@ -25,14 +26,11 @@ struct TimeView: View {
                         Text(time.restLabel)
                             .foregroundStyle(restColor)
                             .lineLimit(1)
-                        HStack(spacing: 3) {
-                            Text(time.elapsed)
-                                .foregroundStyle(Theme.gold)
-                                .fontWeight(.semibold)
-                                .monospacedDigit()
-                            Text(WatchText.total)
-                                .foregroundStyle(Theme.textSecondary)
-                        }
+                        Text(time.elapsed)
+                            .foregroundStyle(Theme.gold)
+                            .fontWeight(.semibold)
+                            .monospacedDigit()
+                            .accessibilityLabel("\(time.elapsed) \(WatchText.total)")
                     }
                 }
             }
