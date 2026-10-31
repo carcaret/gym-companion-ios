@@ -88,7 +88,7 @@ struct WatchModelTests {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca", best: WatchSnapshot.Reference(date: date("2026-10-21"), weight: 60, reps: [11, 11, 10, 8]))]))
         let exercise = watch.model.exercises[0]
-        #expect(exercise.planReps == "4×11")
+        #expect(exercise.planReps == "11·11·11·11")
         #expect(exercise.firstTime == nil)
     }
 
@@ -119,7 +119,7 @@ struct WatchModelTests {
         let watch = WatchHarness(today: today)
         await watch.model.receive(workout([exercise("Press Banca")]))
         #expect(watch.model.exercises[0].firstTime == "Primera vez")
-        #expect(watch.model.exercises[0].planReps == "4×11")
+        #expect(watch.model.exercises[0].planReps == "11·11·11·11")
     }
 
     @Test("un ejercicio saltado hoy se marca")

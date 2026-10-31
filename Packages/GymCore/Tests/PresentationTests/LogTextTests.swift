@@ -43,11 +43,6 @@ struct RepsTests {
         #expect(LogText.reps([12, 12, 12, 12]) == "12·12·12·12")
     }
 
-    @Test("las series por las reps objetivo")
-    func target() {
-        #expect(LogText.target(series: 4, reps: 11) == "4×11")
-    }
-
     @Test("una serie sin reps sale como una raya")
     func emptyRep() {
         #expect(LogText.reps([12, nil, 10]) == "12·—·10")

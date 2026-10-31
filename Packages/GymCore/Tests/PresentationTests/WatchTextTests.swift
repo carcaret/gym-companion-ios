@@ -22,8 +22,8 @@ struct WatchTextTests {
         }
         let best = WatchSnapshot.Reference(date: LocalDate(iso: "2026-09-25")!, weight: 32.5, reps: [11, 11, 10, 8])
         #expect(WatchText.planReps(exercise(weight: 32.5, best: best)) == "11·11·10·8")
-        #expect(WatchText.planReps(exercise(weight: 35, best: best)) == "4×11", "Peso subido: las objetivo")
-        #expect(WatchText.planReps(exercise(weight: 35, best: nil)) == "4×11", "Nunca hecho: las objetivo")
+        #expect(WatchText.planReps(exercise(weight: 35, best: best)) == "11·11·11·11", "Peso subido: las objetivo")
+        #expect(WatchText.planReps(exercise(weight: 35, best: nil)) == "11·11·11·11", "Nunca hecho: las objetivo")
     }
 
     @Test("la posición del ejercicio en la rutina")

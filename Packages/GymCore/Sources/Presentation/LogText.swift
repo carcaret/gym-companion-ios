@@ -7,14 +7,9 @@ public enum LogText {
     public static func summary(_ log: ExerciseLog) -> String {
         var parts: [String] = []
         if log.weight > 0 { parts.append(weight(log.weight)) }
-        parts.append(target(series: log.series, reps: log.targetReps))
+        parts.append("\(log.series)×\(log.targetReps)")
         if let detail = repsDetail(log.actualReps, series: log.series, target: log.targetReps) { parts.append(detail) }
         return parts.joined(separator: " · ")
-    }
-
-    /// "4×11": las series por las reps objetivo.
-    public static func target(series: Int, reps: Int) -> String {
-        "\(series)×\(reps)"
     }
 
     /// Las reps de cada serie ("10·8·10"), o `nil` si no hay ninguna rellenada o todas las series
