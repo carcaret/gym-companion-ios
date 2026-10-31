@@ -105,7 +105,7 @@ public final class WatchModel {
                 name: exercise.name,
                 position: WatchText.position(index, of: count),
                 weight: WatchText.weight(exercise.weight),
-                bestReps: exercise.bestAtTodayWeight.map { LogText.reps($0.reps) },
+                planReps: WatchText.planReps(exercise),
                 lastReps: exercise.lastAtTodayWeight.map { LogText.reps($0.reps) },
                 isSkipped: exercise.skipped,
                 status: exercise.skipped ? WatchText.skipped : nil,

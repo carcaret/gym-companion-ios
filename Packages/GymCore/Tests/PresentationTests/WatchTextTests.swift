@@ -15,6 +15,17 @@ struct WatchTextTests {
         #expect(WatchText.weight(0) == "Peso corporal")
     }
 
+    @Test("junto al peso, las reps de la mejor si es del peso de hoy; si no, las objetivo")
+    func planReps() {
+        func exercise(weight: Double, best: WatchSnapshot.Reference?) -> WatchSnapshot.Exercise {
+            WatchSnapshot.Exercise(name: "Press", weight: weight, series: 4, targetReps: 11, skipped: false, best: best, last: nil)
+        }
+        let best = WatchSnapshot.Reference(date: LocalDate(iso: "2026-09-25")!, weight: 32.5, reps: [11, 11, 10, 8])
+        #expect(WatchText.planReps(exercise(weight: 32.5, best: best)) == "11·11·10·8")
+        #expect(WatchText.planReps(exercise(weight: 35, best: best)) == "11·11·11·11", "Peso subido: las objetivo")
+        #expect(WatchText.planReps(exercise(weight: 35, best: nil)) == "11·11·11·11", "Nunca hecho: las objetivo")
+    }
+
     @Test("la posición del ejercicio en la rutina")
     func position() {
         #expect(WatchText.position(1, of: 6) == "2/6")

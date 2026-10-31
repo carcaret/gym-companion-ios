@@ -3,7 +3,8 @@ import SwiftUI
 import ViewModels
 
 /// El ejercicio que se ve: el nombre y su posición, el peso de hoy con las reps de la mejor sesión
-/// reciente y, si es otra, las de la última (solo las del peso de hoy). Saltado, atenuado salvo el
+/// reciente (o, sin ninguna con ese peso, las objetivo) y, si es otra, las de la última (solo las
+/// del peso de hoy). Saltado, atenuado salvo el
 /// «Saltado». Con la muñeca bajada, todo atenuado y sin la posición; «Última» se queda, porque es lo
 /// que toca hacer (decisión del usuario, 2026-10-31).
 struct ExerciseView: View {
@@ -40,16 +41,15 @@ struct ExerciseView: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 2) {
-            // "60 kg · 10·10·8": el peso en azul y las reps de la mejor, que son lo que se mira.
+            // "60 kg · 10·10·8": el peso en azul y las reps de la mejor (o las objetivo), que son
+            // lo que se mira.
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(exercise.weight)
                     .foregroundStyle(Theme.accentLight)
-                if let reps = exercise.bestReps {
-                    Text("·")
-                        .foregroundStyle(Theme.textSecondary)
-                    Text(reps)
-                        .foregroundStyle(Theme.text)
-                }
+                Text("·")
+                    .foregroundStyle(Theme.textSecondary)
+                Text(exercise.planReps)
+                    .foregroundStyle(Theme.text)
             }
             .font(.body.weight(.semibold).monospacedDigit())
             .lineLimit(1)
