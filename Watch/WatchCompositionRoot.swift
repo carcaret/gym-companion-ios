@@ -8,7 +8,8 @@ import WatchAdapters
 
 /// Raíz de composición del reloj: el único sitio de la app del reloj que conoce los adaptadores
 /// concretos. Escucha al iPhone desde que arranca la app, también en segundo plano: lo que enseña
-/// y los entrenos que hay que borrar de Salud (los guardó el reloj, así que solo él puede). Con
+/// y los entrenos que hay que borrar de Salud (los guardó el reloj, así que solo él puede). Lo que
+/// se termina aquí se lo pide terminar al iPhone. Con
 /// `-demo` (o `-demo-sin-entreno`) enseña datos de ejemplo, mide un entreno de mentira y no escucha
 /// al iPhone (solo para las capturas del CI).
 @MainActor
@@ -28,7 +29,8 @@ final class WatchCompositionRoot {
         let clock = SystemClock()
         demo = WatchDemo.snapshot(arguments: arguments, today: clock.today())
         if demo == nil {
-            model = WatchModel(clock: clock, recorder: HealthKitWorkoutRecorder(), restAlert: WatchKitRestAlert())
+            model = WatchModel(clock: clock, recorder: HealthKitWorkoutRecorder(), restAlert: WatchKitRestAlert(),
+                               phone: WatchConnectivityWorkoutFinisher())
             let receiver = WatchConnectivityReceiver()
             self.receiver = receiver
             receiver.start()

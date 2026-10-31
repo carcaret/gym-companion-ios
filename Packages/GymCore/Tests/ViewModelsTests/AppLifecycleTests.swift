@@ -35,6 +35,18 @@ struct AppLifecycleTests {
         #expect(await harness.remote.fetches == 0)
     }
 
+    @Test("el entreno terminado en el reloj, con la app sin arrancar: carga los datos y lo termina")
+    func finishedOnWatchBeforeLaunch() async {
+        let harness = SyncHarness(local: SyncFixtures.activeWorkout(actual: [10, 10, 8]), remote: SyncFixtures.base)
+        let repository = harness.repository()
+        let app = AppModel(repository: repository)
+        let sync = SyncModel(repository: repository, app: app)
+        let lifecycle = AppLifecycle(app: app, sync: sync, today: TodayModel(app: app, clock: FixedClock(SyncFixtures.today)))
+        await lifecycle.workoutFinishedOnWatch(on: SyncFixtures.today)
+        #expect(await harness.savedLocally?.history.session(on: SyncFixtures.today)?.completed == true)
+        #expect(await harness.remote.pushes.last?.data.history.session(on: SyncFixtures.today)?.completed == true)
+    }
+
     @Test("al irse a segundo plano, aplica lo tecleado y sube ya lo pendiente")
     func background() async {
         let harness = SyncHarness()

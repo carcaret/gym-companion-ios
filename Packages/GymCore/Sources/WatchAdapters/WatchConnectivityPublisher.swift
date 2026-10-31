@@ -8,12 +8,16 @@ import WatchConnectivity
 
 /// Envía al reloj lo que tiene que enseñar con `updateApplicationContext`: WatchConnectivity
 /// guarda solo lo último y se lo entrega al reloj en cuanto está a tiro. Si la sesión aún no está
-/// activa, lo envía al activarse.
+/// activa, lo envía al activarse. Y recibe del reloj los días cuyo entreno se ha terminado allí
+/// (`finishedOnWatch`), también con la app en segundo plano.
 public final class WatchConnectivityPublisher: NSObject, WatchPublisher, WCSessionDelegate, @unchecked Sendable {
     /// Lo último que hay que enseñar (WCSession avisa desde una cola suya).
     private let latest = Mutex<WatchSnapshot?>(nil)
+    public let finishedOnWatch: AsyncStream<LocalDate>
+    private let finishContinuation: AsyncStream<LocalDate>.Continuation
 
     override public init() {
+        (finishedOnWatch, finishContinuation) = AsyncStream.makeStream()
         super.init()
         guard WCSession.isSupported() else { return }
         WCSession.default.delegate = self
@@ -50,6 +54,22 @@ public final class WatchConnectivityPublisher: NSObject, WatchPublisher, WCSessi
 
     public func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: (any Error)?) {
         send()
+    }
+
+    /// El reloj a tiro: `sendMessage`, que despierta la app.
+    public func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        receiveFinish(message)
+    }
+
+    /// El reloj no estaba a tiro: `transferUserInfo`, al volver.
+    public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        receiveFinish(userInfo)
+    }
+
+    private func receiveFinish(_ request: [String: Any]) {
+        guard let iso = request[WatchContext.finishWorkoutKey] as? String, let day = LocalDate(iso: iso) else { return }
+        HealthLog.logger.notice("Terminar \(iso, privacy: .public): recibido del reloj")
+        finishContinuation.yield(day)
     }
 
     /// Sin reloj emparejado, con la app del reloj, y con la sesión activa.

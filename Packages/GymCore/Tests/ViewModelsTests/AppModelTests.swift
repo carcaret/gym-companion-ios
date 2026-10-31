@@ -36,6 +36,17 @@ struct AppModelTests {
         #expect(await harness.local.saves == 1)
     }
 
+    @Test("dos arranques a la vez cargan una sola vez (el reloj que despierta la app mientras arranca)")
+    func concurrentStarts() async {
+        let harness = SyncHarness(local: nil)
+        let model = AppModel(repository: harness.repository())
+        async let first: Void = model.start()
+        async let second: Void = model.start()
+        _ = await (first, second)
+        #expect(await harness.remote.fetches == 1)
+        #expect(model.data == SyncFixtures.base)
+    }
+
     @Test("un cambio se ve al momento y se guarda")
     func update() async {
         let harness = SyncHarness(configured: false)

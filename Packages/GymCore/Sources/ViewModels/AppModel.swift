@@ -27,6 +27,9 @@ public final class AppModel {
 
     private let repository: TrainingRepository
     private let watch: WatchRelay?
+    /// La carga en marcha: si se pide otra vez mientras tanto (el reloj que despierta la app
+    /// mientras arranca), se espera a esa en vez de leer dos veces.
+    private var loading: Task<Void, Never>?
 
     public init(repository: TrainingRepository, watch: WatchRelay? = nil) {
         self.repository = repository
@@ -34,7 +37,15 @@ public final class AppModel {
     }
 
     public func start() async {
+        if let loading { return await loading.value }
         guard data == nil else { return }
+        let task = Task { await load() }
+        loading = task
+        await task.value
+        loading = nil
+    }
+
+    private func load() async {
         do {
             data = try await repository.start()
             loadError = nil
@@ -62,11 +73,12 @@ public final class AppModel {
         if saveError != nil { isSaveErrorPresented = true }
     }
 
-    /// Terminar el entreno: se guarda y se sube ya.
-    public func finishWorkout(_ newData: TrainingData) async -> UploadResult {
+    /// Terminar el entreno: se guarda y se sube ya. Con `keepAlive`, pidiendo tiempo al sistema
+    /// (`TrainingRepository.saveAndUpload`).
+    public func finishWorkout(_ newData: TrainingData, keepAlive: Bool = false) async -> UploadResult {
         data = newData
         do {
-            let result = try await repository.saveAndUpload(newData)
+            let result = try await repository.saveAndUpload(newData, keepAlive: keepAlive)
             saveError = nil
             return result
         } catch {

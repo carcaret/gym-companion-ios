@@ -141,6 +141,11 @@ mano:
 - [ ] **La app sigue en primer plano** al bajar y levantar la muñeca durante el entreno, y con la
       muñeca bajada: si los segundos se refrescan o solo una vez por minuto.
 - [ ] **La vibración a 1:30** con la pantalla apagada, y el doble toque para el descanso.
+- [ ] **Terminar en el reloj termina en el iPhone** (2026-10-31): con la app del iPhone delante,
+      vuelve a las rutinas al momento; en segundo plano o cerrada, el reloj la despierta
+      (`sendMessage`) y el commit «Gym Companion update» llega igual; con el iPhone lejos, al
+      volver a tenerlo a tiro (`transferUserInfo`). Si no llega, el registro (categoría `salud`):
+      «pedido al iPhone» o «en cola» en el reloj, «recibido del reloj» en el iPhone.
 - [ ] **Terminar en el iPhone** termina también el del reloj y enseña el resumen.
 - [ ] **La música**: la página de la izquierda controla lo que suena en el iPhone y la corona sube y
       baja el volumen.

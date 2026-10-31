@@ -89,26 +89,56 @@ extension TodayModel {
     public func confirmFinish() async {
         isFinishPromptPresented = false
         guard activeSession != nil, validateForFinish() else { return }
-        var data = data
-        data.finishWorkout(on: today)
-        storedStage = .selector
-        openExercise = nil
-        // Si no se puede subir, no se interrumpe: la nube se queda pendiente y se sube sola.
-        _ = await app.finishWorkout(data)
+        await complete(on: today, keepAlive: false)
     }
 
     public func cancelFinish() {
         isFinishPromptPresented = false
     }
 
-    /// Marca los errores del entreno en curso y avisa; devuelve si se puede terminar.
-    private func validateForFinish() -> Bool {
+    /// El entreno de `day` terminado en el reloj, que ya preguntó allí: se termina sin preguntar,
+    /// como con «Finalizar», y la subida pide tiempo al sistema (puede llegar con la app en segundo
+    /// plano). `day` es el del entreno, que puede no ser hoy si llega pasada la medianoche. Si falta
+    /// algo, se queda abierto y un aviso que no se va solo lo dice.
+    public func finishFromWatch(on day: LocalDate) async {
+        let isToday = day == today
+        if isToday { await commitTyping() }
+        guard let session = data.activeWorkout(on: day) else { return }
+        guard session.validation.isValid else {
+            if isToday {
+                _ = validateForFinish(notice: ValidationText.finishedOnWatchButInvalid)
+            } else {
+                app.notice = ValidationText.finishedOnWatchButInvalid
+            }
+            return
+        }
+        await complete(on: day, keepAlive: true)
+    }
+
+    /// Termina el entreno de `day` y lo sube ya. Si es el de hoy, se cierra lo abierto y se vuelve
+    /// a las rutinas.
+    private func complete(on day: LocalDate, keepAlive: Bool) async {
+        if day == today {
+            isFinishPromptPresented = false
+            editing.unfocus()
+            editing.validationErrors = [:]
+            storedStage = .selector
+            openExercise = nil
+        }
+        var data = data
+        data.finishWorkout(on: day)
+        // Si no se puede subir, no se interrumpe: la nube se queda pendiente y se sube sola.
+        _ = await app.finishWorkout(data, keepAlive: keepAlive)
+    }
+
+    /// Marca los errores del entreno en curso y avisa con `notice`; devuelve si se puede terminar.
+    private func validateForFinish(notice: Notice = ValidationText.reviewMarked) -> Bool {
         guard let session = activeSession else { return false }
         let validation = session.validation
         editing.validationErrors = validation.errorsByLog
         guard validation.isValid else {
             if let first = validation.errorsByLog.keys.min() { openExercise = session.logs[first].exerciseID }
-            app.notice = ValidationText.reviewMarked
+            app.notice = notice
             return false
         }
         return true

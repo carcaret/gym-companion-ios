@@ -74,7 +74,7 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Entreno terminado"].appears(timeout: 10))
         capture(app, "76-reloj-resumen")
 
-        // El entreno sigue abierto en el iPhone: se puede volver a empezar.
+        // En la demo no hay iPhone que lo termine: el entreno sigue ahí y se puede volver a empezar.
         app.buttons[AccessibilityID.watchDone].tap()
         XCTAssertTrue(app.buttons[AccessibilityID.watchStart].appears(timeout: 5))
         capture(app, "77-reloj-empezar")

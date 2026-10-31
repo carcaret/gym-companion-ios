@@ -30,6 +30,15 @@ public struct AppLifecycle {
         await sync.synchronize()
     }
 
+    /// El reloj ha terminado el entreno de `day`: se termina aquí también, sin preguntar. Puede
+    /// llegar con la app recién despertada por el reloj, en segundo plano y sin la pantalla, así
+    /// que carga los datos si aún no lo estaban.
+    public func workoutFinishedOnWatch(on day: LocalDate) async {
+        await app.start()
+        guard app.data != nil else { return }
+        await today.finishFromWatch(on: day)
+    }
+
     /// Al volver la red.
     public func reconnected() async {
         await sync.synchronize()

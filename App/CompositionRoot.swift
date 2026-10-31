@@ -23,6 +23,8 @@ struct CompositionRoot {
     let progress: ProgressModel
     let catalog: CatalogModel
     let settings: SettingsModel
+    /// Lo que envía el reloj (fuera de la demo).
+    private let watchPublisher: WatchConnectivityPublisher?
 
     init(bundle: Bundle = .main, demo: DemoEnvironment = DemoEnvironment()) {
         appVersion = AppVersion(
@@ -40,6 +42,7 @@ struct CompositionRoot {
         )
         // Con `-demo` el reloj no recibe nada: los datos de ejemplo no son los del usuario.
         let watchPublisher = demo.isDemo ? nil : WatchConnectivityPublisher()
+        self.watchPublisher = watchPublisher
         model = AppModel(repository: repository, watch: watchPublisher.map { WatchRelay(publisher: $0, clock: clock) })
         sync = SyncModel(repository: repository, app: model, noticeDuration: demo.noticeDuration)
         navigation = NavigationModel()
@@ -54,6 +57,11 @@ struct CompositionRoot {
         progress = ProgressModel(app: model, clock: clock)
         catalog = CatalogModel(app: model)
         settings = SettingsModel(sync: sync, repository: repository, version: appVersion)
+    }
+
+    /// Cada día cuyo entreno se ha terminado en el reloj; en la demo, ninguno.
+    func finishedOnWatch() -> AsyncStream<LocalDate> {
+        watchPublisher?.finishedOnWatch ?? AsyncStream { $0.finish() }
     }
 
     /// Cada vez que vuelve la red.
