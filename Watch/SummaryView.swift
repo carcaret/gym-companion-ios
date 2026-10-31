@@ -32,6 +32,7 @@ struct SummaryView: View {
                     .foregroundStyle(Theme.greenSoft)
                 Button(WatchText.done, action: done)
                     .accessibilityIdentifier(AccessibilityID.watchDone)
+                    .centeredInRow()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
