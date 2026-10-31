@@ -61,6 +61,7 @@ final class WatchScreenshotTests: XCTestCase {
         let finish = app.buttons[AccessibilityID.watchFinish]
         XCTAssertTrue(finish.appears(timeout: 5))
         capture(app, "74-reloj-controles")
+        print("ARBOL-CONTROLES\n" + app.debugDescription)
 
         // Pregunta antes de terminar (decisión del usuario, 2026-10-31).
         // Los botones de una alerta no llevan identificador (SwiftUI no les pasa los modificadores):
@@ -73,11 +74,13 @@ final class WatchScreenshotTests: XCTestCase {
         confirm.tap()
         XCTAssertTrue(app.staticTexts["Entreno terminado"].appears(timeout: 10))
         capture(app, "76-reloj-resumen")
+        print("ARBOL-RESUMEN\n" + app.debugDescription)
 
         // En la demo no hay iPhone que lo termine: el entreno sigue ahí y se puede volver a empezar.
         app.buttons[AccessibilityID.watchDone].tap()
         XCTAssertTrue(app.buttons[AccessibilityID.watchStart].appears(timeout: 5))
         capture(app, "77-reloj-empezar")
+        print("ARBOL-EMPEZAR\n" + app.debugDescription)
     }
 
     @MainActor
