@@ -118,12 +118,16 @@ public actor TrainingRepository {
         scheduleUpload()
     }
 
-    /// Guarda un cambio y lo sube ya (al terminar un entreno).
+    /// Guarda un cambio y lo sube ya (al terminar un entreno). Con `keepAlive`, la subida pide
+    /// tiempo al sistema: el entreno terminado en el reloj puede llegar con la app en segundo plano.
     @discardableResult
-    public func saveAndUpload(_ newData: TrainingData) async throws -> UploadResult {
+    public func saveAndUpload(_ newData: TrainingData, keepAlive: Bool = false) async throws -> UploadResult {
         try await saveLocally(newData)
         cancelScheduledUpload()
-        return await upload()
+        guard keepAlive else { return await upload() }
+        let uploading = Task { await upload() }
+        await background.run { _ = await uploading.value }
+        return await uploading.value
     }
 
     private func saveLocally(_ newData: TrainingData) async throws {

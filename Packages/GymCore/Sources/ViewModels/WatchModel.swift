@@ -6,7 +6,8 @@ import Presentation
 /// La app del reloj: la app de entreno. Con el entreno en curso que llega del iPhone (`receive`),
 /// mide la sesión en Salud (`WorkoutRecorder`) y enseña el tiempo, el descanso y el ejercicio que
 /// se elige con la corona. El reloj no hace nada por su cuenta: ni avanza de ejercicio ni sigue lo
-/// que se apunta en el iPhone. Un entreno de otro día ya no está en curso.
+/// que se apunta en el iPhone. Un entreno de otro día ya no está en curso. Terminar en uno de los
+/// dos termina en el otro.
 @MainActor
 @Observable
 public final class WatchModel {
@@ -39,11 +40,14 @@ public final class WatchModel {
     private let clock: any Clock
     private let recorder: any WorkoutRecorder
     private let restAlert: any RestAlert
+    /// Pide al iPhone que termine el entreno terminado aquí. `nil` sin iPhone (la demo).
+    private let phone: (any PhoneWorkoutFinisher)?
 
-    public init(clock: any Clock, recorder: any WorkoutRecorder, restAlert: any RestAlert) {
+    public init(clock: any Clock, recorder: any WorkoutRecorder, restAlert: any RestAlert, phone: (any PhoneWorkoutFinisher)? = nil) {
         self.clock = clock
         self.recorder = recorder
         self.restAlert = restAlert
+        self.phone = phone
         recorder.onMetrics = { [weak self] in self?.metrics = Metrics($0) }
     }
 
@@ -155,9 +159,12 @@ public final class WatchModel {
         isFinishPromptPresented = true
     }
 
-    /// «Terminar» en la alerta.
+    /// «Terminar» en la alerta: termina aquí y pide al iPhone que lo termine allí, sin preguntar
+    /// (decisión del usuario, 2026-10-31).
     public func confirmFinish() async {
         isFinishPromptPresented = false
+        guard phase == .recording else { return }
+        if let day = shownWorkout?.date { phone?.requestFinish(on: day) }
         await finish()
     }
 
@@ -166,8 +173,7 @@ public final class WatchModel {
     }
 
     /// Lo confirmado en el reloj, o el entreno terminado en el iPhone (sin preguntar): deja de
-    /// medir, lo guarda en Salud y enseña el resumen. En el iPhone el entreno sigue abierto hasta
-    /// terminarlo allí.
+    /// medir, lo guarda en Salud y enseña el resumen.
     public func finish() async {
         isFinishPromptPresented = false
         guard phase == .recording else { return }

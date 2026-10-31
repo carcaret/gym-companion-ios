@@ -347,6 +347,30 @@ struct WatchModelTests {
         guard case .summary = watch.model.screen else { Issue.record("sin resumen"); return }
     }
 
+    @Test("terminar en el reloj pide al iPhone que termine el entreno de ese día")
+    func finishesOnPhone() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        watch.model.requestFinish()
+        await watch.model.confirmFinish()
+        #expect(watch.phone.requests == [today])
+    }
+
+    @Test("cancelar no pide nada al iPhone")
+    func cancelDoesNotFinishOnPhone() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        watch.model.requestFinish()
+        watch.model.cancelFinish()
+        #expect(watch.phone.requests.isEmpty)
+    }
+
+    @Test("lo terminado en el iPhone no se le vuelve a pedir")
+    func finishedOnPhoneDoesNotEcho() async {
+        let watch = await WatchHarness.recording(threeExercises, today: today)
+        await watch.model.receive(WatchSnapshot(workout: nil))
+        #expect(watch.recorder.ends == 1)
+        #expect(watch.phone.requests.isEmpty)
+    }
+
     @Test("cancelar sigue midiendo")
     func cancelFinish() async {
         let watch = await WatchHarness.recording(threeExercises, today: today)

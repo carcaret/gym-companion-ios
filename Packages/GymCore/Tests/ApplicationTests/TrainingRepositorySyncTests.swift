@@ -450,3 +450,19 @@ struct WaitingForWorkoutTests {
         #expect(await repository.status == SyncStatus(state: .pending, waitingForWorkout: false))
     }
 }
+
+// Propio de la app (2026-10-31): el entreno terminado en el reloj puede llegar con la app en
+// segundo plano, así que su subida pide tiempo al sistema. La de «Finalizar» no lo necesita.
+@Suite("Subir el entreno terminado en el reloj", .timeLimit(.minutes(1)))
+struct KeepAliveUploadTests {
+    @Test("con keepAlive, la subida pide tiempo al sistema y sale ya")
+    func keepAlive() async throws {
+        let harness = SyncHarness()
+        let repository = harness.repository()
+        _ = try await repository.start()
+        #expect(try await repository.saveAndUpload(F.finishedWorkout(), keepAlive: true) == .uploaded)
+        #expect(await harness.background.runs == 1)
+        #expect(await harness.remote.pushes.last?.data == F.finishedWorkout())
+        #expect(await harness.hasPendingUpload == false)
+    }
+}
