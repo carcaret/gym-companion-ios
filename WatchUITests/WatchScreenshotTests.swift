@@ -17,7 +17,6 @@ final class WatchScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Press Inclinado en Máquina"].appears(timeout: 20))
         capture(app, "90-prueba-press")
         print("ARBOL-PRESS\n" + app.debugDescription)
-        app.buttons.matching(identifier: AccessibilityID.watchExercises).firstMatch.swipeUp()
         app.descendants(matching: .any)[AccessibilityID.watchExercises].firstMatch.swipeUp()
         sleep(2)
         capture(app, "91-prueba-jalon")
