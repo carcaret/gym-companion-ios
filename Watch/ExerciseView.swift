@@ -4,7 +4,8 @@ import ViewModels
 
 /// El ejercicio que se ve: el nombre y su posición, el peso de hoy con las reps de la mejor sesión
 /// reciente y, si es otra, las de la última (solo las del peso de hoy). Saltado, atenuado salvo el
-/// «Saltado».
+/// «Saltado». Con la muñeca bajada, todo atenuado y sin la posición; «Última» se queda, porque es lo
+/// que toca hacer (decisión del usuario, 2026-10-31).
 struct ExerciseView: View {
     let exercise: WatchModel.Exercise
     let isDimmed: Bool
@@ -54,7 +55,7 @@ struct ExerciseView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .accessibilityElement(children: .combine)
-            if let reps = exercise.lastReps, !isDimmed {
+            if let reps = exercise.lastReps {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(WatchText.last)
                         .foregroundStyle(Theme.textSecondary)
