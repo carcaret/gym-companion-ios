@@ -25,7 +25,6 @@ struct ControlsPage: View {
         }
         .alert(WatchText.finishTitle, isPresented: Binding(presentedWhile: { model.isFinishPromptPresented }, onDismiss: { model.cancelFinish() })) {
             Button(WatchText.finish, role: .destructive) { Task { await model.confirmFinish() } }
-                .accessibilityIdentifier(AccessibilityID.watchFinishConfirm)
             Button(FormText.cancel, role: .cancel) { model.cancelFinish() }
         }
     }

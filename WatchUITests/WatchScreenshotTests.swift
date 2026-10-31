@@ -63,9 +63,12 @@ final class WatchScreenshotTests: XCTestCase {
         capture(app, "74-reloj-controles")
 
         // Pregunta antes de terminar (decisión del usuario, 2026-10-31).
+        // Los botones de una alerta no llevan identificador (SwiftUI no les pasa los modificadores):
+        // el de confirmar es el «Terminar» que no es el de la página.
         finish.tap()
-        let confirm = app.buttons[AccessibilityID.watchFinishConfirm]
-        XCTAssertTrue(confirm.appears(timeout: 5), "Tiene que preguntar antes de terminar")
+        XCTAssertTrue(app.staticTexts["¿Terminar el entreno?"].appears(timeout: 5), "Tiene que preguntar antes de terminar")
+        let confirm = app.buttons.matching(NSPredicate(format: "label == 'Terminar' AND identifier != %@", AccessibilityID.watchFinish)).firstMatch
+        XCTAssertTrue(confirm.appears(timeout: 5), "La alerta no tiene el botón «Terminar»")
         capture(app, "75-reloj-terminar")
         confirm.tap()
         XCTAssertTrue(app.staticTexts["Entreno terminado"].appears(timeout: 10))

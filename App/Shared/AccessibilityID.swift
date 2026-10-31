@@ -8,7 +8,6 @@ enum AccessibilityID {
     static let watchHeartRate = "watch-heart-rate"
     static let watchExercises = "watch-exercises"
     static let watchFinish = "watch-finish"
-    static let watchFinishConfirm = "watch-finish-confirm"
     static let watchDone = "watch-done"
 
     // Rutinas y entreno
