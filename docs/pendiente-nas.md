@@ -21,11 +21,9 @@ Falta lo que necesita el iPhone o el NAS:
       `SecItemAdd` falla en el iPhone (`KeychainError`), mirar si plumesign pone
       `keychain-access-groups` en los entitlements; la salida sería firmar ad hoc con un
       `.entitlements` como en #3.
-- [ ] Sincronización real contra `carcaret/gym-companion`: configurar en los ajustes (#14) con un PAT
-      con permiso de escritura en ese repo. Con la app vacía, configurar **baja** los datos (no
-      sube nada). Comprobar después que un cambio en la app crea un commit "Gym Companion update
-      AAAA-MM-DD" y que el diff solo muestra lo cambiado (el primer commit reordena las claves de
-      `exercises` por id: es normal, la app las escribe en orden alfabético).
+- [ ] Sincronización real: configurada contra `carcaret/gym-data` el 2026-11-01 (al guardar, la app
+      subió un `db.json` idéntico byte a byte al de la PWA). Falta comprobar que un cambio en la app
+      crea un commit "Gym Companion update AAAA-MM-DD" y que el diff solo muestra lo cambiado.
 - [ ] Que la PWA lee bien el `db.json` que escribe la app (abrirla tras una subida de la app).
 - [ ] Segundo plano: hacer un cambio fuera de un entreno y bloquear el iPhone en menos de 500 ms;
       el commit debe llegar igual (tarea en segundo plano de `UIKitBackgroundActivity`).
@@ -73,10 +71,6 @@ Falta lo que necesita el iPhone o el NAS:
 
 ### #14 Ajustes
 
-- [ ] **Primera configuración de verdad** (hace falta para todo lo de #7): en los ajustes (menú del indicador → «Configurar GitHub…»), repositorio
-      `carcaret/gym-companion` y un PAT con permiso de escritura en ese repo (rama `master` y ruta
-      `db.json`, en «Avanzado», ya vienen puestas). Con la app vacía, la ✓ baja los datos; comprobar que salen las 297+
-      sesiones en Historial.
 - [ ] La ✓ con un token malo da "GitHub no acepta el token de acceso. Revisa el token, el repositorio y la rama."
 - [ ] Teclado (PR #32): escribir en un campo y tocar fuera lo cierra y vuelve la barra de
       pestañas; también desplazar la pantalla. Probarlo además en las
@@ -89,9 +83,24 @@ justificados) y `CLAUDE.md` al día. Falta, y es del usuario:
 
 - [ ] Entrenar una semana solo con la app nativa y decir si se echa algo en falta.
 - [ ] Decidir el futuro de la PWA (archivarla, dejarla de solo lectura…) y, si se retira, si
-      cambia el formato de `db.json` y si los datos pasan a un repo privado (hoy están en el
-      repo público `carcaret/gym-companion`).
+      cambia el formato de `db.json`. Los datos ya están en el repo privado `carcaret/gym-data`
+      (2026-11-01). Ojo: guardar en la PWA la configuración de `gym-data` sube lo que tenga la PWA
+      encima, sin bajar antes lo de GitHub.
 - [ ] Cerrar #15 y la épica #1 cuando lo anterior esté hecho.
+
+### #104 Salud en `salud.json`
+
+Hecho y probado en Docker (las reglas, el formato y la subida, en el paquete). Falta lo que necesita
+el iPhone:
+
+- [ ] Al abrir la app con esta versión sale la hoja de permisos de Salud (peso, % de grasa, masa
+      sin grasa, cintura y nutrición) y, tras aceptarla, aparece `salud.json` en `gym-data`, junto
+      al `db.json`, con un commit "Salud update AAAA-MM-DD".
+- [ ] En los ajustes de sincronización, la sección «Salud» dice cuántos pesajes, medidas de
+      cintura y días de comida hay, y «subido» o «al día».
+- [ ] En el `salud.json`: los pesajes de Fitdays llevan peso, % de grasa y masa sin grasa juntos (si
+      salieran por separado, la báscula no los escribe en el mismo segundo y habría que juntarlos
+      con margen), y los pesos viejos de MacroFactor van con `fecha`, sin hora.
 
 ### #16 App del Apple Watch
 

@@ -55,7 +55,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         # Salud (#17): el iPhone abre el reloj al empezar el entreno. Los entitlements van en
         # Entitlements/ y los firma el CI (ver build.yml).
-        NSHealthShareUsageDescription: Gym busca en Salud los entrenos que guardó el reloj, para borrarlos si borras su sesión del historial.
+        NSHealthShareUsageDescription: Gym lee tu peso, grasa, cintura y nutrición para guardarlos en tu repositorio de GitHub junto a tus entrenos, y busca los entrenos que guardó el reloj para borrarlos si borras su sesión del historial.
         NSHealthUpdateUsageDescription: Gym borra de Salud el entreno de una sesión que borras del historial, con su pulso y sus kcal.
     settings:
       base:

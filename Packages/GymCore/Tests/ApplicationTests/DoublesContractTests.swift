@@ -36,4 +36,11 @@ struct DoublesContractTests {
             (InMemoryRemote(storage: .init()), SyncLocation(repository: "u/r"), "t")
         })
     }
+
+    @Test(arguments: RemoteHealthRecordStoreContract.allCases)
+    func healthRemote(_ check: RemoteHealthRecordStoreContract) async throws {
+        try await check.verify(makeStore: {
+            (InMemoryHealthRecordRemote(), SyncLocation(repository: "u/r", path: "salud.json"), "t")
+        })
+    }
 }

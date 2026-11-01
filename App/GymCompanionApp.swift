@@ -7,7 +7,7 @@ struct GymCompanionApp: App {
     private let root = CompositionRoot()
     @Environment(\.scenePhase) private var scenePhase
 
-    private var lifecycle: AppLifecycle { AppLifecycle(app: root.model, sync: root.sync, today: root.today) }
+    private var lifecycle: AppLifecycle { AppLifecycle(app: root.model, sync: root.sync, today: root.today, health: root.health) }
 
     /// Lo que termina el reloj se escucha desde que arranca la app, no desde la pantalla: el reloj
     /// puede despertarla en segundo plano, sin escena.

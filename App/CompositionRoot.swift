@@ -23,6 +23,8 @@ struct CompositionRoot {
     let progress: ProgressModel
     let catalog: CatalogModel
     let settings: SettingsModel
+    /// Lo de Salud que se sube a GitHub (fuera de la demo).
+    let health: HealthModel?
     /// Lo que envía el reloj (fuera de la demo).
     private let watchPublisher: WatchConnectivityPublisher?
 
@@ -56,7 +58,11 @@ struct CompositionRoot {
         charts = ChartsModel(app: model, clock: clock)
         progress = ProgressModel(app: model, clock: clock)
         catalog = CatalogModel(app: model)
-        settings = SettingsModel(sync: sync, repository: repository, version: appVersion)
+        // Lo de Salud va al `salud.json`, junto al `db.json` (en la demo no: no toca Salud ni GitHub).
+        health = demo.isDemo ? nil : HealthModel(export: HealthExport(
+            source: HealthKitSampleSource(), remote: GitHubHealthRecordStore(), repository: repository, clock: clock
+        ))
+        settings = SettingsModel(sync: sync, repository: repository, version: appVersion, health: health)
     }
 
     /// Cada día cuyo entreno se ha terminado en el reloj; en la demo, ninguno.

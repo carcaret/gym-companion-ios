@@ -30,6 +30,8 @@ public final class SettingsModel {
     /// Por qué no se guardó (la conexión falló), debajo de los campos.
     public private(set) var connectionResult: Notice?
 
+    /// Lo de Salud; sin él (la demo), los ajustes no lo enseñan.
+    public let health: HealthModel?
     private let version: AppVersion
     private let sync: SyncModel
     private let repositoryActor: TrainingRepository
@@ -37,10 +39,11 @@ public final class SettingsModel {
     /// Lo que tenían los campos al abrir, para saber si hay algo escrito sin guardar.
     private var loadedFields: [String] = ["", "", "", ""]
 
-    public init(sync: SyncModel, repository: TrainingRepository, version: AppVersion) {
+    public init(sync: SyncModel, repository: TrainingRepository, version: AppVersion, health: HealthModel? = nil) {
         self.sync = sync
         repositoryActor = repository
         self.version = version
+        self.health = health
     }
 
     public var versionLabel: String { SettingsText.version(version) }

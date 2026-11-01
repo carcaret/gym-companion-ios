@@ -55,9 +55,12 @@ jobs:
     container: swift:6.3.3
     steps:
       - uses: actions/checkout@v4
+      # Los datos reales ya no están en la PWA (pasaron al repo privado gym-data, 2026-11-01): el
+      # test de importación usa el último db.json que tuvo, fijado por su commit.
       - uses: actions/checkout@v4
         with:
           repository: carcaret/gym-companion
+          ref: 2fb5601b022e8b6a6d0035f1ee358bb10d9d2e52
           path: pwa
       - name: Tests del paquete (Linux)
         working-directory: Packages/GymCore

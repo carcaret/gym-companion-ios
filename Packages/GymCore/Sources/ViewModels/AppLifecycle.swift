@@ -8,26 +8,31 @@ public struct AppLifecycle {
     private let app: AppModel
     private let sync: SyncModel
     private let today: TodayModel
+    /// Lo de Salud que se sube a GitHub; sin él (la demo), nada.
+    private let health: HealthModel?
 
-    public init(app: AppModel, sync: SyncModel, today: TodayModel) {
+    public init(app: AppModel, sync: SyncModel, today: TodayModel, health: HealthModel? = nil) {
         self.app = app
         self.sync = sync
         self.today = today
+        self.health = health
     }
 
-    /// Carga los datos y sincroniza.
+    /// Carga los datos, sincroniza y sube lo de Salud si ha cambiado.
     public func launch() async {
         await app.start()
         await sync.synchronize()
+        await health?.refresh()
     }
 
     /// Al volver a la app, lo que haría la PWA al recargar: subir lo pendiente o bajar lo que se
-    /// haya cambiado en GitHub. Y poner el reloj al día (puede ser otro día). Sin datos cargados,
-    /// nada.
+    /// haya cambiado en GitHub. Y poner el reloj al día (puede ser otro día) y subir lo de Salud
+    /// si ha cambiado. Sin datos cargados, nada.
     public func becameActive() async {
         guard app.data != nil else { return }
         app.refreshWatch()
         await sync.synchronize()
+        await health?.refresh()
     }
 
     /// El reloj ha terminado el entreno de `day`: se termina aquí también, sin preguntar. Puede
