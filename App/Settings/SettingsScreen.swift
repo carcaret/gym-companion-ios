@@ -35,6 +35,17 @@ struct SettingsScreen: View {
                 }
             }
             .listRowBackground(Theme.surface)
+            // Lo de Salud que se sube junto al db.json (#104): cómo fue la última vez.
+            if let health = model.health {
+                Section {
+                    Text(health.statusText)
+                } header: {
+                    Text(HealthText.section)
+                } footer: {
+                    Text(HealthText.explanation)
+                }
+                .listRowBackground(Theme.surface)
+            }
             Section {
                 field(SettingsText.branch, .branch) {
                     TextField(SettingsText.branch, text: $model.branch, prompt: Text(SettingsText.branchPlaceholder))

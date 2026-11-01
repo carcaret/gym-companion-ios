@@ -296,6 +296,10 @@ public actor TrainingRepository {
         return .uploading
     }
 
+    /// Dónde se sincroniza y con qué token; `nil` sin GitHub configurado. Lo de Salud va al mismo
+    /// sitio (`HealthExport`).
+    public var syncTarget: (location: SyncLocation, token: String)? { target }
+
     // MARK: - Ayudas
 
     private var target: (location: SyncLocation, token: String)? {

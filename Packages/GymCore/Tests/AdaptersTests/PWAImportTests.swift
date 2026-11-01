@@ -114,7 +114,7 @@ struct PWAImportTests {
         }
     }
 
-    /// `db.json` real de la PWA: `test.sh` y el CI lo pasan en `PWA_DB_JSON` (clon de carcaret/gym-companion).
+    /// `db.json` real de la PWA: `test.sh` y el CI lo pasan en `PWA_DB_JSON` (en el NAS, el clon de carcaret/gym-data; en el CI, el último que tuvo el repo de la PWA).
     static let realDatabase = ProcessInfo.processInfo.environment["PWA_DB_JSON"].map(URL.init(fileURLWithPath:))
 
     @Test("los datos reales de la PWA se importan enteros", .enabled(if: realDatabase != nil, "sin PWA_DB_JSON"))

@@ -14,4 +14,10 @@ public struct SyncLocation: Hashable, Sendable {
         self.branch = branch
         self.path = path
     }
+
+    /// Otro fichero en la misma carpeta, rama y repositorio (`datos/db.json` → `datos/salud.json`).
+    public func sibling(named fileName: String) -> SyncLocation {
+        let folder = path.split(separator: "/", omittingEmptySubsequences: false).dropLast()
+        return SyncLocation(repository: repository, branch: branch, path: (folder + [Substring(fileName)]).joined(separator: "/"))
+    }
 }
