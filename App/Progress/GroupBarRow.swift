@@ -4,16 +4,17 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// Una fila de grupo (`.stats-group-bar-row`): el nombre, la barra y el total; al tocarla, sus
-/// ejercicios.
+/// Una fila de grupo (`.stats-group-bar-row`): el nombre, la barra y las series por semana; al
+/// tocarla, sus ejercicios con las series y sesiones de toda la ventana.
 struct GroupBarRow: View {
     let group: ProgressModel.GroupRow
     let scale: Double
     let band: ClosedRange<Int>
     let toggle: () -> Void
-    /// El nombre y el total, con su ancho fijo de la PWA, crecen con la letra (Dynamic Type).
-    @ScaledMetric(relativeTo: .caption) private var nameWidth: CGFloat = 62
-    @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 26
+    /// El nombre y las series, con su ancho fijo, crecen con la letra (Dynamic Type). El del nombre
+    /// cabe «Femoral y glúteo» en una línea.
+    @ScaledMetric(relativeTo: .caption) private var nameWidth: CGFloat = 92
+    @ScaledMetric(relativeTo: .footnote) private var totalWidth: CGFloat = 32
 
     var body: some View {
         CardDisclosure(isExpanded: group.isOpen, chevronSize: 11, identifier: AccessibilityID.statsGroup(group.name),
@@ -22,7 +23,7 @@ struct GroupBarRow: View {
                 Text(group.name).scaledFont(12).foregroundStyle(Theme.textSecondary).frame(width: nameWidth, alignment: .leading)
                 GroupBar(group: group, scale: scale, band: band)
                     .frame(height: 14)
-                Text("\(group.total)").scaledFont(13, .semibold).monospacedDigit().foregroundStyle(Theme.text)
+                Text(group.perWeek).scaledFont(13, .semibold).monospacedDigit().foregroundStyle(Theme.text)
                     .frame(width: totalWidth, alignment: .trailing)
             }
         } content: {
@@ -56,7 +57,7 @@ struct GroupBarRow: View {
     }
 }
 
-/// La barra de series de un grupo, en Swift Charts y en la escala común: las directas y las
+/// La barra de series por semana de un grupo, en Swift Charts y en la escala común: las directas y las
 /// indirectas seguidas, la franja de referencia detrás y sus límites encima, para que una barra
 /// larga no los tape.
 struct GroupBar: View {
@@ -65,8 +66,8 @@ struct GroupBar: View {
     let band: ClosedRange<Int>
 
     var body: some View {
-        let direct = min(Double(group.sets), scale)
-        let total = min(Double(group.sets) + group.indirectSets, scale)
+        let direct = min(group.directPerWeek, scale)
+        let total = min(group.directPerWeek + group.indirectPerWeek, scale)
         Chart {
             RectangleMark(xStart: .value("Series", Double(band.lowerBound)), xEnd: .value("Series", Double(band.upperBound)),
                           y: .value("Grupo", group.name), height: .ratio(1))

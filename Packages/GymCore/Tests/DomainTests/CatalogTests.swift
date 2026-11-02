@@ -159,9 +159,12 @@ struct UpdateExerciseTests {
         #expect(catalog["press"] == exercise("press", "Press banca plano", .hombros, secondary: [.triceps]))
     }
 
-    @Test("GRUPOS cubre los siete grupos musculares en uso")
-    func sevenGroups() {
-        #expect(MuscleGroup.all.map(\.rawValue).sorted() == ["biceps", "core", "espalda", "hombros", "pecho", "piernas", "triceps"])
+    // «GRUPOS cubre los siete grupos musculares en uso» de la PWA: la pierna se partió en tres
+    // (decisión del usuario, 2026-11-02; docs/pwa-tests-no-aplican.tsv).
+    @Test("GRUPOS cubre los grupos musculares en uso, con la pierna partida")
+    func groups() {
+        #expect(MuscleGroup.all.map(\.rawValue) == ["pecho", "espalda", "hombros", "biceps", "triceps", "cuadriceps", "femoral_gluteo", "gemelos", "core"])
+        #expect(!MuscleGroup.piernas.isKnown)
     }
 }
 

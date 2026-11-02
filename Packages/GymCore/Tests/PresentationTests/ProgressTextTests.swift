@@ -39,9 +39,13 @@ struct PhraseTests {
         #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 6, bestReps: 27, allHit: true)) == "6 sesiones idénticas, ninguna rep fallada")
     }
 
-    @Test("estancado con fallos usa el tiempo")
+    // «estancado con fallos usa el tiempo» de la PWA: ahora cuenta sesiones, porque tras un parón
+    // «2 meses sin superar» eran dos sesiones (decisión del usuario, 2026-11-02;
+    // docs/pwa-tests-no-aplican.tsv).
+    @Test("estancado con fallos cuenta las sesiones que no superan el récord")
     func stalledMissed() {
-        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 14, bestReps: 32, spanDays: 120, allHit: false)) == "4 meses sin superar 32 reps")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 5, bestReps: 40, allHit: false)) == "4 sesiones sin superar 40 reps")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 2, bestReps: 44, allHit: false)) == "1 sesión sin superar 44 reps")
     }
 }
 
@@ -70,6 +74,9 @@ struct GroupNameTests {
         #expect(GroupText.name(.biceps) == "Bíceps")
         #expect(GroupText.name(.triceps) == "Tríceps")
         #expect(GroupText.name(.pecho) == "Pecho")
+        #expect(GroupText.name(.cuadriceps) == "Cuádriceps")
+        #expect(GroupText.name(.femoralGluteo) == "Femoral y glúteo")
+        #expect(GroupText.name(.gemelos) == "Gemelos")
         #expect(GroupText.name("brazos") == "Brazos")
         #expect(GroupText.name(nil) == "Sin grupo")
     }
@@ -94,8 +101,20 @@ struct ProgressRowTextTests {
         #expect(ProgressText.setsAndSessions(sets: 12, sessions: 4) == "12 · 4")
     }
 
-    @Test("las reps de las últimas sesiones, separadas")
-    func recentReps() {
-        #expect(ProgressText.recentReps(["11·11·10", "12·11·10"]) == "11·11·10  ·  12·11·10")
+    @Test("las series por semana de un grupo, con un decimal como mucho")
+    func perWeek() {
+        #expect(ProgressText.perWeek(12.75) == "12,8")
+        #expect(ProgressText.perWeek(11) == "11")
+        #expect(ProgressText.referenceBand(10...20) == "10–20 por semana")
+    }
+
+    @Test("el peso de la fila no repite el de la frase")
+    func weight() {
+        let weightUp = ExerciseProgress(weight: 15, status: .progressing, weightFrom: 14, weightTo: 15, spanDays: 21)
+        #expect(ProgressText.phrase(weightUp) == "14 → 15 kg en 3 semanas")
+        #expect(ProgressText.weight(weightUp) == nil)
+        #expect(ProgressText.weight(ExerciseProgress(weight: 68, status: .progressing, weightFrom: 68, weightTo: 68)) == "68 kg")
+        #expect(ProgressText.weight(ExerciseProgress(weight: 30, status: .stalled, weightFrom: 25, weightTo: 30)) == "30 kg")
+        #expect(ProgressText.weight(ExerciseProgress(weight: 0, status: .stalled)) == nil)
     }
 }

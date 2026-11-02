@@ -14,14 +14,13 @@ public enum ProgressText {
     // Las etiquetas sueltas empiezan en mayúscula, como en iOS (repaso de la HIG, 2026-10-28).
     public static let direct = "Directo"
     public static let indirect = "Indirecto"
+    /// La unidad de las barras de los grupos, en su cabecera.
+    public static let perWeekHeader = "Series por semana"
     public static let setsHeader = "series"
     public static let sessionsHeader = "· sesiones"
 
     /// Una fila del desglose de un grupo: "6 · 3", series y sesiones.
     public static func setsAndSessions(sets: Int, sessions: Int) -> String { "\(sets) · \(sessions)" }
-
-    /// Las reps de las últimas sesiones, de una en una: "11·11·10  ·  12·11·10".
-    public static func recentReps(_ sessions: [String]) -> String { sessions.joined(separator: "  ·  ") }
 
     public static func window(weeks: Int) -> String { "Últimas \(weeks) semanas" }
 
@@ -30,13 +29,26 @@ public enum ProgressText {
         stalled > 0 ? "\(stalled) de \(total) \(total == 1 ? "estancado" : "estancados")" : "Nada estancado · \(progressing) progresando"
     }
 
+    /// "10–20 por semana": la franja, en la unidad de las barras.
     public static func referenceBand(_ range: ClosedRange<Int>) -> String {
-        "\(range.lowerBound)–\(range.upperBound) series"
+        "\(range.lowerBound)–\(range.upperBound) por semana"
+    }
+
+    /// Las series por semana de un grupo, con un decimal como mucho ("12,8", "11").
+    public static func perWeek(_ sets: Double) -> String { oneDecimal(sets) }
+
+    /// El peso de la fila, a la derecha: nada sin peso, ni cuando la frase ya lo dice
+    /// («14 → 15 kg en 3 semanas»).
+    public static func weight(_ progress: ExerciseProgress) -> String? {
+        guard progress.weight > 0, !saysWeight(progress) else { return nil }
+        return LogText.weight(progress.weight)
     }
 
     /// Series indirectas con un decimal como mucho ("2,5", "3").
-    public static func indirectSets(_ sets: Double) -> String {
-        LogText.decimal((sets * 10).rounded() / 10)
+    public static func indirectSets(_ sets: Double) -> String { oneDecimal(sets) }
+
+    private static func oneDecimal(_ value: Double) -> String {
+        LogText.decimal((value * 10).rounded() / 10)
     }
 
     // MARK: - Frases de cada ejercicio
@@ -55,7 +67,7 @@ public enum ProgressText {
         case .noTrack:
             return "\(Plural.sessions(progress.sessionCount)), aún sin recorrido"
         case .progressing:
-            if let from = progress.weightFrom, let to = progress.weightTo, to > from {
+            if saysWeight(progress), let from = progress.weightFrom, let to = progress.weightTo {
                 return "\(LogText.kilograms(from)) → \(LogText.kilograms(to)) kg en \(span(days: progress.spanDays ?? 0))"
             }
             return "\(progress.repsFrom ?? 0) → \(progress.repsTo ?? 0) reps al mismo peso"
@@ -63,7 +75,15 @@ public enum ProgressText {
             if progress.allHit == true {
                 return "\(Plural.sessions(progress.stallSessions)) \(progress.stallSessions == 1 ? "idéntica" : "idénticas"), ninguna rep fallada"
             }
-            return "\(span(days: progress.spanDays ?? 0)) sin superar \(progress.bestReps) reps"
+            // En sesiones y no en tiempo: tras un parón, «2 meses sin superar» eran dos sesiones
+            // (decisión del usuario, 2026-11-02).
+            return "\(Plural.sessions(progress.sessionsWithoutRecord)) sin superar \(progress.bestReps) reps"
         }
+    }
+
+    /// Si la frase cuenta una subida de peso.
+    private static func saysWeight(_ progress: ExerciseProgress) -> Bool {
+        guard progress.status == .progressing, let from = progress.weightFrom, let to = progress.weightTo else { return false }
+        return to > from
     }
 }

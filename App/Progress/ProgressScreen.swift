@@ -28,6 +28,8 @@ struct ProgressScreen: View {
             }
         }
         .navigationTitle(ProgressText.title)
+        // La ventana vale para las dos secciones: una vez, bajo el título.
+        .navigationSubtitle(ProgressText.window(weeks: ProgressModel.weeks))
         // Las gráficas del ejercicio entran empujadas: se vuelve con la flecha de iOS o deslizando.
         .navigationDestination(isPresented: Binding(presentedWhile: { model.charts != nil }, onDismiss: { model.closeCharts() })) {
             if let charts = model.charts {
@@ -62,27 +64,29 @@ struct ProgressScreen: View {
                 GroupBarRow(group: group, scale: model.scale, band: model.referenceBand) { model.toggleGroup(group.name) }
             }
         } header: {
-            header(ProgressText.groupsTitle)
+            header(ProgressText.groupsTitle, unit: ProgressText.perWeekHeader)
         } footer: {
             HStack(spacing: 14) {
                 legend(ProgressText.direct, Theme.accent)
                 legend(ProgressText.indirect, Theme.indirect)
-                legend(ProgressText.referenceBand(model.referenceBand), Theme.referenceBand, border: Theme.referenceBandBorder)
+                legend(ProgressText.referenceBand(model.referenceBand), Theme.referenceBandBar, border: Theme.referenceLimit)
             }
             .scaledFont(11)
             .foregroundStyle(Theme.textSecondary)
         }
     }
 
-    /// La cabecera de una sección: el título y, a la derecha, la ventana de semanas.
-    private func header(_ title: String) -> some View {
+    /// La cabecera de una sección: el título y, a la derecha, la unidad de sus números si la hay.
+    private func header(_ title: String, unit: String? = nil) -> some View {
         HStack(alignment: .firstTextBaseline) {
             // VoiceOver salta de una sección a otra con el rotor de encabezados.
             Text(title).scaledFont(17, .semibold).foregroundStyle(Theme.textSecondary)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
-            // Más pequeña que el título: es un dato de la sección, no otro título.
-            Text(ProgressText.window(weeks: ProgressModel.weeks)).scaledFont(13).foregroundStyle(Theme.textSecondary)
+            if let unit {
+                // Más pequeña que el título: es un dato de la sección, no otro título.
+                Text(unit).scaledFont(13).foregroundStyle(Theme.textSecondary)
+            }
         }
     }
 

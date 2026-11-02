@@ -69,17 +69,67 @@ struct WorkoutPickerRulesTests {
 
 @Suite("Progreso: la ventana y la escala")
 struct ProgressRulesTests {
-    @Test("la ventana de Progreso es de 8 semanas, y la franja de referencia, la de esa ventana")
+    @Test("la ventana de Progreso es de 8 semanas, y la franja de referencia, de 10 a 20 series por semana")
     func window() {
         #expect(ProgressWindow.weeks == 8)
-        #expect(GroupSets.referenceRange(weeks: ProgressWindow.weeks) == 32...80)
+        #expect(GroupSets.weeklyReferenceRange == 10...20)
     }
 
-    @Test("la escala de las barras: en decenas, nunca por debajo de la franja ni de 10")
+    @Test("la escala de las barras: en medias decenas, con otra media decena por encima de la franja")
     func scale() {
-        #expect(GroupSets.scale(largest: 0, reference: 32...80) == 80)
-        #expect(GroupSets.scale(largest: 91.5, reference: 32...80) == 100)
-        #expect(GroupSets.scale(largest: 3, reference: 0...0) == 10)
+        #expect(GroupSets.scale(largestPerWeek: 0) == 25)
+        #expect(GroupSets.scale(largestPerWeek: 12.8) == 25)
+        #expect(GroupSets.scale(largestPerWeek: 27.3) == 30)
+        #expect(GroupSets.scale(largestPerWeek: 3, reference: 0...0) == 5)
+    }
+
+    @Test("las series por semana de un grupo suman las directas y las indirectas")
+    func perWeek() {
+        let data = TrainingData(
+            catalog: Catalog([exercise("curl_biceps_polea", "Curl polea", .biceps), exercise("jalon_al_pecho_neutro", "Jalón neutro", .espalda)]),
+            history: [makeSession("2026-06-19", completed: true, logs: [
+                makeLog("curl_biceps_polea", weight: 20, series: 4, expected: 10, actual: [10]),
+                makeLog("jalon_al_pecho_neutro", weight: 60, series: 4, expected: 10, actual: [10]),
+            ])]
+        )
+        let biceps = data.groupSets(anchor: "2026-06-19", weeks: 8).first { $0.group == .biceps }
+        #expect(biceps?.totalPerWeek(weeks: 8) == 0.75)
+    }
+}
+
+@Suite("Progreso: el estancamiento")
+struct StallRulesTests {
+    private func data(_ sessions: [(LocalDate, Double, [Int?])]) -> TrainingData {
+        TrainingData(catalog: Catalog([exercise("press", "Press", .hombros)]),
+                     history: sessions.map { makeSession($0.0, completed: true, logs: [makeLog("press", weight: $0.1, series: 3, expected: 10, actual: $0.2)]) })
+    }
+
+    // Decisión del usuario, 2026-11-02: con las elevaciones laterales a 14 kg y cuatro sesiones
+    // iguales, Progreso decía «12 → 14 kg» porque la subida caía en la ventana.
+    @Test("subir de peso no tapa lo que se estanca después al peso nuevo")
+    func weightUpThenStall() {
+        let r = data([("2026-06-05", 12, [12, 12, 12]), ("2026-06-12", 14, [11, 11, 11]), ("2026-06-19", 14, [11, 11, 11]),
+                      ("2026-06-26", 14, [11, 11, 11]), ("2026-07-03", 14, [11, 11, 11])])
+            .progress(of: "press", anchor: "2026-07-03", weeks: 8)
+        #expect(r.status == .stalled)
+        #expect(r.stallSessions == 4)
+        #expect(r.sessionsWithoutRecord == 3)
+        #expect(r.spanDays == nil)
+    }
+
+    @Test("la primera sesión a un peso nuevo es progreso, y su frase cuenta desde la carga vieja")
+    func firstAtNewWeight() {
+        let r = data([("2026-06-05", 12, [12, 12, 12]), ("2026-06-12", 12, [12, 12, 12]), ("2026-06-19", 14, [10, 10, 10])])
+            .progress(of: "press", anchor: "2026-06-19", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.spanDays == 7)
+    }
+
+    @Test("las últimas sesiones traen su día")
+    func recentDates() {
+        let r = data([("2026-06-05", 12, [10]), ("2026-06-12", 12, [11]), ("2026-06-19", 12, [12]), ("2026-06-26", 12, [12])])
+            .progress(of: "press", anchor: "2026-06-26", weeks: 8)
+        #expect(r.recentSessions.map(\.date) == ["2026-06-12", "2026-06-19", "2026-06-26"])
     }
 }
 

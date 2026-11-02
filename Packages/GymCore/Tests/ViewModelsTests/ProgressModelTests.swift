@@ -92,7 +92,7 @@ struct StatsTests {
         let id = model.allRows[0].exerciseID
         model.toggleRow(id)
         #expect(model.allRows[0].isOpen)
-        #expect(!model.allRows[0].recentReps.isEmpty)
+        #expect(!model.allRows[0].recentSessions.isEmpty)
         model.toggleRow(id)
         #expect(!model.allRows[0].isOpen)
     }
@@ -172,12 +172,14 @@ struct StatsTests {
         #expect(model.charts == nil)
     }
 
+    // La franja es de 10–20 series por semana y no de 32–80 en la ventana (4–10 por semana en la
+    // PWA; decisión del usuario, 2026-11-02).
     @Test("cada grupo pinta la franja de referencia con sus dos límites")
     func band() async {
         let model = await ProgressHarness.make().model
-        #expect(model.referenceBand == 32...80)
-        #expect(model.scale >= Double(model.referenceBand.upperBound))
-        #expect(ProgressText.referenceBand(model.referenceBand) == "32–80 series")
+        #expect(model.referenceBand == 10...20)
+        #expect(model.scale > Double(model.referenceBand.upperBound))
+        #expect(ProgressText.referenceBand(model.referenceBand) == "10–20 por semana")
     }
 
     @Test("tocar un grupo despliega y pliega sus ejercicios")
@@ -201,21 +203,37 @@ struct ProgressModelTests {
         #expect(ProgressText.exercisesSubtitle(stalled: 0, total: 3, progressing: 2) == "Nada estancado · 2 progresando")
     }
 
-    @Test("la escala es la decena por encima del grupo mayor o de la franja, y nunca menos de 10")
+    @Test("la escala es la de las barras por semana, con margen sobre la franja")
     func scale() async {
         let model = await ProgressHarness.make().model
-        #expect(model.scale == 80)
+        #expect(model.scale == 25)
         let empty = await ProgressHarness.make(TrainingData()).model
-        #expect(empty.scale == 80)
+        #expect(empty.scale == 25)
     }
 
-    @Test("los grupos dicen sus series y las de cada ejercicio con sus sesiones")
+    @Test("los grupos dicen sus series por semana, y las de cada ejercicio con sus sesiones")
     func groupDetail() async throws {
         let model = await ProgressHarness.make().model
         let back = try #require(model.groups.first { $0.name == "Espalda" })
-        #expect(back.sets == 22)
+        #expect(back.directPerWeek == 22.0 / 8)
+        #expect(back.perWeek == "2,8")
         #expect(back.exercises.first?.name == "Jalon al Pecho")
         #expect(back.exercises.first?.value == "16 · 4")
+    }
+
+    @Test("las últimas sesiones de un ejercicio, cada una con su día")
+    func recentSessions() async throws {
+        let model = await ProgressHarness.make().model
+        let row = try #require(model.allRows.first { $0.name == "Press de Hombros" })
+        let today = SyncFixtures.today
+        #expect(row.recentSessions.map(\.date) == [-21, -14, -7].map { DateText.dayMonth(today.adding(days: $0)) })
+        #expect(row.recentSessions.map(\.reps) == ["11·11·10", "11·10·10", "11·11·10"])
+    }
+
+    @Test("la frase del estancado cuenta las sesiones sin superar el récord")
+    func stalledPhrase() async throws {
+        let row = try #require(await ProgressHarness.make().model.allRows.first)
+        #expect(row.phrase == "3 sesiones sin superar 32 reps")
     }
 
     @Test("las series indirectas van con un decimal como mucho")

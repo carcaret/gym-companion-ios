@@ -5,7 +5,7 @@ import ViewModels
 
 /// Un ejercicio (`.stats-row`), una fila de la lista: a la izquierda, el icono de su estado (como
 /// los de Ajustes): azul y flecha si progresa, dorado e igual si está estancado, gris sin recorrido.
-/// Al abrirla, sus últimas sesiones y «Ver en Gráficas».
+/// Al abrirla, sus últimas sesiones, una por línea con su día, y «Ver en Gráficas».
 struct ExerciseProgressRow: View {
     let row: ProgressModel.ExerciseRow
     let toggle: () -> Void
@@ -27,7 +27,8 @@ struct ExerciseProgressRow: View {
                         Text(row.name).scaledFont(15, .medium).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
                         Spacer()
                         if let weight = row.weight {
-                            Text(weight).scaledFont(14, .semibold).foregroundStyle(Theme.accentLight)
+                            // En gris sin recorrido, como el nombre: no es un dato que mirar.
+                            Text(weight).scaledFont(14, .semibold).foregroundStyle(noTrack ? Theme.textSecondary : Theme.accentLight)
                         }
                     }
                     Text(row.phrase).scaledFont(12).foregroundStyle(Theme.textSecondary)
@@ -40,9 +41,15 @@ struct ExerciseProgressRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Group {
                     Text(ProgressText.recentSessions).sectionLabelStyle()
-                    Text(row.recentRepsText)
-                        .scaledFont(13).monospacedDigit()
-                        .foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                    Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 3) {
+                        ForEach(Array(row.recentSessions.enumerated()), id: \.offset) { _, session in
+                            GridRow {
+                                Text(session.date).foregroundStyle(Theme.textSecondary)
+                                Text(session.reps).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+                            }
+                        }
+                    }
+                    .scaledFont(13).monospacedDigit()
                 }
                 .padding(.leading, indent)
                 .padding(.trailing, 16)

@@ -14,17 +14,21 @@ public final class ProgressModel {
         public var id: ExerciseID { exerciseID }
         public let exerciseID: ExerciseID
         public let name: String
-        /// "18 kg"; sin peso, nada.
+        /// "18 kg"; sin peso, o si la frase ya lo dice, nada.
         public let weight: String?
         public let phrase: String
         public let status: ProgressStatus
-        /// Las reps de las últimas sesiones ("11-11-10").
-        public let recentReps: [String]
-        /// "11·11·10  ·  12·11·10": las de cada sesión, separadas.
-        public var recentRepsText: String { ProgressText.recentReps(recentReps) }
+        /// Las últimas sesiones, una por línea, la más antigua primero.
+        public let recentSessions: [RecentSessionRow]
         /// "Ver en Gráficas", solo si hay histórico que dibujar.
         public let canOpenCharts: Bool
         public let isOpen: Bool
+    }
+
+    /// Una de las últimas sesiones de un ejercicio: "5 oct" y "10·10·10".
+    public struct RecentSessionRow: Hashable, Sendable {
+        public let date: String
+        public let reps: String
     }
 
     /// Una línea del desglose de un grupo: "Remo" y "12 · 4" (series · sesiones), o sus series
@@ -37,10 +41,11 @@ public final class ProgressModel {
     public struct GroupRow: Hashable, Sendable, Identifiable {
         public var id: String { name }
         public let name: String
-        public let sets: Int
-        public let indirectSets: Double
-        /// Series totales redondeadas.
-        public let total: Int
+        /// Series por semana, directas e indirectas, en la escala de `scale`.
+        public let directPerWeek: Double
+        public let indirectPerWeek: Double
+        /// "12,8": las dos juntas.
+        public let perWeek: String
         public let exercises: [GroupDetail]
         public let indirect: [GroupDetail]
         public let isOpen: Bool
@@ -70,9 +75,8 @@ public final class ProgressModel {
         return data.progressRows(for: data.routines.allExerciseIDs, anchor: clock.today(), weeks: Self.weeks).map { progress in
             ExerciseRow(
                 exerciseID: progress.exerciseID, name: data.catalog.name(of: progress.exerciseID),
-                weight: progress.weight > 0 ? LogText.weight(progress.weight) : nil,
-                phrase: ProgressText.phrase(progress), status: progress.status,
-                recentReps: progress.recentReps.map { LogText.reps($0) },
+                weight: ProgressText.weight(progress), phrase: ProgressText.phrase(progress), status: progress.status,
+                recentSessions: progress.recentSessions.map { RecentSessionRow(date: DateText.dayMonth($0.date), reps: LogText.reps($0.reps)) },
                 canOpenCharts: progress.status != .noTrack, isOpen: openRows.contains(progress.exerciseID)
             )
         }
@@ -123,11 +127,15 @@ public final class ProgressModel {
 
     // MARK: - Grupos
 
+    /// De más a menos series. Las barras van en series por semana; el desglose, en las de toda la
+    /// ventana, con sus sesiones.
     public var groups: [GroupRow] {
-        data.groupSets(anchor: clock.today(), weeks: Self.weeks).map { group in
+        let weeks = Double(Self.weeks)
+        return data.groupSets(anchor: clock.today(), weeks: Self.weeks).map { group in
             let name = GroupText.name(group.group)
             return GroupRow(
-                name: name, sets: group.sets, indirectSets: group.indirectSets, total: Int(jsRound(group.totalSets)),
+                name: name, directPerWeek: Double(group.sets) / weeks, indirectPerWeek: group.indirectSets / weeks,
+                perWeek: ProgressText.perWeek(group.totalPerWeek(weeks: Self.weeks)),
                 exercises: group.exercises.map { GroupDetail(name: $0.name, value: ProgressText.setsAndSessions(sets: $0.sets, sessions: $0.sessions)) },
                 indirect: group.indirect.map { GroupDetail(name: $0.name, value: ProgressText.indirectSets($0.sets)) },
                 isOpen: openGroups.contains(name)
@@ -135,13 +143,13 @@ public final class ProgressModel {
         }
     }
 
-    /// La franja de referencia (4–10 series por semana) en series de toda la ventana.
-    public var referenceBand: ClosedRange<Int> { GroupSets.referenceRange(weeks: Self.weeks) }
+    /// La franja de referencia, en series por semana.
+    public var referenceBand: ClosedRange<Int> { GroupSets.weeklyReferenceRange }
 
-    /// Escala absoluta compartida por todas las barras, en decenas (si cada barra se escalara a su
-    /// manera, la franja caería en un sitio distinto en cada una y no significaría nada).
+    /// Escala absoluta compartida por todas las barras, en series por semana (si cada barra se
+    /// escalara a su manera, la franja caería en un sitio distinto en cada una y no significaría nada).
     public var scale: Double {
-        GroupSets.scale(largest: groups.map { Double($0.sets) + $0.indirectSets }.max() ?? 0, reference: referenceBand)
+        GroupSets.scale(largestPerWeek: groups.map { $0.directPerWeek + $0.indirectPerWeek }.max() ?? 0, reference: referenceBand)
     }
 
     public func toggleGroup(_ name: String) {

@@ -36,18 +36,20 @@ public struct GroupSets: Hashable, Sendable {
     /// De más a menos series.
     public let indirect: [IndirectSets]
 
-    /// Franja de referencia de la literatura: 4–10 series por músculo y semana.
-    public static let weeklyReferenceRange = 4...10
+    /// Series por semana, directas e indirectas: lo que se compara con la franja.
+    public func totalPerWeek(weeks: Int) -> Double { totalSets / Double(weeks) }
 
-    /// La franja de referencia para una ventana de `weeks` semanas, en series totales.
-    public static func referenceRange(weeks: Int) -> ClosedRange<Int> {
-        weeklyReferenceRange.lowerBound * weeks...weeklyReferenceRange.upperBound * weeks
-    }
+    /// Franja de referencia, en series por músculo y semana: 10–20, lo habitual para ganar
+    /// músculo (el metaanálisis de Schoenfeld de 2017: 10 o más por semana, mejor que menos de 5).
+    /// La PWA usaba 4–10, que es más bien lo justo para mantener, y daba por «te pasas» lo que
+    /// era ir en lo mínimo (decisión del usuario, 2026-11-02).
+    public static let weeklyReferenceRange = 10...20
 
-    /// La escala común de todas las barras, en decenas, para que la franja caiga en el mismo sitio
-    /// en cada una: lo más alto de `largest` y de la franja, y nunca menos de 10.
-    public static func scale(largest: Double, reference: ClosedRange<Int>) -> Double {
-        max((max(largest, Double(reference.upperBound)) / 10).rounded(.up) * 10, 10)
+    /// La escala común de todas las barras, en series por semana, para que la franja caiga en el
+    /// mismo sitio en cada una: el grupo mayor redondeado a la media decena de arriba, y nunca menos
+    /// de la franja y otra media decena, para que su límite de arriba no quede en el borde.
+    public static func scale(largestPerWeek: Double, reference: ClosedRange<Int> = weeklyReferenceRange) -> Double {
+        max((largestPerWeek / 5).rounded(.up) * 5, Double(reference.upperBound + 5))
     }
 }
 
