@@ -88,10 +88,14 @@ final class ScreenshotTests: XCTestCase {
 
         app.tabBars.buttons["Progreso"].tap()
         XCTAssertTrue(app.buttons[AccessibilityID.statsExercises].appears(timeout: 10))
+        capture(app, "40-progreso")  // plegada: solo los estancados
         app.buttons[AccessibilityID.statsExercises].tap()
-        capture(app, "40-progreso")
+        XCTAssertTrue(app.buttons[AccessibilityID.statsRow("press_banca")].appears(timeout: 10))
+        capture(app, "42-progreso-todos")
 
         app.buttons[AccessibilityID.statsRow("press_banca")].tap()
+        XCTAssertTrue(app.buttons["Ver en Gráficas"].firstMatch.appears(timeout: 10))
+        capture(app, "43-progreso-ejercicio")  // sus últimas sesiones
         app.buttons["Ver en Gráficas"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Gráficas"].appears(timeout: 10))
         capture(app, "41-progreso-graficas")

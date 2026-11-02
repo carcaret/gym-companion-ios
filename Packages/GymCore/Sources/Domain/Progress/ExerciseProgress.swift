@@ -13,11 +13,15 @@ public struct ExerciseProgress: Hashable, Sendable {
     public var name: String
     /// Peso de la última sesión.
     public var weight: Double
-    /// Reps de las 3 últimas sesiones, la más antigua primero.
-    public var recentReps: [[Int]]
+    /// Las 3 últimas sesiones, la más antigua primero.
+    public var recentSessions: [RecentSession]
+    /// Sus reps.
+    public var recentReps: [[Int]] { recentSessions.map(\.reps) }
     public var status: ProgressStatus
-    /// Sesiones al peso actual desde el último récord de reps (0 si progresa).
+    /// Sesiones al peso actual desde el último récord de reps, esa incluida (0 si progresa).
     public var stallSessions: Int
+    /// Las de después del récord, las que no lo han superado.
+    public var sessionsWithoutRecord: Int { max(stallSessions - 1, 0) }
     public var weightFrom: Double?
     public var weightTo: Double?
     /// Reps totales de la primera y la última sesión al peso actual dentro de la ventana.
@@ -29,14 +33,14 @@ public struct ExerciseProgress: Hashable, Sendable {
     public var stallSince: LocalDate?
     /// Sesiones con reps hechas.
     public var sessionCount: Int
-    /// Días que describe la frase (desde el último récord, o desde la última sesión con el peso
-    /// anterior); `nil` si no hay recorrido.
+    /// Días desde la última sesión con el peso anterior, en una subida de peso (los que dice su
+    /// frase); `nil` en lo demás.
     public var spanDays: Int?
     /// ¿Se cumplió el objetivo en todas las series de la racha? Solo elige la redacción.
     public var allHit: Bool?
 
     public init(
-        exerciseID: ExerciseID = "", name: String = "", weight: Double = 0, recentReps: [[Int]] = [],
+        exerciseID: ExerciseID = "", name: String = "", weight: Double = 0, recentSessions: [RecentSession] = [],
         status: ProgressStatus = .noTrack, stallSessions: Int = 0, weightFrom: Double? = nil, weightTo: Double? = nil,
         repsFrom: Int? = nil, repsTo: Int? = nil, bestReps: Int = 0, stallSince: LocalDate? = nil,
         sessionCount: Int = 0, spanDays: Int? = nil, allHit: Bool? = nil
@@ -44,7 +48,7 @@ public struct ExerciseProgress: Hashable, Sendable {
         self.exerciseID = exerciseID
         self.name = name
         self.weight = weight
-        self.recentReps = recentReps
+        self.recentSessions = recentSessions
         self.status = status
         self.stallSessions = stallSessions
         self.weightFrom = weightFrom
@@ -56,6 +60,17 @@ public struct ExerciseProgress: Hashable, Sendable {
         self.sessionCount = sessionCount
         self.spanDays = spanDays
         self.allHit = allHit
+    }
+}
+
+/// Una de las últimas sesiones de un ejercicio: su día y las reps de cada serie.
+public struct RecentSession: Hashable, Sendable {
+    public let date: LocalDate
+    public let reps: [Int]
+
+    public init(date: LocalDate, reps: [Int]) {
+        self.date = date
+        self.reps = reps
     }
 }
 
@@ -77,11 +92,14 @@ extension TrainingData {
 
     /// Progreso de un ejercicio en las `weeks` semanas anteriores a `anchor`.
     ///
-    /// Progresa si sube el peso o si la última sesión batió el récord de reps totales al peso
-    /// actual. Nunca se compara con el objetivo de reps: lo teclea el usuario y lo sube según
-    /// progresa, así que medir contra él marcaría como estancado a quien mejora. Tampoco vale
-    /// comparar primera y última de la ventana: con 30-32-32-31 la última supera a la primera,
-    /// pero el récord de 32 lleva sin batirse desde la segunda.
+    /// Progresa si la última sesión batió el récord de reps totales al peso actual; la primera a un
+    /// peso nuevo lo bate siempre, así que subir de peso es progreso hasta que a ese peso deja de
+    /// mejorar. Lo que pasó antes no cuenta: con 12 → 14 kg y después cuatro sesiones iguales a 14,
+    /// está estancado (decisión del usuario, 2026-11-02; la PWA lo daba por progreso mientras la
+    /// subida cayera en la ventana). Nunca se compara con el objetivo de reps: lo teclea el
+    /// usuario y lo sube según progresa, así que medir contra él marcaría como estancado a quien
+    /// mejora. Tampoco vale comparar primera y última de la ventana: con 30-32-32-31 la última
+    /// supera a la primera, pero el récord de 32 lleva sin batirse desde la segunda.
     public func progress(of exercise: ExerciseID, anchor: LocalDate, weeks: Int = ProgressWindow.weeks) -> ExerciseProgress {
         let from = anchor.adding(days: -weeks * 7)
         let withReps = history.sessions(of: exercise, to: anchor).filter { $0.log.totalReps > 0 }
@@ -90,7 +108,7 @@ extension TrainingData {
 
         let weight = last.log.weight
         progress.weight = weight
-        progress.recentReps = withReps.suffix(Self.recentSessionsShown).map { $0.log.actualReps.compactMap { $0 } }
+        progress.recentSessions = withReps.suffix(Self.recentSessionsShown).map { RecentSession(date: $0.date, reps: $0.log.actualReps.compactMap { $0 }) }
         guard withReps.count >= Self.minimumSessions else { return progress }
 
         let inWindow = withReps.filter { $0.date >= from }
@@ -109,16 +127,12 @@ extension TrainingData {
             lastImprovement = index
         }
         let streak = atWeight.count - lastImprovement
-        let progressing = weightWentUp || streak == 1
+        let progressing = streak == 1
 
-        // Lo que describe la frase. Estancado: desde el último récord. Subida de peso: desde la
-        // última sesión con la carga vieja (desde el principio de la ventana contaría semanas en
-        // las que no pasó nada).
-        var spanFrom = anchor
-        if !progressing {
-            spanFrom = atWeight[lastImprovement].date
-        } else if weightWentUp, let lastOld = scope.last(where: { $0.log.weight == weightFrom }) {
-            spanFrom = lastOld.date
+        // Lo que describe la frase de una subida de peso: desde la última sesión con la carga vieja
+        // (desde el principio de la ventana contaría semanas en las que no pasó nada).
+        if progressing, weightWentUp, let lastOld = scope.last(where: { $0.log.weight == weightFrom }) {
+            progress.spanDays = lastOld.date.days(until: anchor)
         }
 
         progress.status = progressing ? .progressing : .stalled
@@ -129,7 +143,6 @@ extension TrainingData {
         progress.weightTo = weight
         progress.repsFrom = atWeightInScope.first?.log.totalReps
         progress.repsTo = atWeightInScope.last?.log.totalReps
-        progress.spanDays = spanFrom.days(until: anchor)
         progress.allHit = atWeight[lastImprovement...].allSatisfy { session in
             session.log.actualReps.allSatisfy { $0.map { RepOutcome(reps: $0, target: session.log.targetReps).meetsTarget } ?? true }
         }

@@ -56,14 +56,14 @@ enum Theme {
     static let actionGray = Color(Palette.actionGray)
 
     // Las barras de grupos de Progreso
-    /// Las series indirectas, en la barra y en su leyenda.
-    static let indirect = accent.opacity(0.32)
-    /// La franja de referencia (32–80 series) y su borde.
-    static let referenceBand = Color.white.opacity(0.07)
-    static let referenceBandBorder = Color.white.opacity(0.14)
-    /// La franja dentro de cada barra y las líneas de sus límites.
-    static let referenceBandBar = Color.white.opacity(0.10)
-    static let referenceLimit = Color.white.opacity(0.45)
+    /// Las series indirectas, en la barra y en su leyenda: bien distintas del fondo de la barra
+    /// (con 0,32 casi no se veían; 2026-11-02).
+    static let indirect = accent.opacity(0.6)
+    /// La franja de referencia (10–20 series por semana) dentro de cada barra y en la leyenda, y
+    /// las líneas de sus límites: en el azul claro, para que se distinga del fondo de la barra
+    /// (en blanco tenue no se veía; 2026-11-02).
+    static let referenceBandBar = accentLight.opacity(0.16)
+    static let referenceLimit = accentLight.opacity(0.7)
     /// La línea fina entre dos filas de una sección.
     static let separator = Color.white.opacity(0.08)
 

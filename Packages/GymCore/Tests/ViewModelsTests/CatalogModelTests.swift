@@ -11,7 +11,7 @@ private func catalogData() -> TrainingData {
         catalog: Catalog([
             Exercise(id: "press_banca", name: "Press Banca", group: .pecho, secondaryGroups: []),
             Exercise(id: "jalon", name: "Jalón al Pecho", group: .espalda, secondaryGroups: []),
-            Exercise(id: "nunca_entrenado", name: "Peso Muerto Rumano", group: .piernas, secondaryGroups: []),
+            Exercise(id: "nunca_entrenado", name: "Peso Muerto Rumano", group: .femoralGluteo, secondaryGroups: []),
             Exercise(id: "huerfano", name: "Ejercicio Huérfano", secondaryGroups: []),
         ]),
         routines: [
@@ -166,7 +166,8 @@ struct CatalogTests {
         #expect(catalog.rows.first { $0.exerciseID == "press_banca" }?.secondaries == ["Tríceps"])
         catalog.model.leave()
         let triceps = try #require(catalog.progress.groups.first { $0.name == "Tríceps" })
-        #expect(triceps.total == 2)
+        // 4 series de press, media cada una: 2 en las 8 semanas (las barras van por semana).
+        #expect(triceps.indirectPerWeek * Double(ProgressModel.weeks) == 2)
     }
 
     @Test("el grupo principal no se puede marcar además como secundario")

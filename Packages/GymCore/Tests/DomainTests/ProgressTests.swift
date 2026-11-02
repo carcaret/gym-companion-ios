@@ -169,7 +169,9 @@ struct AnalyzeExerciseTests {
         #expect(r.stallSessions == 3)
     }
 
-    @Test("subir de peso es progreso, aunque a la carga nueva aún no se mejore")
+    // «subir de peso es progreso, aunque a la carga nueva aún no se mejore» de la PWA ya no vale:
+    // ahora es estancado (decisión del usuario, 2026-11-02; docs/pwa-tests-no-aplican.tsv).
+    @Test("a la carga nueva, una sesión sin mejorar ya es estancado")
     func weightUpNoReps() {
         let data = dataWith([
             entry("2026-06-05", statsLog(weight: 16, actual: [12, 12, 12])),
@@ -177,8 +179,8 @@ struct AnalyzeExerciseTests {
             entry("2026-06-19", statsLog(weight: 18, actual: [10, 10, 10])),
         ])
         let r = data.progress(of: "press", anchor: "2026-06-19", weeks: 8)
-        #expect(r.status == .progressing)
-        #expect(r.stallSessions == 0)
+        #expect(r.status == .stalled)
+        #expect(r.stallSessions == 2)
     }
 
     @Test("el span de una subida de peso se mide desde la última sesión con la carga vieja")
@@ -282,12 +284,6 @@ struct GroupSetsTests {
         #expect(triceps?.totalSets == 2)
     }
 
-    @Test("rangoDeVentana escala la franja semanal a la ventana")
-    func referenceRange() {
-        #expect(GroupSets.referenceRange(weeks: 8) == 32...80)
-        #expect(GroupSets.referenceRange(weeks: 4) == 16...40)
-    }
-
     @Test("cada ejercicio trae sus series y sus sesiones")
     func exercises() {
         let espalda = groupData.groupSets(anchor: "2026-06-19", weeks: 4).first { $0.group == .espalda }
@@ -305,9 +301,9 @@ struct GroupSetsTests {
     @Test("deja fuera lo anterior a la ventana; el límite es inclusivo")
     func window() {
         var withOld = groupData
-        withOld.catalog = Catalog(groupData.catalog.all + [exercise("sentadilla", "Sentadilla", .piernas)])
+        withOld.catalog = Catalog(groupData.catalog.all + [exercise("sentadilla", "Sentadilla", .cuadriceps)])
         withOld.history.insert(makeSession("2026-01-05", completed: true, logs: [makeLog("sentadilla", weight: 80, series: 5, expected: 8, actual: [8])]), at: 0)
-        #expect(withOld.groupSets(anchor: "2026-06-19", weeks: 4).first { $0.group == .piernas } == nil)
+        #expect(withOld.groupSets(anchor: "2026-06-19", weeks: 4).first { $0.group == .cuadriceps } == nil)
         // la sesión del 12/06 cae justo en el borde de una ventana de 1 semana
         #expect(withOld.groupSets(anchor: "2026-06-19", weeks: 1).first { $0.group == "brazos" }?.sets == 3)
     }
@@ -318,7 +314,7 @@ struct EditedSecondariesTests {
     @Test("computeGroupSets usa los secundarios de la DB por encima del mapa")
     func editedWins() {
         let data = one(makeLog("sentadilla", weight: 100, series: 4, expected: 8, actual: [8]),
-                       Catalog([exercise("sentadilla", "Sentadilla", .piernas, secondary: [.core])]), date: "2026-08-20")
+                       Catalog([exercise("sentadilla", "Sentadilla", .cuadriceps, secondary: [.core])]), date: "2026-08-20")
         let core = data.groupSets(anchor: "2026-08-25", weeks: 8).first { $0.group == .core }
         #expect(core?.indirectSets == 2)
         #expect(core?.indirect == [IndirectSets(name: "Sentadilla", sets: 2)])

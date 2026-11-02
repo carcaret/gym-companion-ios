@@ -82,7 +82,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `catalog.test.js` › updateExercise › rechaza grupo inválido | `CatalogTests.swift` |  |
 | `catalog.test.js` › updateExercise › rechaza un id que no existe | `CatalogTests.swift` |  |
 | `catalog.test.js` › updateExercise › no toca el historial, las rutinas ni los demás ejercicios | `CatalogTests.swift` |  |
-| `catalog.test.js` › updateExercise › GRUPOS cubre los siete grupos musculares en uso | `CatalogTests.swift` |  |
+| `catalog.test.js` › updateExercise › GRUPOS cubre los siete grupos musculares en uso | — | La pierna se partió en cuádriceps, femoral y glúteo, y gemelos (decisión del usuario, 2026-11-02): lo comprueba «GRUPOS cubre los grupos musculares en uso, con la pierna partida». |
 | `catalog.test.js` › los secundarios editados alimentan Progreso › computeGroupSets usa los secundarios de la DB por encima del mapa | `ProgressTests.swift` |  |
 | `catalog.test.js` › los secundarios editados alimentan Progreso › secundarios vacíos en la DB anulan el mapa hardcodeado | `ProgressTests.swift` |  |
 | `charts.test.js` › getExercisesInRange › devuelve ejercicios únicos dentro del rango de fechas | `ChartsTests.swift` |  |
@@ -351,7 +351,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `stats.test.js` › analyzeExercise › la racha arranca en la última sesión que batió el récord, no antes | `ProgressTests.swift` |  |
 | `stats.test.js` › analyzeExercise › empatar el récord seis veces cuenta las seis sesiones | `ProgressTests.swift` |  |
 | `stats.test.js` › analyzeExercise › la racha solo cuenta sesiones al peso actual | `ProgressTests.swift` |  |
-| `stats.test.js` › analyzeExercise › subir de peso es progreso, aunque a la carga nueva aún no se mejore | `ProgressTests.swift` |  |
+| `stats.test.js` › analyzeExercise › subir de peso es progreso, aunque a la carga nueva aún no se mejore | — | Ya no lo es: a la carga nueva, una sesión sin mejorar es estancado (decisión del usuario, 2026-11-02). Lo comprueba «a la carga nueva, una sesión sin mejorar ya es estancado». |
 | `stats.test.js` › analyzeExercise › el span de una subida de peso se mide desde la última sesión con la carga vieja | `ProgressTests.swift` |  |
 | `stats.test.js` › formatSpan › menos de dos semanas, en días | `ProgressTextTests.swift` |  |
 | `stats.test.js` › formatSpan › menos de dos meses, en semanas | `ProgressTextTests.swift` |  |
@@ -360,7 +360,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `stats.test.js` › buildExercisePhrase › progreso por peso | `ProgressTextTests.swift` |  |
 | `stats.test.js` › buildExercisePhrase › progreso por reps al mismo peso | `ProgressTextTests.swift` |  |
 | `stats.test.js` › buildExercisePhrase › estancado sin fallar reps | `ProgressTextTests.swift` |  |
-| `stats.test.js` › buildExercisePhrase › estancado con fallos usa el tiempo | `ProgressTextTests.swift` |  |
+| `stats.test.js` › buildExercisePhrase › estancado con fallos usa el tiempo | — | La frase cuenta sesiones y no tiempo: tras un parón, «2 meses sin superar» eran dos sesiones (decisión del usuario, 2026-11-02). Lo comprueba «estancado con fallos cuenta las sesiones que no superan el récord». |
 | `stats.test.js` › buildExerciseRows › ordena estancados primero y sin-recorrido al final | `ProgressTests.swift` |  |
 | `stats.test.js` › buildExerciseRows › cada fila trae su frase | `ProgressTextTests.swift` |  |
 | `stats.test.js` › computeGroupSets › agrupa series por grupo y las divide entre las semanas | `ProgressTests.swift` |  |
@@ -369,7 +369,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `stats.test.js` › computeGroupSets › los ejercicios sin grupo caen en (sin grupo) | `ProgressTests.swift` |  |
 | `stats.test.js` › computeGroupSets › los tirones suman media serie a bíceps sin tocar su grupo directo | `ProgressTests.swift` |  |
 | `stats.test.js` › computeGroupSets › un grupo que solo recibe trabajo indirecto también aparece | `ProgressTests.swift` |  |
-| `stats.test.js` › computeGroupSets › rangoDeVentana escala la franja semanal a la ventana | `ProgressTests.swift` |  |
+| `stats.test.js` › computeGroupSets › rangoDeVentana escala la franja semanal a la ventana | — | La franja ya no se escala a la ventana: las barras van en series por semana, con la franja de 10–20 (decisión del usuario, 2026-11-02). Lo comprueba «la ventana de Progreso es de 8 semanas, y la franja de referencia, de 10 a 20 series por semana». |
 | `stats.test.js` › computeGroupSets › cada ejercicio trae sus series y sus sesiones | `ProgressTests.swift` |  |
 | `stats.test.js` › computeGroupSets › desglosa los ejercicios de cada grupo, de más a menos | `ProgressTests.swift` |  |
 | `stats.test.js` › computeGroupSets › deja fuera lo anterior a la ventana; el límite es inclusivo | `ProgressTests.swift` |  |
@@ -844,4 +844,4 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 7 — quitar de rutina sobre log swapped: log desaparece, plantilla DIA1 intacta | `TodayEditingTests.swift` |  |
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 8 — tras swap A→B, "+ Ejercicio" no ofrece B (fix bug duplicado) | `TodayEditingTests.swift` |  |
 
-**Total:** 768 portados, 61 no aplican, 0 sin portar, de 829.
+**Total:** 764 portados, 65 no aplican, 0 sin portar, de 829.
