@@ -29,6 +29,27 @@ struct WatchSnapshotCodingTests {
         #expect(try WatchSnapshotCoding.decode(WatchSnapshotCoding.encode(none)) == none)
     }
 
+    @Test("sin entreno, las rutinas para empezar en el reloj llegan igual que salen")
+    func roundTripStart() throws {
+        let routines = WatchSnapshot(workout: nil, start: WatchSnapshot.Start(
+            date: LocalDate(year: 2026, month: 10, day: 25)!,
+            routines: [
+                WatchSnapshot.Routine(id: "DIA1", plan: try #require(workout.workout)),
+                WatchSnapshot.Routine(id: "DIA2", plan: WatchSnapshot.Workout(date: LocalDate(year: 2026, month: 10, day: 25)!, routineName: "Día 2", exercises: [])),
+            ],
+            completedRoutineName: "Día 3"
+        ))
+        #expect(try WatchSnapshotCoding.decode(WatchSnapshotCoding.encode(routines)) == routines)
+    }
+
+    // Las rutinas se añadieron sin cambiar de versión: el reloj y el iPhone no se actualizan a la
+    // vez, y lo de uno de antes se tiene que seguir leyendo.
+    @Test("lo de un iPhone de antes, sin las rutinas, se lee igual")
+    func withoutStart() throws {
+        let json = #"{"version":2,"workout":null}"#
+        #expect(try WatchSnapshotCoding.decode(Data(json.utf8)) == WatchSnapshot(workout: nil))
+    }
+
     @Test("lleva versión y las fechas como YYYY-MM-DD")
     func format() throws {
         let json = try #require(String(data: WatchSnapshotCoding.encode(workout), encoding: .utf8))

@@ -70,6 +70,11 @@ struct CompositionRoot {
         watchPublisher?.finishedOnWatch ?? AsyncStream { $0.finish() }
     }
 
+    /// Cada entreno empezado en el reloj; en la demo, ninguno.
+    func startedOnWatch() -> AsyncStream<PhoneWorkoutStart> {
+        watchPublisher?.startedOnWatch ?? AsyncStream { $0.finish() }
+    }
+
     /// Cada vez que vuelve la red.
     func reconnections() -> AsyncStream<Void> {
         ConnectivityMonitor.reconnections()

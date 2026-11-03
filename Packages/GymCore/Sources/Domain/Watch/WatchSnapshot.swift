@@ -1,5 +1,6 @@
 /// Lo que enseña el reloj: el entreno en curso, ejercicio a ejercicio, con el plan de hoy y las
-/// sesiones de referencia (la mejor reciente y la última). El reloj solo lo lee; manda el iPhone.
+/// sesiones de referencia (la mejor reciente y la última); sin entreno, las rutinas para empezarlo
+/// allí. El reloj solo lo lee; manda el iPhone.
 public struct WatchSnapshot: Hashable, Sendable {
     public struct Workout: Hashable, Sendable {
         public let date: LocalDate
@@ -55,11 +56,43 @@ public struct WatchSnapshot: Hashable, Sendable {
         }
     }
 
+    /// Sin entreno en curso, lo que hace falta para empezarlo en el reloj: cada rutina con el
+    /// entreno que saldría al empezarla.
+    public struct Start: Hashable, Sendable {
+        /// El día para el que se ha calculado.
+        public let date: LocalDate
+        /// En el orden de las rutinas del iPhone.
+        public let routines: [Routine]
+        /// La rutina del entreno de ese día, si ya está terminado: empezar otra lo sustituye.
+        public let completedRoutineName: String?
+
+        public init(date: LocalDate, routines: [Routine], completedRoutineName: String?) {
+            self.date = date
+            self.routines = routines
+            self.completedRoutineName = completedRoutineName
+        }
+    }
+
+    /// Una rutina y el entreno que saldría al empezarla ese día (`startWorkout`).
+    public struct Routine: Hashable, Sendable {
+        public let id: RoutineID
+        public let plan: Workout
+
+        public init(id: RoutineID, plan: Workout) {
+            self.id = id
+            self.plan = plan
+        }
+    }
+
     /// `nil` = sin entreno en curso.
     public let workout: Workout?
+    /// Sin entreno en curso, las rutinas para empezarlo; `nil` con entreno (o de un iPhone con la
+    /// app de antes).
+    public let start: Start?
 
-    public init(workout: Workout?) {
+    public init(workout: Workout?, start: Start? = nil) {
         self.workout = workout
+        self.start = start
     }
 }
 
@@ -82,10 +115,31 @@ extension WatchSnapshot.Exercise {
 }
 
 extension TrainingData {
-    /// Lo que enseña el reloj el día `today`: el entreno sin terminar de ese día, si lo hay.
+    /// Lo que enseña el reloj el día `today`: el entreno sin terminar de ese día, si lo hay; si no,
+    /// las rutinas para empezarlo allí.
     public func watchSnapshot(today: LocalDate) -> WatchSnapshot {
-        guard let session = history.activeSession(on: today) else { return WatchSnapshot(workout: nil) }
-        return WatchSnapshot(workout: WatchSnapshot.Workout(
+        guard let session = history.activeSession(on: today) else {
+            return WatchSnapshot(workout: nil, start: watchStart(today: today))
+        }
+        return WatchSnapshot(workout: watchWorkout(session, today: today))
+    }
+
+    /// Cada rutina con el entreno que saldría al empezarla: el que hace `startWorkout`, con los
+    /// cambios pendientes de la semana, para que el reloj enseñe lo mismo que el iPhone creará.
+    private func watchStart(today: LocalDate) -> WatchSnapshot.Start {
+        // Sin entreno en curso, el de hoy, si lo hay, está terminado.
+        let done = history.session(on: today)
+        let routines = routines.compactMap { routine -> WatchSnapshot.Routine? in
+            var started = self
+            started.startWorkout(routine: routine.id, on: today)
+            guard let session = started.history.activeSession(on: today) else { return nil }
+            return WatchSnapshot.Routine(id: routine.id, plan: started.watchWorkout(session, today: today))
+        }
+        return WatchSnapshot.Start(date: today, routines: routines, completedRoutineName: done.map { self.routines.name(of: $0.routineID) })
+    }
+
+    private func watchWorkout(_ session: Session, today: LocalDate) -> WatchSnapshot.Workout {
+        WatchSnapshot.Workout(
             date: today,
             routineName: routines.name(of: session.routineID),
             exercises: session.logs.map { log in
@@ -101,6 +155,6 @@ extension TrainingData {
                     last: last.flatMap { $0.date == best?.date ? nil : WatchSnapshot.Reference($0) }
                 )
             }
-        ))
+        )
     }
 }

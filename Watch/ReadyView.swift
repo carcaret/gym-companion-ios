@@ -2,8 +2,9 @@ import Presentation
 import SwiftUI
 import ViewModels
 
-/// El entreno está en curso en el iPhone y el reloj aún no lo mide: la rutina y «Empezar» (lo
-/// normal es que lo haya abierto ya el iPhone al empezar allí).
+/// La rutina y «Empezar»: la elegida en la lista del reloj (con su color y sus ejercicios), o la del
+/// entreno en curso en el iPhone que el reloj aún no mide (lo normal es que lo haya abierto ya el
+/// iPhone al empezar allí).
 struct ReadyView: View {
     let ready: WatchModel.Ready
     let start: () -> Void
@@ -13,6 +14,7 @@ struct ReadyView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(ready.routine)
                     .font(.title3.weight(.bold))
+                    .foregroundStyle(Theme.color(ready.tint) ?? Theme.text)
                     .lineLimit(2)
                 Text(ready.detail)
                     .foregroundStyle(Theme.textSecondary)

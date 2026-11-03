@@ -72,6 +72,8 @@ enum Theme {
     static let wristDownOpacity = 0.6
     /// Los detalles de un ejercicio saltado (el «Saltado», no).
     static let skippedOpacity = 0.45
+    /// Las tarjetas de las rutinas, con las esquinas de las filas de las listas de watchOS.
+    static let watchRowRadius: CGFloat = 16
 
     // Radios
     /// Las tarjetas, con las esquinas de las secciones de lista de iOS 26 (la PWA usaba 14): así las

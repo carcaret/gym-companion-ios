@@ -44,6 +44,14 @@ public struct AppLifecycle {
         await today.finishFromWatch(on: day)
     }
 
+    /// El reloj ha empezado un entreno: se empieza aquí también. Como al terminar, puede llegar con
+    /// la app recién despertada por el reloj, en segundo plano.
+    public func workoutStartedOnWatch(_ request: PhoneWorkoutStart) async {
+        await app.start()
+        guard app.data != nil else { return }
+        await today.startFromWatch(request)
+    }
+
     /// Al volver la red.
     public func reconnected() async {
         await sync.synchronize()

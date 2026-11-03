@@ -7,6 +7,8 @@ public enum WatchText {
     public static let firstTime = "Primera vez"
     public static let skipped = "Saltado"
     public static let start = "Empezar"
+    /// El título de la lista de rutinas.
+    public static let routines = "Gym"
     public static let startFailed = "No se ha podido empezar a medir. Mira los permisos de Salud en el iPhone."
     public static let last = "Última"
     public static let total = "total"
@@ -54,6 +56,11 @@ public enum WatchText {
     /// "7 ejercicios".
     public static func exerciseCount(_ count: Int) -> String {
         Plural.exercises(count)
+    }
+
+    /// "Press Banca · Sentadilla · Remo": los ejercicios de la rutina que se va a empezar.
+    public static func exerciseNames(_ names: [String]) -> String {
+        names.joined(separator: " · ")
     }
 
     /// "23:41", y pasada la hora, "63:23": el tiempo del entreno o del descanso, siempre en minutos

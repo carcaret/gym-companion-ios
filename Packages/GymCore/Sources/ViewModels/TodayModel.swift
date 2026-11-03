@@ -159,13 +159,27 @@ public final class TodayModel {
     /// las rutinas.
     public func start() async {
         guard case .preview(let routine) = storedStage else { return }
+        await begin(routine)
+        await watchLauncher?.launch()
+    }
+
+    /// El entreno empezado en el reloj, que ya mide y ya preguntó allí si había que sustituir el de
+    /// hoy: se empieza como con «Iniciar entreno», sin abrir el reloj. Lo de otro día (llegado tarde),
+    /// de una rutina que ya no existe o con un entreno ya en curso no hace nada: manda el del iPhone,
+    /// que el reloj recibe y enseña.
+    public func startFromWatch(_ request: PhoneWorkoutStart) async {
+        guard request.day == today, activeSession == nil, data.routines.routine(request.routine) != nil else { return }
+        replacePrompt = nil
+        await begin(request.routine)
+    }
+
+    private func begin(_ routine: RoutineID) async {
         var data = data
         data.startWorkout(routine: routine, on: today)
         storedStage = .selector
         openExercise = nil
         editing.reset()
         await app.update(data)
-        await watchLauncher?.launch()
     }
 
     // MARK: - Ayudas
