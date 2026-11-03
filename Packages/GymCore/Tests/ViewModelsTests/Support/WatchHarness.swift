@@ -9,9 +9,10 @@ struct WatchHarness {
     let recorder = FakeWorkoutRecorder()
     let alert = RecordingRestAlert()
     let phone = RecordingPhoneWorkoutFinisher()
+    let phoneStarter = RecordingPhoneWorkoutStarter()
 
     init(today: LocalDate) {
-        model = WatchModel(clock: FixedClock(today), recorder: recorder, restAlert: alert, phone: phone)
+        model = WatchModel(clock: FixedClock(today), recorder: recorder, restAlert: alert, phone: phone, phoneStarter: phoneStarter)
     }
 
     /// Con el entreno recibido y empezado a medir.

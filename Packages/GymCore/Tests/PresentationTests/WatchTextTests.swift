@@ -66,4 +66,10 @@ struct WatchTextTests {
         #expect(WatchText.exerciseCount(7) == "7 ejercicios")
         #expect(WatchText.exerciseCount(1) == "1 ejercicio")
     }
+
+    @Test("los ejercicios de la rutina que se va a empezar, separados por puntos")
+    func exerciseNames() {
+        #expect(WatchText.exerciseNames(["Press Banca", "Sentadilla", "Remo"]) == "Press Banca · Sentadilla · Remo")
+        #expect(WatchText.exerciseNames(["Remo"]) == "Remo")
+    }
 }

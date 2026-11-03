@@ -2,12 +2,13 @@ import Application
 import Domain
 
 /// Lo que enseña el reloj en las capturas del CI: el Día 1 de `DemoData` en curso, como si se
-/// acabara de empezar en el iPhone, o nada con `-demo-sin-entreno`. Nunca se usa en el reloj.
+/// acabara de empezar en el iPhone, o, con `-demo-sin-entreno`, sus rutinas para empezar en el
+/// reloj. Nunca se usa en el reloj.
 enum WatchDemo {
     static func snapshot(arguments: [String], today: LocalDate) -> WatchSnapshot? {
-        if LaunchArgument.demoWithoutWorkout.isPresent(in: arguments) { return WatchSnapshot(workout: nil) }
-        guard LaunchArgument.demo.isPresent(in: arguments) else { return nil }
         var data = DemoData.make(today: today)
+        if LaunchArgument.demoWithoutWorkout.isPresent(in: arguments) { return data.watchSnapshot(today: today) }
+        guard LaunchArgument.demo.isPresent(in: arguments) else { return nil }
         data.startWorkout(routine: data.routines[0].id, on: today)
         return data.watchSnapshot(today: today)
     }

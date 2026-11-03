@@ -93,13 +93,28 @@ final class WatchScreenshotTests: XCTestCase {
                        "«\(button.label)» no está centrado: \(button.frame), pantalla \(screen)", file: file, line: line)
     }
 
+    /// Sin entreno en curso, empezarlo en el reloj (2026-11-03): las rutinas; al tocar una, su
+    /// pantalla con «Empezar», que vuelve con la flecha; y «Empezar» mide en seguida.
     @MainActor
     func testSinEntreno() {
         let app = XCUIApplication()
         app.launchArguments = [LaunchArgument.demoWithoutWorkout.rawValue]
         app.launch()
-        XCTAssertTrue(app.staticTexts["Empieza el entreno en el iPhone"].appears(timeout: 20))
-        capture(app, "79-reloj-sin-entreno")
+        let dayTwo = app.buttons[AccessibilityID.watchRoutine("DIA2")]
+        XCTAssertTrue(dayTwo.appears(timeout: 20))
+        XCTAssertTrue(app.buttons[AccessibilityID.watchRoutine("DIA1")].exists)
+        capture(app, "78-reloj-rutinas")
+
+        dayTwo.tap()
+        let start = app.buttons[AccessibilityID.watchStart]
+        XCTAssertTrue(start.appears(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Sentadilla · Dominadas"].exists)
+        assertCentered(start, in: app)
+        capture(app, "79-reloj-empezar-rutina")
+
+        start.tap()
+        XCTAssertTrue(app.staticTexts["Sentadilla"].appears(timeout: 10))
+        XCTAssertTrue(app.staticTexts["toca para descansar"].exists)
     }
 }
 

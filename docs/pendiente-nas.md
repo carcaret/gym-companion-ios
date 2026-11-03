@@ -115,7 +115,7 @@ del simulador del Series 10 de 46 mm). Falta lo que necesita el NAS o el reloj e
 - [ ] **WatchConnectivity con la app instalada directamente en el reloj**: con un entreno en curso
       en el iPhone, el reloj enseña sus ejercicios; al cambiar un peso, quitar o saltar un
       ejercicio en el iPhone, el reloj se pone al día; al terminar el entreno en el iPhone, el reloj
-      deja de medir y enseña el resumen (y, tras «Listo», "Empieza el entreno en el iPhone"). Nadie documenta
+      deja de medir y enseña el resumen (y, tras «Listo», las rutinas). Nadie documenta
       si WatchConnectivity empareja una app del reloj que no instaló el iPhone: si no, la salida es
       que el reloj lea el `db.json` de GitHub él mismo (otro adaptador del mismo `WatchModel`).
 
@@ -156,5 +156,12 @@ mano:
       volver a tenerlo a tiro (`transferUserInfo`). Si no llega, el registro (categoría `salud`):
       «pedido al iPhone» o «en cola» en el reloj, «recibido del reloj» en el iPhone.
 - [ ] **Terminar en el iPhone** termina también el del reloj y enseña el resumen.
+- [ ] **Empezar en el reloj empieza en el iPhone** (2026-11-03): sin entreno, el reloj enseña las
+      rutinas; elegir una y «Empezar» mide al momento y, con la app del iPhone delante, pasa al
+      entreno de esa rutina; en segundo plano o cerrada, el reloj la despierta (`sendMessage`) y el
+      entreno está empezado al abrirla; con el iPhone lejos, al volver a tenerlo a tiro
+      (`transferUserInfo`, solo si sigue siendo el mismo día). Con el entreno de hoy ya terminado,
+      el reloj pregunta antes de sustituirlo. Si no llega, el registro (categoría `salud`):
+      «Empezar …: pedido al iPhone» o «en cola» en el reloj, «recibido del reloj» en el iPhone.
 - [ ] **La música**: la página de la izquierda controla lo que suena en el iPhone y la corona sube y
       baja el volumen.

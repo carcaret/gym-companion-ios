@@ -2,8 +2,9 @@ import SwiftUI
 import ViewModels
 import WatchKit
 
-/// La app del reloj, según en qué punto está el entreno. Mientras se mide, tres páginas, en el
-/// orden de Entreno: los controles, el entreno y la música (la vista del sistema).
+/// La app del reloj, según en qué punto está el entreno. Sin entreno, las rutinas para empezarlo.
+/// Mientras se mide, tres páginas, en el orden de Entreno: los controles, el entreno y la música
+/// (la vista del sistema).
 struct WatchRootView: View {
     @Bindable var model: WatchModel
 
@@ -11,6 +12,8 @@ struct WatchRootView: View {
         switch model.screen {
         case .message(let text):
             MessageView(text: text)
+        case .routines(let routines):
+            RoutineListView(model: model, routines: routines)
         case .ready(let ready):
             ReadyView(ready: ready) {
                 Task { await model.start() }

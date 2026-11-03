@@ -177,3 +177,63 @@ struct WatchReferenceWeightTests {
         #expect(exercise(best: nil, last: nil).isFirstTime)
     }
 }
+
+// Empezar el entreno en el reloj (decisión del usuario, 2026-11-03): sin entreno en curso, el
+// reloj enseña las rutinas y, al elegir una, mide en seguida con lo que el iPhone creará.
+@Suite("Las rutinas para empezar en el reloj")
+struct WatchStartTests {
+    private let today: LocalDate = "2026-10-25"
+
+    private func data(history: [Session] = [], pendingSwaps: [RoutineID: PendingSwap] = [:]) -> TrainingData {
+        var data = TrainingData(
+            catalog: Catalog([exercise("press_banca", "Press Banca"), exercise("sentadilla", "Sentadilla"), exercise("remo", "Remo")]),
+            routines: [
+                Routine(id: "DIA1", name: "Día 1", exerciseIDs: ["press_banca", "sentadilla"]),
+                Routine(id: "DIA2", name: "Día 2", exerciseIDs: ["remo"]),
+            ],
+            history: history
+        )
+        data.pendingSwaps = pendingSwaps
+        return data
+    }
+
+    @Test("sin entreno en curso, cada rutina en su orden con el entreno que saldría al empezarla")
+    func routines() throws {
+        let data = data(history: [makeSession("2026-10-21", completed: true, logs: [makeLog("press_banca", weight: 60, actual: [10, 10, 8])])])
+        let start = try #require(data.watchSnapshot(today: today).start)
+        #expect(start.date == today)
+        #expect(start.routines.map(\.id) == ["DIA1", "DIA2"])
+        for routine in start.routines {
+            var started = data
+            started.startWorkout(routine: routine.id, on: today)
+            #expect(routine.plan == started.watchSnapshot(today: today).workout)
+        }
+        #expect(start.routines[0].plan.exercises.map(\.name) == ["Press Banca", "Sentadilla"])
+        #expect(start.routines[0].plan.exercises[0].weight == 60)
+    }
+
+    @Test("con el cambio pendiente de la semana, como al empezar en el iPhone")
+    func pendingSwap() throws {
+        let data = data(pendingSwaps: ["DIA1": PendingSwap(from: "sentadilla", to: "remo", weekStart: today.weekStart)])
+        let start = try #require(data.watchSnapshot(today: today).start)
+        #expect(start.routines[0].plan.exercises.map(\.name) == ["Press Banca", "Remo"])
+    }
+
+    @Test("sin entreno hoy, nada que sustituir")
+    func nothingToReplace() throws {
+        #expect(try #require(data().watchSnapshot(today: today).start).completedRoutineName == nil)
+    }
+
+    @Test("con el entreno de hoy terminado, su rutina: empezar otra lo sustituye")
+    func completedToday() throws {
+        let data = data(history: [makeSession(today, routine: "DIA2", completed: true, logs: [makeLog("remo", actual: [10, 10, 10])])])
+        #expect(try #require(data.watchSnapshot(today: today).start).completedRoutineName == "Día 2")
+    }
+
+    @Test("con un entreno en curso, no hay rutinas que empezar")
+    func active() {
+        let snapshot = data(history: [makeSession(today, completed: false, logs: [makeLog()])]).watchSnapshot(today: today)
+        #expect(snapshot.workout != nil)
+        #expect(snapshot.start == nil)
+    }
+}

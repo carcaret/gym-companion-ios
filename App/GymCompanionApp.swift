@@ -1,3 +1,4 @@
+import Application
 import Domain
 import SwiftUI
 import ViewModels
@@ -9,14 +10,20 @@ struct GymCompanionApp: App {
 
     private var lifecycle: AppLifecycle { AppLifecycle(app: root.model, sync: root.sync, today: root.today, health: root.health) }
 
-    /// Lo que termina el reloj se escucha desde que arranca la app, no desde la pantalla: el reloj
-    /// puede despertarla en segundo plano, sin escena.
+    /// Lo que empieza o termina el reloj se escucha desde que arranca la app, no desde la pantalla:
+    /// el reloj puede despertarla en segundo plano, sin escena.
     init() {
         let lifecycle = lifecycle
         let finished = root.finishedOnWatch()
         Task {
             for await day in finished {
                 await lifecycle.workoutFinishedOnWatch(on: day)
+            }
+        }
+        let started = root.startedOnWatch()
+        Task {
+            for await request in started {
+                await lifecycle.workoutStartedOnWatch(request)
             }
         }
     }

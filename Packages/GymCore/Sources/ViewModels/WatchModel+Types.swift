@@ -5,6 +5,8 @@ extension WatchModel {
     public enum Screen: Hashable, Sendable {
         /// Sin entreno que enseñar: el porqué.
         case message(String)
+        /// Sin entreno en curso: las rutinas para empezarlo aquí.
+        case routines([RoutineRow])
         /// Hay entreno en el iPhone y el reloj aún no lo mide.
         case ready(Ready)
         /// Midiendo: las tres páginas (`Tab`).
@@ -17,20 +19,48 @@ extension WatchModel {
         case controls, workout, music
     }
 
+    /// Una rutina de la lista, con su color (el de la tarjeta del iPhone).
+    public struct RoutineRow: Hashable, Sendable, Identifiable {
+        public let id: RoutineID
+        public let name: String
+        public let tint: RoutineTint?
+
+        public init(id: RoutineID, name: String, tint: RoutineTint?) {
+            self.id = id
+            self.name = name
+            self.tint = tint
+        }
+    }
+
+    /// Sustituir el entreno de hoy, ya terminado, por el que se empieza.
+    public struct ReplacePrompt: Hashable, Sendable {
+        public let title: String
+        public let message: String
+
+        public init(title: String, message: String) {
+            self.title = title
+            self.message = message
+        }
+    }
+
     public struct Ready: Hashable, Sendable {
         public let routine: String
-        /// "7 ejercicios".
+        /// "7 ejercicios", o los ejercicios de la rutina elegida en el reloj
+        /// ("Press Banca · Sentadilla").
         public let detail: String
         /// Por qué no se ha podido empezar la última vez.
         public let error: String?
         /// Pidiendo permiso o arrancando la sesión: el botón no se puede volver a pulsar.
         public let isStarting: Bool
+        /// El color de la rutina elegida en el reloj; sin él, el del texto.
+        public let tint: RoutineTint?
 
-        public init(routine: String, detail: String, error: String?, isStarting: Bool) {
+        public init(routine: String, detail: String, error: String?, isStarting: Bool, tint: RoutineTint? = nil) {
             self.routine = routine
             self.detail = detail
             self.error = error
             self.isStarting = isStarting
+            self.tint = tint
         }
     }
 

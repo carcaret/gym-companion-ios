@@ -9,6 +9,7 @@ enum AccessibilityID {
     static let watchExercises = "watch-exercises"
     static let watchFinish = "watch-finish"
     static let watchDone = "watch-done"
+    static func watchRoutine(_ id: String) -> String { "watch-routine-\(id)" }
 
     // Rutinas y entreno
     static let startWorkout = "start-workout"
