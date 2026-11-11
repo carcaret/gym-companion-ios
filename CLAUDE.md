@@ -67,6 +67,7 @@ Entitlements/                los de HealthKit de cada app; los firma el CI (no v
 WatchUITests/                las capturas del reloj
 project.yml                  XcodeGen (el .xcodeproj no se versiona)
 scripts/pwa_tests.py         cruza los tests de la PWA con los de la app (ver Tests)
+scripts/launch_image.py       la imagen de la pantalla de arranque, desde una captura de Rutinas del iPhone
 docs/paridad.md              la tabla de los 829 tests de la PWA con su test nativo o el motivo (#15)
 docs/decisiones-ui.md        las decisiones de interfaz, con su porqué
 docs/pendiente-nas.md        lo que queda por comprobar desde el NAS o con el iPhone en la mano

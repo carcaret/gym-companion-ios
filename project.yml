@@ -48,8 +48,14 @@ targets:
         CFBundleDevelopmentRegion: es
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # La pantalla de arranque es la de Rutinas sin datos: el título, la barra de pestañas y las
+        # tarjetas con bandas grises, para que al cargar solo aparezca el texto (decisión del usuario,
+        # 2026-11-11). La imagen sale de una captura del iPhone Air del usuario
+        # (scripts/launch_image.py): iOS no la escala, y en otro iPhone no cuadraría.
         UILaunchScreen:
           UIColorName: LaunchBackground
+          UIImageName: LaunchImage
+          UIImageRespectsSafeAreaInsets: false
         UIUserInterfaceStyle: Dark   # siempre en oscuro, como la PWA
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
