@@ -13,6 +13,7 @@ struct GymCompanionApp: App {
     /// Lo que empieza o termina el reloj se escucha desde que arranca la app, no desde la pantalla:
     /// el reloj puede despertarla en segundo plano, sin escena.
     init() {
+        Thread.sleep(forTimeInterval: 10) // prueba visual del arranque (no va a master)
         let lifecycle = lifecycle
         let finished = root.finishedOnWatch()
         Task {
