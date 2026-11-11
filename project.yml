@@ -48,8 +48,13 @@ targets:
         CFBundleDevelopmentRegion: es
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # La pantalla de arranque es la primera pantalla sin contenido: el fondo y las barras de
+        # arriba y de abajo, para que al cargar solo aparezca lo de dentro (HIG; decisión del
+        # usuario, 2026-11-11). Sin logo: la haría parecer más lenta.
         UILaunchScreen:
           UIColorName: LaunchBackground
+          UINavigationBar: {}
+          UITabBar: {}
         UIUserInterfaceStyle: Dark   # siempre en oscuro, como la PWA
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
