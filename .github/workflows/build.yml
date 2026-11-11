@@ -154,15 +154,19 @@ jobs:
         run: |
           app=build/Build/Products/Debug-iphonesimulator/GymCompanion.app
           mkdir -p capturas-arranque
-          xcrun simctl install "$SIM_UDID" "$app"
-          xcrun simctl status_bar "$SIM_UDID" override --time 9:41 --batteryLevel 100 --batteryState charged
-          # Esta rama hace esperar 10 s a GymCompanionApp.init: la pantalla de arranque se queda.
+          # El iPhone del usuario es un iPhone Air: la imagen de arranque solo cuadra en ese tamaño.
+          air=$(xcrun simctl create "Air" "iPhone Air")
+          xcrun simctl boot "$air"
+          xcrun simctl bootstatus "$air" -b
+          xcrun simctl install "$air" "$app"
+          xcrun simctl status_bar "$air" override --time 9:41 --batteryLevel 100 --batteryState charged
+          # Esta rama hace esperar 30 s a GymCompanionApp.init: la pantalla de arranque se queda.
           for round in 1 2; do
-            xcrun simctl launch --terminate-running-process "$SIM_UDID" com.carcaret.gymcompanion -demo
-            sleep 4
-            xcrun simctl io "$SIM_UDID" screenshot "capturas-arranque/$round-a-arranque.png"
-            sleep 16
-            xcrun simctl io "$SIM_UDID" screenshot "capturas-arranque/$round-b-app.png"
+            xcrun simctl launch --terminate-running-process "$air" com.carcaret.gymcompanion -demo
+            sleep 8
+            xcrun simctl io "$air" screenshot "capturas-arranque/$round-a-arranque.png"
+            sleep 40
+            xcrun simctl io "$air" screenshot "capturas-arranque/$round-b-app.png"
           done
       - uses: actions/upload-artifact@v4
         if: always()
