@@ -50,7 +50,7 @@ jobs:
     # El paquete entero se prueba también en Linux, con la misma imagen que en el NAS: solo
     # AppleAdapters y WatchAdapters, tras `#if canImport`, tocan frameworks de Apple.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false   # prueba visual del arranque (no va a master)
     runs-on: ubuntu-latest
     container: swift:6.3.3
     steps:
@@ -73,7 +73,7 @@ jobs:
     # un motivo en docs/pwa-tests-no-aplican.tsv, y la tabla de docs/paridad.md está al día. Ver
     # CLAUDE.md.
     needs: gate
-    if: ${{ !cancelled() && needs.gate.outputs.tested != 'true' }}
+    if: false   # prueba visual del arranque (no va a master)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -96,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: [1, 2, 3]
+        part: [1]
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
       # Medido el 2026-10-26: unos 230-250 s de tests en cada parte. Cada parte corre sus clases por
@@ -150,22 +150,25 @@ jobs:
       - name: Esperar al simulador
         run: scripts/ci-simulator.sh wait
 
-      - name: Tests de la app en el simulador
-        if: env.TESTED != 'true'
+      - name: Capturas del arranque
         run: |
-          # Primero a una variable: así, si el script falla, falla el paso.
-          classes=$(scripts/ci-ui-selection.sh "${{ matrix.part }}")
-          selection=()
-          while IFS= read -r arg; do selection+=("$arg"); done <<< "$classes"
-          scripts/ci-timeline.sh mark "tests: empiezan"
-          scripts/ci-xcodebuild.sh test.log 60 "tests: terminan" test-without-building \
-            -project GymCompanion.xcodeproj \
-            -scheme GymCompanion \
-            -destination "id=$SIM_UDID" \
-            -derivedDataPath build \
-            -resultBundlePath Tests.xcresult \
-            -retry-tests-on-failure -test-iterations 2 \
-            "${selection[@]}"
+          app=build/Build/Products/Debug-iphonesimulator/GymCompanion.app
+          mkdir -p capturas-arranque
+          xcrun simctl install "$SIM_UDID" "$app"
+          xcrun simctl status_bar "$SIM_UDID" override --time 9:41 --batteryLevel 100 --batteryState charged
+          # Esta rama hace esperar 10 s a GymCompanionApp.init: la pantalla de arranque se queda.
+          for round in 1 2; do
+            xcrun simctl launch --terminate-running-process "$SIM_UDID" com.carcaret.gymcompanion -demo
+            sleep 4
+            xcrun simctl io "$SIM_UDID" screenshot "capturas-arranque/$round-a-arranque.png"
+            sleep 16
+            xcrun simctl io "$SIM_UDID" screenshot "capturas-arranque/$round-b-app.png"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-arranque
+          path: capturas-arranque
 
       - name: Fin
         if: always()
@@ -183,7 +186,7 @@ jobs:
     # tests del paquete en macOS: este job acaba mucho antes que los del iPhone, y así no hacen
     # falta más de 5 máquinas a la vez.
     needs: gate
-    if: ${{ !cancelled() }}
+    if: false   # prueba visual del arranque (no va a master)
     runs-on: macos-26
     env:
       TESTED: ${{ needs.gate.outputs.tested }}
@@ -270,7 +273,7 @@ jobs:
   capturas:
     # Las capturas de las tres partes y del reloj, juntas en un solo artefacto "capturas".
     needs: [app, watch]
-    if: always()
+    if: false   # prueba visual del arranque (no va a master)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/upload-artifact/merge@v4
@@ -344,7 +347,7 @@ jobs:
 
   publish:
     needs: [gate, core-linux, pwa-tests, app, watch, release-build]
-    if: github.event_name == 'push' && needs.gate.outputs.tested != 'true'
+    if: false   # prueba visual del arranque (no va a master)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
