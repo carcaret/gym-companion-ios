@@ -4,6 +4,9 @@ public enum ProgressWindow {
     /// Al abrir un ejercicio, cómo estaba hace 3 meses: cuando el avance se ralentiza, en 8 semanas
     /// parece parado y en 3 meses se ve lo que ha subido (decisión del usuario, 2026-11-27).
     public static let lookBackMonths = 3
+    /// Y no más atrás: si la última sesión tan antigua es de hace más de 4 meses (un ejercicio que
+    /// estuvo parado), no dice cómo estaba hace 3 y no sale (decisión del usuario, 2026-11-27).
+    public static let lookBackLimitMonths = 4
 }
 
 /// Cuándo está estancado un ejercicio: hacen falta las dos condiciones. A su ritmo, no batir el

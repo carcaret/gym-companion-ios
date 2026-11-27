@@ -82,6 +82,7 @@ struct ProgressRulesTests {
         #expect(StallThreshold.minimumSessionsWithoutRecord == 3)
         #expect(StallThreshold.minimumDaysWithoutRecord == 28)
         #expect(ProgressWindow.lookBackMonths == 3)
+        #expect(ProgressWindow.lookBackLimitMonths == 4)
     }
 
     @Test("la escala de las barras: en medias decenas, con otra media decena por encima de la franja")
@@ -272,6 +273,18 @@ struct LookBackRulesTests {
         let r = data([("2026-08-12", 16, [16, 16, 15]), ("2026-08-19", 16, [nil, nil, nil]), ("2026-11-19", 18, [14, 14, 14])])
             .progress(of: "press", anchor: "2026-11-19", weeks: 8)
         #expect(r.lookBack?.date == "2026-08-12")
+    }
+
+    // Con sus datos, Overhead Extension Tríceps enseñaba «12 dic» (de 2025): entre diciembre y finales
+    // de agosto no lo hizo (decisión del usuario, 2026-11-27).
+    @Test("si la última tan antigua es de hace más de 4 meses, no sale")
+    func tooOld() {
+        let r = data([("2025-12-12", 4.5, [11, 11, 10]), ("2026-09-01", 6.8, [11, 11, 11]), ("2026-11-19", 6.8, [12, 12, 11])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(r.lookBack == nil)
+        let limit = data([("2026-07-19", 16, [16, 16, 15]), ("2026-11-19", 18, [14, 14, 14])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(limit.lookBack?.date == "2026-07-19")
     }
 
     @Test("sin sesiones tan antiguas no hay nada")

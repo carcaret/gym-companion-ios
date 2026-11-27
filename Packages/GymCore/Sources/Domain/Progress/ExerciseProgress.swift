@@ -43,7 +43,8 @@ public struct ExerciseProgress: Hashable, Sendable {
     /// En los estancados, cómo cambiaron la 1.ª y la última serie desde la sesión del récord; `nil`
     /// si no cambió ninguna.
     public var setsChange: SetsChange?
-    /// La última sesión con reps de hace `ProgressWindow.lookBackMonths` meses o antes, si la hay.
+    /// La última sesión con reps de hace `ProgressWindow.lookBackMonths` meses o antes, si no es de
+    /// hace más de `ProgressWindow.lookBackLimitMonths`.
     public var lookBack: ExerciseSession?
 
     public init(
@@ -149,7 +150,8 @@ extension TrainingData {
         progress.weight = weight
         progress.recentSessions = withReps.suffix(Self.recentSessionsShown).map { RecentSession(date: $0.date, reps: $0.log.actualReps.compactMap { $0 }) }
         let lookBackDate = anchor.adding(months: -ProgressWindow.lookBackMonths)
-        progress.lookBack = withReps.last { $0.date <= lookBackDate }
+        let lookBackLimit = anchor.adding(months: -ProgressWindow.lookBackLimitMonths)
+        progress.lookBack = withReps.last { $0.date <= lookBackDate }.flatMap { $0.date >= lookBackLimit ? $0 : nil }
         guard withReps.count >= Self.minimumSessions else { return progress }
 
         let inWindow = withReps.filter { $0.date >= from }
