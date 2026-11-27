@@ -75,6 +75,16 @@ struct ProgressRulesTests {
         #expect(GroupSets.weeklyReferenceRange == 10...20)
     }
 
+    // Decisión del usuario, 2026-11-27 (#112): con «estancado en cuanto la última sesión no bate el
+    // récord», salían 12 de 20 y casi siempre entre 8 y 14; a su ritmo, no batirlo una vez es lo normal.
+    @Test("estancado es llevar al menos 3 sesiones y 28 días sin superar el récord; la comparación, hace 3 meses")
+    func stallThreshold() {
+        #expect(StallThreshold.minimumSessionsWithoutRecord == 3)
+        #expect(StallThreshold.minimumDaysWithoutRecord == 28)
+        #expect(ProgressWindow.lookBackMonths == 3)
+        #expect(ProgressWindow.lookBackLimitMonths == 4)
+    }
+
     @Test("la escala de las barras: en medias decenas, con otra media decena por encima de la franja")
     func scale() {
         #expect(GroupSets.scale(largestPerWeek: 0) == 25)
@@ -105,12 +115,13 @@ struct StallRulesTests {
     }
 
     // Decisión del usuario, 2026-11-02: con las elevaciones laterales a 14 kg y cuatro sesiones
-    // iguales, Progreso decía «12 → 14 kg» porque la subida caía en la ventana.
+    // iguales, Progreso decía «12 → 14 kg» porque la subida caía en la ventana. La última sesión,
+    // del 3/7 al 10/7, para que el récord tenga los 28 días del umbral (2026-11-27).
     @Test("subir de peso no tapa lo que se estanca después al peso nuevo")
     func weightUpThenStall() {
         let r = data([("2026-06-05", 12, [12, 12, 12]), ("2026-06-12", 14, [11, 11, 11]), ("2026-06-19", 14, [11, 11, 11]),
-                      ("2026-06-26", 14, [11, 11, 11]), ("2026-07-03", 14, [11, 11, 11])])
-            .progress(of: "press", anchor: "2026-07-03", weeks: 8)
+                      ("2026-06-26", 14, [11, 11, 11]), ("2026-07-10", 14, [11, 11, 11])])
+            .progress(of: "press", anchor: "2026-07-10", weeks: 8)
         #expect(r.status == .stalled)
         #expect(r.stallSessions == 4)
         #expect(r.sessionsWithoutRecord == 3)
@@ -130,6 +141,157 @@ struct StallRulesTests {
         let r = data([("2026-06-05", 12, [10]), ("2026-06-12", 12, [11]), ("2026-06-19", 12, [12]), ("2026-06-26", 12, [12])])
             .progress(of: "press", anchor: "2026-06-26", weeks: 8)
         #expect(r.recentSessions.map(\.date) == ["2026-06-12", "2026-06-19", "2026-06-26"])
+    }
+
+    // El umbral (decisión del usuario, 2026-11-27): hacen falta las dos condiciones. El mínimo de
+    // sesiones evita que un parón o un ejercicio saltado lo marque con una o dos.
+    @Test("3 sesiones y 28 días sin superar el récord es estancado")
+    func threshold() {
+        let r = data([("2026-06-05", 18, [12, 12, 12]), ("2026-06-12", 18, [12, 12, 11]), ("2026-06-19", 18, [12, 11, 11]),
+                      ("2026-06-26", 18, [12, 12, 11])])
+            .progress(of: "press", anchor: "2026-07-03", weeks: 8)
+        #expect(r.status == .stalled)
+        #expect(r.sessionsWithoutRecord == 3)
+        #expect(r.stallSince == "2026-06-05")
+    }
+
+    @Test("2 sesiones sin superar el récord no es estancado, aunque pasen 40 días")
+    func twoSessions() {
+        let r = data([("2026-05-01", 18, [10, 10, 10]), ("2026-05-24", 18, [12, 12, 12]), ("2026-06-19", 18, [12, 12, 11]),
+                      ("2026-06-26", 18, [12, 11, 11])])
+            .progress(of: "press", anchor: "2026-07-03", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.stallSessions == 0)
+        #expect(r.stallSince == nil)
+    }
+
+    @Test("3 sesiones sin superar el récord en 21 días no es estancado")
+    func twentyOneDays() {
+        let r = data([("2026-06-12", 18, [12, 12, 12]), ("2026-06-19", 18, [12, 12, 11]), ("2026-06-26", 18, [12, 11, 11]),
+                      ("2026-07-03", 18, [12, 12, 11])])
+            .progress(of: "press", anchor: "2026-07-03", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.stallSessions == 0)
+    }
+
+    // Lo que no llega al umbral sale como «progresa», con lo avanzado en la ventana hasta el récord
+    // (decisión del usuario, 2026-11-27, opción (a) de #112).
+    @Test("sin llegar al umbral, lo avanzado en la ventana llega hasta el récord")
+    func belowThresholdReps() {
+        let r = data([("2026-06-05", 18, [11, 11, 11]), ("2026-06-12", 18, [12, 12, 11]), ("2026-06-19", 18, [12, 11, 11]),
+                      ("2026-06-26", 18, [12, 11, 10])])
+            .progress(of: "press", anchor: "2026-06-26", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.repsFrom == 33)
+        #expect(r.repsTo == 35)
+        #expect(r.bestReps == 35)
+        #expect(r.sessionsWithoutRecord == 2)
+    }
+
+    @Test("sin llegar al umbral tras subir de peso, la frase cuenta la subida desde la carga vieja")
+    func belowThresholdWeight() {
+        let r = data([("2026-06-05", 16, [12, 12, 12]), ("2026-06-12", 16, [12, 12, 12]), ("2026-06-19", 18, [10, 10, 10]),
+                      ("2026-06-26", 18, [10, 10, 9])])
+            .progress(of: "press", anchor: "2026-06-26", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.weightFrom == 16)
+        #expect(r.weightTo == 18)
+        #expect(r.spanDays == 14)
+    }
+}
+
+// Qué cambió desde el récord, en los estancados (decisión del usuario, 2026-11-27, #112). Compara
+// la misma serie entre la sesión del récord y la última; no es la caída de la 1.ª a la última dentro
+// de una sesión, que el diseño de Estadísticas de la PWA descartó como señal.
+@Suite("Progreso: las series desde el récord")
+struct SetsChangeRulesTests {
+    private func stalled(record: [Int?], last: [Int?]) -> ExerciseProgress {
+        // Las de antes y las de en medio, una rep menos en cada serie: el récord es el del 8/5.
+        let below = record.map { $0.map { $0 - 1 } }
+        let sessions: [(LocalDate, [Int?])] = [("2026-05-01", below), ("2026-05-08", record), ("2026-05-15", below),
+                                               ("2026-05-22", below), ("2026-06-05", last)]
+        return TrainingData(catalog: Catalog([exercise("press", "Press", .pecho)]),
+                            history: sessions.map { makeSession($0.0, completed: true, logs: [makeLog("press", weight: 30, series: 4, expected: 10, actual: $0.1)]) })
+            .progress(of: "press", anchor: "2026-06-05", weeks: 8)
+    }
+
+    @Test("compara la 1.ª y la última serie del récord con las de la última sesión")
+    func changed() {
+        let r = stalled(record: [11, 11, 10, 8], last: [12, 11, 7, 6])
+        #expect(r.status == .stalled)
+        #expect(r.setsChange == SetsChange(firstFrom: 11, firstTo: 12, lastFrom: 8, lastTo: 6))
+    }
+
+    @Test("basta con que cambie una de las dos")
+    func oneChanged() {
+        #expect(stalled(record: [12, 12, 11], last: [12, 12, 9]).setsChange == SetsChange(firstFrom: 12, firstTo: 12, lastFrom: 11, lastTo: 9))
+    }
+
+    @Test("con las dos iguales no hay nada que contar")
+    func identical() {
+        #expect(stalled(record: [14, 14, 14], last: [14, 14, 14]).setsChange == nil)
+        #expect(stalled(record: [11, 11, 10, 8], last: [11, 10, 9, 8]).setsChange == nil)
+    }
+
+    @Test("con una sola serie no sale: la frase ya lo dice")
+    func singleSet() {
+        #expect(stalled(record: [20], last: [18]).setsChange == nil)
+    }
+
+    @Test("en los que progresan no sale")
+    func progressing() {
+        let r = TrainingData(catalog: Catalog([exercise("press", "Press", .pecho)]),
+                             history: [("2026-06-05", [10, 10, 9]), ("2026-06-12", [11, 10, 9]), ("2026-06-19", [10, 10, 8]), ("2026-06-26", [12, 10, 9])]
+                                .map { makeSession(LocalDate($0.0), completed: true, logs: [makeLog("press", weight: 30, series: 3, expected: 10, actual: $0.1)]) })
+            .progress(of: "press", anchor: "2026-06-26", weeks: 8)
+        #expect(r.status == .progressing)
+        #expect(r.setsChange == nil)
+    }
+}
+
+// Hace 3 meses, al abrir un ejercicio (decisión del usuario, 2026-11-27, #112): cuando el avance se
+// ralentiza, en 8 semanas parece parado y en 3 meses se ve lo que ha subido.
+@Suite("Progreso: hace 3 meses")
+struct LookBackRulesTests {
+    private func data(_ sessions: [(LocalDate, Double, [Int?])]) -> TrainingData {
+        TrainingData(catalog: Catalog([exercise("press", "Press", .hombros)]),
+                     history: sessions.map { makeSession($0.0, completed: true, logs: [makeLog("press", weight: $0.1, series: 3, expected: 10, actual: $0.2)]) })
+    }
+
+    @Test("la última sesión con reps en esa fecha o antes")
+    func lastOnOrBefore() {
+        let r = data([("2026-08-12", 16, [16, 16, 15]), ("2026-08-19", 16, [16, 15, 15]), ("2026-08-26", 16, [16, 16, 16]),
+                      ("2026-11-19", 18, [14, 14, 14])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(r.lookBack?.date == "2026-08-19")
+        #expect(r.lookBack?.log.weight == 16)
+        #expect(r.lookBack?.log.actualReps == [16, 15, 15])
+    }
+
+    @Test("salta las sesiones sin reps")
+    func skipsEmpty() {
+        let r = data([("2026-08-12", 16, [16, 16, 15]), ("2026-08-19", 16, [nil, nil, nil]), ("2026-11-19", 18, [14, 14, 14])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(r.lookBack?.date == "2026-08-12")
+    }
+
+    // Con sus datos, Overhead Extension Tríceps enseñaba «12 dic» (de 2025): entre diciembre y finales
+    // de agosto no lo hizo (decisión del usuario, 2026-11-27).
+    @Test("si la última tan antigua es de hace más de 4 meses, no sale")
+    func tooOld() {
+        let r = data([("2025-12-12", 4.5, [11, 11, 10]), ("2026-09-01", 6.8, [11, 11, 11]), ("2026-11-19", 6.8, [12, 12, 11])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(r.lookBack == nil)
+        let limit = data([("2026-07-19", 16, [16, 16, 15]), ("2026-11-19", 18, [14, 14, 14])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(limit.lookBack?.date == "2026-07-19")
+    }
+
+    @Test("sin sesiones tan antiguas no hay nada")
+    func noneThatOld() {
+        let r = data([("2026-08-20", 16, [16, 16, 15]), ("2026-11-19", 18, [14, 14, 14])])
+            .progress(of: "press", anchor: "2026-11-19", weeks: 8)
+        #expect(r.lookBack == nil)
     }
 }
 

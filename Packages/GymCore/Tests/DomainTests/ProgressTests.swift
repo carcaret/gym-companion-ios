@@ -4,6 +4,11 @@ import Testing
 // Portados de tests/unit/stats.test.js de la PWA y de "los secundarios editados alimentan
 // Progreso" (catalog.test.js). formatSpan, buildExercisePhrase y la frase de cada fila, en
 // PresentationTests.
+//
+// Con el umbral del estancado (3 sesiones y 28 días sin superar el récord; decisión del usuario,
+// 2026-11-27, #112) se alargaron las fechas de los que tenían rachas más cortas, para que sigan
+// probando lo mismo: «estancado: mismo peso…», «la racha arranca…», «la racha solo cuenta…» y
+// «ordena estancados primero…» (docs/paridad.md).
 
 /// `log` de stats.test.js.
 private func statsLog(_ id: ExerciseID = "press", weight: Double = 20, series: Int = 3, expected: Int = 10, actual: [Int?] = []) -> ExerciseLog {
@@ -62,7 +67,7 @@ struct AnalyzeExerciseTests {
     @Test("estancado: mismo peso y sin superar el mejor total")
     func stalled() {
         let data = dataWith([
-            entry("2026-06-05", statsLog(weight: 18, actual: [11, 11, 10])),
+            entry("2026-05-29", statsLog(weight: 18, actual: [11, 11, 10])),
             entry("2026-06-12", statsLog(weight: 18, actual: [11, 11, 10])),
             entry("2026-06-19", statsLog(weight: 18, actual: [11, 10, 9])),
             entry("2026-06-26", statsLog(weight: 18, actual: [11, 11, 10])),
@@ -133,6 +138,7 @@ struct AnalyzeExerciseTests {
         #expect(data.progress(of: "press", anchor: "2026-06-26", weeks: 8).recentReps == [[2], [3], [4]])
     }
 
+    // Con una sesión más (la del 5/6), que el umbral pide 3 después del récord: la racha es de 4.
     @Test("la racha arranca en la última sesión que batió el récord, no antes")
     func streakStart() {
         let data = dataWith([
@@ -140,9 +146,10 @@ struct AnalyzeExerciseTests {
             entry("2026-05-08", statsLog(weight: 18, actual: [11, 11, 10])),
             entry("2026-05-15", statsLog(weight: 18, actual: [11, 11, 10])),
             entry("2026-05-22", statsLog(weight: 18, actual: [11, 10, 10])),
+            entry("2026-06-05", statsLog(weight: 18, actual: [11, 11, 9])),
         ])
-        let r = data.progress(of: "press", anchor: "2026-05-22", weeks: 8)
-        #expect(r.stallSessions == 3)
+        let r = data.progress(of: "press", anchor: "2026-06-05", weeks: 8)
+        #expect(r.stallSessions == 4)
         #expect(r.stallSince == "2026-05-08")
         #expect(r.bestReps == 32)
     }
@@ -156,22 +163,25 @@ struct AnalyzeExerciseTests {
         #expect(r.stallSessions == 6)
     }
 
+    // Con una sesión más a 18 kg (la del 22/5), que el umbral pide 3 después del récord.
     @Test("la racha solo cuenta sesiones al peso actual")
     func streakAtWeight() {
         let data = dataWith([
             entry("2026-01-10", statsLog(weight: 16, actual: [12, 12, 12])),
+            entry("2026-05-22", statsLog(weight: 18, actual: [10, 10, 10])),
             entry("2026-06-05", statsLog(weight: 18, actual: [10, 10, 10])),
             entry("2026-06-12", statsLog(weight: 18, actual: [10, 10, 10])),
             entry("2026-06-19", statsLog(weight: 18, actual: [10, 10, 10])),
         ])
         let r = data.progress(of: "press", anchor: "2026-06-19", weeks: 8)
         #expect(r.status == .stalled)
-        #expect(r.stallSessions == 3)
+        #expect(r.stallSessions == 4)
     }
 
-    // «subir de peso es progreso, aunque a la carga nueva aún no se mejore» de la PWA ya no vale:
-    // ahora es estancado (decisión del usuario, 2026-11-02; docs/pwa-tests-no-aplican.tsv).
-    @Test("a la carga nueva, una sesión sin mejorar ya es estancado")
+    // Del 2026-11-02 al 2026-11-27 decía lo contrario («a la carga nueva, una sesión sin mejorar ya
+    // es estancado»). Con el umbral de 3 sesiones y 28 días vuelve a ser progreso, como en la PWA
+    // (decisión del usuario, 2026-11-27, #112).
+    @Test("subir de peso es progreso, aunque a la carga nueva aún no se mejore")
     func weightUpNoReps() {
         let data = dataWith([
             entry("2026-06-05", statsLog(weight: 16, actual: [12, 12, 12])),
@@ -179,8 +189,8 @@ struct AnalyzeExerciseTests {
             entry("2026-06-19", statsLog(weight: 18, actual: [10, 10, 10])),
         ])
         let r = data.progress(of: "press", anchor: "2026-06-19", weeks: 8)
-        #expect(r.status == .stalled)
-        #expect(r.stallSessions == 2)
+        #expect(r.status == .progressing)
+        #expect(r.stallSessions == 0)
     }
 
     @Test("el span de una subida de peso se mide desde la última sesión con la carga vieja")
@@ -201,6 +211,8 @@ struct ExerciseRowsTests {
         catalog: Catalog([exercise("a", "Aaa"), exercise("b", "Bbb"), exercise("c", "Ccc")]),
         routines: [Routine(id: "DIA1", name: "1", exerciseIDs: ["a", "b", "c"])],
         history: [
+            // «a», con su récord hace 4 semanas y 3 sesiones sin superarlo (umbral del 2026-11-27).
+            makeSession("2026-05-22", completed: true, logs: [statsLog("a", weight: 10, actual: [10])]),
             makeSession("2026-06-05", completed: true, logs: [statsLog("a", weight: 10, actual: [10]), statsLog("b", weight: 10, actual: [8])]),
             makeSession("2026-06-12", completed: true, logs: [statsLog("a", weight: 10, actual: [10]), statsLog("b", weight: 10, actual: [9])]),
             makeSession("2026-06-19", completed: true, logs: [statsLog("a", weight: 10, actual: [10]), statsLog("b", weight: 10, actual: [10]), statsLog("c", weight: 10, actual: [10])]),

@@ -17,9 +17,13 @@ public final class ProgressModel {
         /// "18 kg"; sin peso, o si la frase ya lo dice, nada.
         public let weight: String?
         public let phrase: String
+        /// Debajo de la frase de un estancado: "1.ª serie 11 → 12 · última 8 → 6", si cambió alguna.
+        public let setsChange: String?
         public let status: ProgressStatus
         /// Las últimas sesiones, una por línea, la más antigua primero.
         public let recentSessions: [RecentSessionRow]
+        /// Cómo estaba hace 3 meses, si tiene sesiones tan antiguas.
+        public let lookBack: LookBackRow?
         /// "Ver en Gráficas", solo si hay histórico que dibujar.
         public let canOpenCharts: Bool
         public let isOpen: Bool
@@ -29,6 +33,17 @@ public final class ProgressModel {
     public struct RecentSessionRow: Hashable, Sendable {
         public let date: String
         public let reps: String
+    }
+
+    /// La sesión de hace 3 meses: "19 ago" y "16 kg · 16·15·15".
+    public struct LookBackRow: Hashable, Sendable {
+        public let date: String
+        public let detail: String
+
+        public init(date: String, detail: String) {
+            self.date = date
+            self.detail = detail
+        }
     }
 
     /// Una línea del desglose de un grupo: "Remo" y "12 · 4" (series · sesiones), o sus series
@@ -75,8 +90,10 @@ public final class ProgressModel {
         return data.progressRows(for: data.routines.allExerciseIDs, anchor: clock.today(), weeks: Self.weeks).map { progress in
             ExerciseRow(
                 exerciseID: progress.exerciseID, name: data.catalog.name(of: progress.exerciseID),
-                weight: ProgressText.weight(progress), phrase: ProgressText.phrase(progress), status: progress.status,
+                weight: ProgressText.weight(progress), phrase: ProgressText.phrase(progress),
+                setsChange: progress.setsChange.map(ProgressText.setsChange), status: progress.status,
                 recentSessions: progress.recentSessions.map { RecentSessionRow(date: DateText.dayMonth($0.date), reps: LogText.reps($0.reps)) },
+                lookBack: progress.lookBack.map { LookBackRow(date: DateText.dayMonth($0.date), detail: ProgressText.lookBack($0)) },
                 canOpenCharts: progress.status != .noTrack, isOpen: openRows.contains(progress.exerciseID)
             )
         }

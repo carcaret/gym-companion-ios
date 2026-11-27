@@ -2,7 +2,10 @@ import Domain
 
 /// Datos de ejemplo para las capturas del CI (`-demo` al arrancar): el `db-test.json` de la PWA con
 /// fechas recientes, para que se vean tiras de historial y récords, y en Progreso un ejercicio de
-/// cada clase (el Jalón, estancado a 68 kg). Nunca se usan en el iPhone.
+/// cada clase: el Jalón, estancado a 68 kg (el récord hace 7 semanas y 3 sesiones sin superarlo),
+/// y una sesión de hace más de 3 meses para «Hace 3 meses» (#112). El récord queda fuera de las 6
+/// semanas de las que sale el plan: el entreno de las capturas copia la sesión del 21, así que su
+/// 1.ª serie sube y la última baja, y Progreso enseña qué cambió. Nunca se usan en el iPhone.
 enum DemoData {
     static func make(today: LocalDate) -> TrainingData {
         func log(_ id: ExerciseID, _ series: Int, _ target: Int, _ actual: [Int?], _ weight: Double) -> ExerciseLog {
@@ -22,17 +25,23 @@ enum DemoData {
                 Routine(id: "DIA3", name: "Full Body - Día 3", exerciseIDs: ["press_banca", "sentadilla"]),
             ],
             history: [
+                Session(date: today.adding(days: -95), routineID: "DIA1", completed: true, logs: [
+                    log("press_banca", 3, 10, [10, 10, 8], 50), log("curl_biceps", 3, 12, [12, 10, 9], 12), log("jalon_al_pecho", 4, 10, [10, 10, 9, 8], 60),
+                ]),
+                Session(date: today.adding(days: -49), routineID: "DIA1", completed: true, logs: [
+                    log("press_banca", 3, 10, [10, 10, 9], 52.5), log("curl_biceps", 3, 12, [12, 10, 10], 14), log("jalon_al_pecho", 4, 10, [11, 10, 10, 9], 68),
+                ]),
                 Session(date: today.adding(days: -21), routineID: "DIA1", completed: true, logs: [
-                    log("press_banca", 3, 10, [10, 10, 9], 55), log("curl_biceps", 3, 12, [12, 11, 10], 14), log("jalon_al_pecho", 4, 10, [10, 10, 10, 9], 64),
+                    log("press_banca", 3, 10, [10, 10, 9], 55), log("curl_biceps", 3, 12, [12, 11, 10], 14), log("jalon_al_pecho", 4, 10, [12, 10, 9, 8], 68),
                 ]),
                 Session(date: today.adding(days: -14), routineID: "DIA1", completed: true, logs: [
-                    log("press_banca", 3, 10, [10, 10, 10], 57.5), log("curl_biceps", 3, 12, [12, 12, 10], 15), log("jalon_al_pecho", 4, 10, [10, 10, 10, 10], 68),
+                    log("press_banca", 3, 10, [10, 10, 10], 57.5), log("curl_biceps", 3, 12, [12, 12, 10], 15), log("jalon_al_pecho", 4, 10, [11, 10, 9, 8], 68),
                 ]),
                 Session(date: today.adding(days: -10), routineID: "DIA2", completed: true, logs: [
                     log("sentadilla", 3, 8, [8, 8, 8], 100), log("dominadas", 4, 10, [10, 10, 9, 8], 0),
                 ]),
                 Session(date: today.adding(days: -7), routineID: "DIA1", completed: true, logs: [
-                    log("press_banca", 3, 10, [10, 10, 8], 60), log("curl_biceps", 3, 12, [12, 12, 12], 15), log("jalon_al_pecho", 4, 10, [10, 10, 10, 9], 68),
+                    log("press_banca", 3, 10, [10, 10, 8], 60), log("curl_biceps", 3, 12, [12, 12, 12], 15), log("jalon_al_pecho", 4, 10, [12, 10, 9, 7], 68),
                 ]),
             ]
         )

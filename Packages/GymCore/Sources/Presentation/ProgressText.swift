@@ -7,6 +7,8 @@ public enum ProgressText {
     public static let exercisesTitle = "Ejercicios"
     public static let groupsTitle = "Grupos musculares"
     public static let recentSessions = "Últimas sesiones"
+    /// Al abrir un ejercicio, debajo de las últimas sesiones.
+    public static let lookBackTitle = "Hace \(ProgressWindow.lookBackMonths) meses"
     /// Sin nada que comparar (repaso de la HIG, 2026-10-28).
     public static let emptyTitle = "Aún no hay progreso"
     public static let emptyMessage = "Termina un par de entrenos y aquí verás qué avanza y qué se estanca."
@@ -44,6 +46,17 @@ public enum ProgressText {
         return LogText.weight(progress.weight)
     }
 
+    /// La sesión de hace 3 meses, sin el día: "16 kg · 16·15·15"; sin peso, solo las reps.
+    public static func lookBack(_ session: ExerciseSession) -> String {
+        let reps = LogText.reps(session.log.actualReps.compactMap { $0 })
+        return session.log.weight > 0 ? "\(LogText.weight(session.log.weight)) · \(reps)" : reps
+    }
+
+    /// Lo que cambió desde el récord, debajo de la frase de un estancado: "1.ª serie 11 → 12 · última 8 → 6".
+    public static func setsChange(_ change: SetsChange) -> String {
+        "1.ª serie \(change.firstFrom) → \(change.firstTo) · última \(change.lastFrom) → \(change.lastTo)"
+    }
+
     /// Series indirectas con un decimal como mucho ("2,5", "3").
     public static func indirectSets(_ sets: Double) -> String { oneDecimal(sets) }
 
@@ -70,15 +83,24 @@ public enum ProgressText {
             if saysWeight(progress), let from = progress.weightFrom, let to = progress.weightTo {
                 return "\(LogText.kilograms(from)) → \(LogText.kilograms(to)) kg en \(span(days: progress.spanDays ?? 0))"
             }
+            // Sin llegar al umbral del estancado y con el récord en la primera sesión de la ventana,
+            // «35 → 35» no diría nada (decisión del usuario, 2026-11-27).
+            if progress.sessionsWithoutRecord > 0, progress.repsFrom == progress.repsTo {
+                return withoutRecord(progress)
+            }
             return "\(progress.repsFrom ?? 0) → \(progress.repsTo ?? 0) reps al mismo peso"
         case .stalled:
             if progress.allHit == true {
                 return "\(Plural.sessions(progress.stallSessions)) \(progress.stallSessions == 1 ? "idéntica" : "idénticas"), ninguna rep fallada"
             }
-            // En sesiones y no en tiempo: tras un parón, «2 meses sin superar» eran dos sesiones
-            // (decisión del usuario, 2026-11-02).
-            return "\(Plural.sessions(progress.sessionsWithoutRecord)) sin superar \(progress.bestReps) reps"
+            return withoutRecord(progress)
         }
+    }
+
+    /// "4 sesiones sin superar 40 reps". En sesiones y no en tiempo: tras un parón, «2 meses sin
+    /// superar» eran dos sesiones (decisión del usuario, 2026-11-02).
+    private static func withoutRecord(_ progress: ExerciseProgress) -> String {
+        "\(Plural.sessions(progress.sessionsWithoutRecord)) sin superar \(progress.bestReps) reps"
     }
 
     /// Si la frase cuenta una subida de peso.

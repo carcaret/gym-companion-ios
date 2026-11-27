@@ -12,6 +12,14 @@ La épica (#1) y #15 hablan de 851 (508 unitarios y 343 e2e), pero la PWA tiene 
 unitarios y 321 e2e en 37 ficheros (contados en el commit `76243dc` de la PWA; ningún e2e se genera
 en bucle, así que Playwright lista los mismos 321).
 
+Cambios aprobados por el usuario el 2026-11-27 (#112, estancado con al menos 3 sesiones y 28 días
+sin superar el récord): «subir de peso es progreso, aunque a la carga nueva aún no se mejore» vuelve
+a portarse tal cual, después de no aplicar desde el 2026-11-02; y en «estancado: mismo peso y sin
+superar el mejor total», «la racha arranca en la última sesión que batió el récord, no antes», «la
+racha solo cuenta sesiones al peso actual» y «ordena estancados primero y sin-recorrido al final»
+se alargaron las fechas para llegar al umbral (en los dos de la racha, con una sesión más, que pasa
+a ser de 4). Lo anota cada test.
+
 | Test de la PWA | Test nativo | Notas |
 |---|---|---|
 | `bar-colors.test.js` › computeRepShortfall › todas las series clavan el objetivo → 0 | `BarColorTests.swift` |  |
@@ -351,7 +359,7 @@ en bucle, así que Playwright lista los mismos 321).
 | `stats.test.js` › analyzeExercise › la racha arranca en la última sesión que batió el récord, no antes | `ProgressTests.swift` |  |
 | `stats.test.js` › analyzeExercise › empatar el récord seis veces cuenta las seis sesiones | `ProgressTests.swift` |  |
 | `stats.test.js` › analyzeExercise › la racha solo cuenta sesiones al peso actual | `ProgressTests.swift` |  |
-| `stats.test.js` › analyzeExercise › subir de peso es progreso, aunque a la carga nueva aún no se mejore | — | Ya no lo es: a la carga nueva, una sesión sin mejorar es estancado (decisión del usuario, 2026-11-02). Lo comprueba «a la carga nueva, una sesión sin mejorar ya es estancado». |
+| `stats.test.js` › analyzeExercise › subir de peso es progreso, aunque a la carga nueva aún no se mejore | `ProgressTests.swift` |  |
 | `stats.test.js` › analyzeExercise › el span de una subida de peso se mide desde la última sesión con la carga vieja | `ProgressTests.swift` |  |
 | `stats.test.js` › formatSpan › menos de dos semanas, en días | `ProgressTextTests.swift` |  |
 | `stats.test.js` › formatSpan › menos de dos meses, en semanas | `ProgressTextTests.swift` |  |
@@ -844,4 +852,4 @@ en bucle, así que Playwright lista los mismos 321).
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 7 — quitar de rutina sobre log swapped: log desaparece, plantilla DIA1 intacta | `TodayEditingTests.swift` |  |
 | `e2e/workout-swap.spec.js` › swap puntual de ejercicio en entreno activo › 8 — tras swap A→B, "+ Ejercicio" no ofrece B (fix bug duplicado) | `TodayEditingTests.swift` |  |
 
-**Total:** 764 portados, 65 no aplican, 0 sin portar, de 829.
+**Total:** 765 portados, 64 no aplican, 0 sin portar, de 829.
