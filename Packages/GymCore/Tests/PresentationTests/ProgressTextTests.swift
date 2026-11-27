@@ -36,7 +36,7 @@ struct PhraseTests {
 
     @Test("estancado sin fallar reps")
     func stalledAllHit() {
-        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 6, bestReps: 27, allHit: true)) == "6 sesiones idénticas, ninguna rep fallada")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, sessionsWithoutRecord: 5, bestReps: 27, allHit: true)) == "6 sesiones idénticas, ninguna rep fallada")
     }
 
     // «estancado con fallos usa el tiempo» de la PWA: ahora cuenta sesiones, porque tras un parón
@@ -44,8 +44,42 @@ struct PhraseTests {
     // docs/pwa-tests-no-aplican.tsv).
     @Test("estancado con fallos cuenta las sesiones que no superan el récord")
     func stalledMissed() {
-        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 5, bestReps: 40, allHit: false)) == "4 sesiones sin superar 40 reps")
-        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, stallSessions: 2, bestReps: 44, allHit: false)) == "1 sesión sin superar 44 reps")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, sessionsWithoutRecord: 4, bestReps: 40, allHit: false)) == "4 sesiones sin superar 40 reps")
+        #expect(ProgressText.phrase(ExerciseProgress(status: .stalled, sessionsWithoutRecord: 1, bestReps: 44, allHit: false)) == "1 sesión sin superar 44 reps")
+    }
+}
+
+// Lo que no llega al umbral del estancado sale como «progresa» (decisión del usuario, 2026-11-27,
+// opción (a) de #112).
+@Suite("La frase de lo que no llega al umbral")
+struct BelowThresholdPhraseTests {
+    @Test("cuenta lo avanzado hasta el récord")
+    func reps() {
+        let progress = ExerciseProgress(status: .progressing, sessionsWithoutRecord: 2, weightFrom: 18, weightTo: 18, repsFrom: 33, repsTo: 35, bestReps: 35)
+        #expect(ProgressText.phrase(progress) == "33 → 35 reps al mismo peso")
+    }
+
+    @Test("si el récord es la primera sesión de la ventana, las sesiones sin superarlo")
+    func recordFirst() {
+        let progress = ExerciseProgress(status: .progressing, sessionsWithoutRecord: 2, weightFrom: 18, weightTo: 18, repsFrom: 35, repsTo: 35, bestReps: 35)
+        #expect(ProgressText.phrase(progress) == "2 sesiones sin superar 35 reps")
+    }
+}
+
+@Suite("Lo que se ve al abrir un ejercicio")
+struct ProgressDetailTextTests {
+    @Test("las series desde el récord: la 1.ª y la última")
+    func setsChange() {
+        #expect(ProgressText.setsChange(SetsChange(firstFrom: 11, firstTo: 12, lastFrom: 8, lastTo: 6)) == "1.ª serie 11 → 12 · última 8 → 6")
+    }
+
+    @Test("hace 3 meses: el peso y las reps; sin peso, solo las reps")
+    func lookBack() {
+        #expect(ProgressText.lookBackTitle == "Hace 3 meses")
+        let session = ExerciseSession(date: "2026-08-19", log: ExerciseLog(exerciseID: "a", series: 3, targetReps: 15, actualReps: [16, 15, 15], weight: 16))
+        #expect(ProgressText.lookBack(session) == "16 kg · 16·15·15")
+        let bodyweight = ExerciseSession(date: "2026-08-19", log: ExerciseLog(exerciseID: "a", series: 3, targetReps: 10, actualReps: [10, 9, 8], weight: 0))
+        #expect(ProgressText.lookBack(bodyweight) == "10·9·8")
     }
 }
 

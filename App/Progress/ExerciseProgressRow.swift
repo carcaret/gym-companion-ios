@@ -5,7 +5,8 @@ import ViewModels
 
 /// Un ejercicio (`.stats-row`), una fila de la lista: a la izquierda, el icono de su estado (como
 /// los de Ajustes): azul y flecha si progresa, dorado e igual si está estancado, gris sin recorrido.
-/// Al abrirla, sus últimas sesiones, una por línea con su día, y «Ver en Gráficas».
+/// En los estancados, debajo de la frase, qué cambió desde el récord. Al abrirla, sus últimas
+/// sesiones, una por línea con su día, cómo estaba hace 3 meses y «Ver en Gráficas».
 struct ExerciseProgressRow: View {
     let row: ProgressModel.ExerciseRow
     let toggle: () -> Void
@@ -32,6 +33,10 @@ struct ExerciseProgressRow: View {
                         }
                     }
                     Text(row.phrase).scaledFont(12).foregroundStyle(Theme.textSecondary)
+                    if let setsChange = row.setsChange {
+                        // Más clara que la frase: es el dato nuevo (#112).
+                        Text(setsChange).scaledFont(12).foregroundStyle(Theme.text)
+                    }
                 }
             }
             .padding(.vertical, 4)
@@ -50,6 +55,9 @@ struct ExerciseProgressRow: View {
                         }
                     }
                     .scaledFont(13).monospacedDigit()
+                    if let lookBack = row.lookBack {
+                        lookBackBox(lookBack)
+                    }
                 }
                 .padding(.leading, indent)
                 .padding(.trailing, 16)
@@ -69,6 +77,24 @@ struct ExerciseProgressRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 8)
         }
+    }
+
+    /// Cómo estaba hace 3 meses, en un recuadro azul suave para que se distinga de las últimas
+    /// sesiones; la fila, con el formato de su rejilla (#112).
+    private func lookBackBox(_ lookBack: ProgressModel.LookBackRow) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(ProgressText.lookBackTitle).sectionLabelStyle()
+            HStack(spacing: 12) {
+                Text(lookBack.date).foregroundStyle(Theme.textSecondary)
+                Text(lookBack.detail).foregroundStyle(noTrack ? Theme.textSecondary : Theme.text)
+            }
+            .scaledFont(13).monospacedDigit()
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.accentTint, in: .rect(cornerRadius: 10))
+        .padding(.top, 6)
     }
 
     /// El margen de la sección y el icono con su hueco.

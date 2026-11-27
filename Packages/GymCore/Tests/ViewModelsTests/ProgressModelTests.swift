@@ -236,6 +236,41 @@ struct ProgressModelTests {
         #expect(row.phrase == "3 sesiones sin superar 32 reps")
     }
 
+    // Con el umbral del 2026-11-27 (3 sesiones y 28 días sin superar el récord), Press de Hombros
+    // sigue estancado: el récord, hace 28 días, y 3 sesiones sin superarlo.
+    @Test("el estancado de los e2e llega al umbral")
+    func threshold() async throws {
+        let row = try #require(await ProgressHarness.make().model.allRows.first)
+        #expect(row.name == "Press de Hombros")
+        #expect(row.status == .stalled)
+    }
+
+    @Test("la línea de las series desde el récord, solo si cambiaron")
+    func setsChange() async throws {
+        let identical = try #require(await ProgressHarness.make().model.allRows.first)
+        #expect(identical.setsChange == nil)
+
+        var data = statsData()
+        data.history[3].logs[0].actualReps = [12, 11, 9]
+        let row = try #require(await ProgressHarness.make(data).model.allRows.first)
+        #expect(row.status == .stalled)
+        #expect(row.setsChange == "1.ª serie 11 → 12 · última 10 → 9")
+    }
+
+    @Test("hace 3 meses, con su día, solo si hay una sesión tan antigua")
+    func lookBack() async throws {
+        let none = try #require(await ProgressHarness.make().model.allRows.first)
+        #expect(none.lookBack == nil)
+
+        var data = statsData()
+        let old = SyncFixtures.today.adding(days: -100)
+        data.history.insert(Session(date: old, routineID: "DIA1", completed: true, logs: [
+            ExerciseLog(exerciseID: "press_hombros", series: 3, targetReps: 12, actualReps: [12, 12, 12], weight: 16),
+        ]), at: 0)
+        let row = try #require(await ProgressHarness.make(data).model.allRows.first { $0.name == "Press de Hombros" })
+        #expect(row.lookBack == ProgressModel.LookBackRow(date: DateText.dayMonth(old), detail: "16 kg · 12·12·12"))
+    }
+
     @Test("las series indirectas van con un decimal como mucho")
     func indirect() {
         #expect(ProgressText.indirectSets(2.5) == "2,5")
